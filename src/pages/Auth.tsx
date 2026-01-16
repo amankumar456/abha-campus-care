@@ -11,9 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users } from "lucide-react";
 import { z } from "zod";
-
-const emailSchema = z.string().email("Please enter a valid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+import { PasswordStrength } from "@/components/ui/password-strength";
+import { 
+  emailSchema, 
+  passwordSchema as strongPasswordSchema,
+  loginPasswordSchema,
+  nameSchema 
+} from "@/lib/security/validation";
 
 type UserType = "student" | "doctor" | "mentor";
 type AuthView = "select" | "signin" | "signup" | "forgot";
@@ -94,6 +98,7 @@ export default function Auth() {
   const validateForm = (isSignUp: boolean) => {
     const newErrors: { email?: string; password?: string; fullName?: string } = {};
     
+    // Validate email
     try {
       emailSchema.parse(email);
     } catch (e) {
@@ -102,9 +107,16 @@ export default function Auth() {
       }
     }
 
+    // Password validation - strict for signup, lenient for signin
     if (authView !== "forgot") {
       try {
-        passwordSchema.parse(password);
+        if (isSignUp) {
+          // Strong password requirements for new accounts
+          strongPasswordSchema.parse(password);
+        } else {
+          // Just check presence for login (don't reveal requirements)
+          loginPasswordSchema.parse(password);
+        }
       } catch (e) {
         if (e instanceof z.ZodError) {
           newErrors.password = e.errors[0].message;
@@ -112,8 +124,15 @@ export default function Auth() {
       }
     }
 
-    if (isSignUp && !fullName.trim()) {
-      newErrors.fullName = "Full name is required";
+    // Name validation for signup
+    if (isSignUp) {
+      try {
+        nameSchema.parse(fullName);
+      } catch (e) {
+        if (e instanceof z.ZodError) {
+          newErrors.fullName = e.errors[0].message;
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -531,12 +550,14 @@ export default function Auth() {
                       <Input
                         id="signup-password"
                         type="password"
-                        placeholder="••••••••"
+                        placeholder="Min 8 chars, uppercase, number, symbol"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10"
+                        autoComplete="new-password"
                       />
                     </div>
+                    <PasswordStrength password={password} />
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password}</p>
                     )}
