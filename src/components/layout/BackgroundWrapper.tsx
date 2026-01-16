@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import nitwBackground from "@/assets/nitw-background.png";
+import nitwBackground from "@/assets/nitw-main-campus.png";
 
 interface BackgroundWrapperProps {
   children: ReactNode;
