@@ -16,6 +16,7 @@ import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
+import BackNavigation from "./components/BackNavigation";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <BackNavigation />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
