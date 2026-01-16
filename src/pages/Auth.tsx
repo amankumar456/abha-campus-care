@@ -172,7 +172,7 @@ export default function Auth() {
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder="your.email@nitw.ac.in"
+                        placeholder="ak****@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -216,7 +216,7 @@ export default function Auth() {
                       <Input
                         id="signup-name"
                         type="text"
-                        placeholder="John Doe"
+                        placeholder="Aman Kumar"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="pl-10"
@@ -234,7 +234,7 @@ export default function Auth() {
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder="your.email@nitw.ac.in"
+                        placeholder="ak****@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
