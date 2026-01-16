@@ -9,7 +9,7 @@ interface BackgroundWrapperProps {
 const BackgroundWrapper = ({ children, className = "" }: BackgroundWrapperProps) => {
   return (
     <div className={`relative min-h-screen ${className}`}>
-      {/* Background Image with Blur and Overlay */}
+      {/* Background Image */}
       <div 
         className="fixed inset-0 -z-10"
         style={{
@@ -17,7 +17,6 @@ const BackgroundWrapper = ({ children, className = "" }: BackgroundWrapperProps)
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundAttachment: 'fixed',
-          filter: 'blur(2px)',
         }}
       />
       
