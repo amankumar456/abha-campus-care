@@ -1,8 +1,17 @@
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import nitwLogo from "@/assets/nitw-logo.png";
 
 const NAVIGATION_ITEMS = [
@@ -22,8 +31,43 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out successfully.",
+      });
+      navigate("/");
+    }
+  };
 
   const filteredItems = NAVIGATION_ITEMS.filter((item) => {
     const query = searchQuery.toLowerCase();
@@ -49,6 +93,17 @@ const Header = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const getUserDisplayName = () => {
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getUserType = () => {
+    return user?.user_metadata?.user_type || 'student';
+  };
 
   return (
     <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
@@ -120,12 +175,58 @@ const Header = () => {
               <Link to="/health-dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                 Health Records
               </Link>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/auth">Sign In</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/doctor/register">Doctor Portal</Link>
-              </Button>
+              
+              {/* Auth Section */}
+              {isLoading ? (
+                <div className="w-20 h-9 bg-muted animate-pulse rounded-md" />
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      {getUserType() === 'doctor' ? (
+                        <Stethoscope className="w-4 h-4" />
+                      ) : (
+                        <GraduationCap className="w-4 h-4" />
+                      )}
+                      <span className="max-w-[100px] truncate">{getUserDisplayName()}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to="/health-dashboard" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        My Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-appointments" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        My Appointments
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Button asChild variant="outline" size="sm" className="gap-2">
+                    <Link to="/auth">
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" className="gap-2">
+                    <Link to="/auth">
+                      <UserPlus className="w-4 h-4" />
+                      Sign Up
+                    </Link>
+                  </Button>
+                </>
+              )}
             </nav>
           </div>
 
@@ -190,6 +291,25 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
+              {/* User Info for Mobile */}
+              {user && (
+                <div className="flex items-center gap-3 pb-3 border-b border-border">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    getUserType() === 'doctor' ? 'bg-secondary/10' : 'bg-primary/10'
+                  }`}>
+                    {getUserType() === 'doctor' ? (
+                      <Stethoscope className="w-5 h-5 text-secondary" />
+                    ) : (
+                      <GraduationCap className="w-5 h-5 text-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{getUserDisplayName()}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+              )}
+              
               <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                 Medical Team
               </Link>
@@ -203,15 +323,27 @@ const Header = () => {
                 Health Records
               </Link>
               <div className="flex flex-col gap-2 pt-2">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-                <Button asChild variant="secondary" className="w-full">
-                  <Link to="/admin">Admin Portal</Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link to="/doctor/register">Doctor Portal</Link>
-                </Button>
+                {user ? (
+                  <Button variant="destructive" className="w-full gap-2" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" className="w-full gap-2">
+                      <Link to="/auth">
+                        <GraduationCap className="w-4 h-4" />
+                        New User / Student
+                      </Link>
+                    </Button>
+                    <Button asChild variant="secondary" className="w-full gap-2">
+                      <Link to="/auth">
+                        <Stethoscope className="w-4 h-4" />
+                        Doctor / Medical Staff
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </nav>

@@ -18,6 +18,7 @@ import NewVisit from "./pages/NewVisit";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import BackNavigation from "./components/BackNavigation";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,19 +30,41 @@ const App = () => (
       <BrowserRouter>
         <BackNavigation />
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/email-confirmation" element={<EmailConfirmation />} />
-          <Route path="/student/register" element={<StudentRegistration />} />
-          <Route path="/doctor/register" element={<DoctorRegistration />} />
-          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
           <Route path="/medical-team" element={<MedicalTeam />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/my-appointments" element={<MyAppointments />} />
-          <Route path="/health-dashboard" element={<HealthDashboard />} />
-          <Route path="/student-profile/:rollNumber" element={<StudentProfile />} />
-          <Route path="/new-visit" element={<NewVisit />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          
+          {/* Protected Routes - Require Login */}
+          <Route path="/student/register" element={
+            <ProtectedRoute><StudentRegistration /></ProtectedRoute>
+          } />
+          <Route path="/doctor/register" element={
+            <ProtectedRoute><DoctorRegistration /></ProtectedRoute>
+          } />
+          <Route path="/doctor/dashboard" element={
+            <ProtectedRoute><DoctorDashboard /></ProtectedRoute>
+          } />
+          <Route path="/appointments" element={
+            <ProtectedRoute><Appointments /></ProtectedRoute>
+          } />
+          <Route path="/my-appointments" element={
+            <ProtectedRoute><MyAppointments /></ProtectedRoute>
+          } />
+          <Route path="/health-dashboard" element={
+            <ProtectedRoute><HealthDashboard /></ProtectedRoute>
+          } />
+          <Route path="/student-profile/:rollNumber" element={
+            <ProtectedRoute><StudentProfile /></ProtectedRoute>
+          } />
+          <Route path="/new-visit" element={
+            <ProtectedRoute><NewVisit /></ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute><AdminPanel /></ProtectedRoute>
+          } />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
