@@ -8,21 +8,23 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+    <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex items-center justify-between min-h-[72px]">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-4">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
             <img 
               src={nitwLogo} 
               alt="NIT Warangal Logo" 
-              className="w-14 h-14 object-contain"
+              className="w-12 h-12 md:w-14 md:h-14 object-contain"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-foreground leading-tight">
+            <div className="flex flex-col">
+              <h1 className="text-sm sm:text-base md:text-lg font-bold text-foreground leading-tight tracking-tight">
                 National Institute of Technology
               </h1>
-              <p className="text-sm text-muted-foreground">Warangal, Telangana</p>
+              <p className="text-xs sm:text-sm text-primary font-medium">
+                Warangal, Telangana
+              </p>
             </div>
           </Link>
 
