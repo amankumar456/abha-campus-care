@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck } from 'lucide-react';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
 import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
+import MentorsTab from '@/components/admin/MentorsTab';
 
 interface UserWithRoles {
   id: string;
@@ -35,6 +36,15 @@ interface Doctor {
 }
 
 interface Mentor {
+  id: string;
+  name: string;
+  department: string;
+  email: string | null;
+  phone: string | null;
+  user_id: string | null;
+}
+
+interface MentorForLinking {
   id: string;
   name: string;
   user_id: string | null;
@@ -75,9 +85,10 @@ const AdminPanel = () => {
   const { user, loading: roleLoading } = useUserRole();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [mentorsForLinking, setMentorsForLinking] = useState<MentorForLinking[]>([]);
   const [medicalOfficers, setMedicalOfficers] = useState<MedicalOfficer[]>([]);
   const [visitingDoctors, setVisitingDoctors] = useState<VisitingDoctor[]>([]);
+  const [allMentors, setAllMentors] = useState<Mentor[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,11 +155,11 @@ const AdminPanel = () => {
         .select('id, name, user_id');
       setDoctors(doctorsData || []);
 
-      // Fetch unlinked mentors
+      // Fetch mentors for linking
       const { data: mentorsData } = await supabase
         .from('mentors')
         .select('id, name, user_id');
-      setMentors(mentorsData || []);
+      setMentorsForLinking(mentorsData || []);
 
       // Fetch all medical officers for management
       const { data: medicalOfficersData } = await supabase
@@ -163,6 +174,13 @@ const AdminPanel = () => {
         .select('*')
         .order('name');
       setVisitingDoctors(visitingDoctorsData || []);
+
+      // Fetch all mentors for management
+      const { data: allMentorsData } = await supabase
+        .from('mentors')
+        .select('*')
+        .order('name');
+      setAllMentors(allMentorsData || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -266,7 +284,7 @@ const AdminPanel = () => {
   );
 
   const unlinkedDoctors = doctors.filter(d => !d.user_id);
-  const unlinkedMentors = mentors.filter(m => !m.user_id);
+  const unlinkedMentors = mentorsForLinking.filter(m => !m.user_id);
 
   if (roleLoading || loading) {
     return (
@@ -325,7 +343,7 @@ const AdminPanel = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -366,11 +384,19 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{visitingDoctors.length}</div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Mentors</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{allMentors.length}</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users & Roles
@@ -382,6 +408,10 @@ const AdminPanel = () => {
             <TabsTrigger value="visiting-doctors" className="flex items-center gap-2">
               <UserCheck className="h-4 w-4" />
               Visiting Doctors
+            </TabsTrigger>
+            <TabsTrigger value="mentors" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Mentors
             </TabsTrigger>
           </TabsList>
 
@@ -567,6 +597,10 @@ const AdminPanel = () => {
 
           <TabsContent value="visiting-doctors">
             <VisitingDoctorsTab doctors={visitingDoctors} onRefresh={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="mentors">
+            <MentorsTab mentors={allMentors} onRefresh={fetchData} />
           </TabsContent>
         </Tabs>
       </div>
