@@ -104,6 +104,69 @@ export type Database = {
           },
         ]
       }
+      health_visits: {
+        Row: {
+          created_at: string
+          diagnosis: string | null
+          doctor_id: string | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          prescription: string | null
+          reason_category: Database["public"]["Enums"]["visit_reason"]
+          reason_notes: string | null
+          reason_subcategory: string | null
+          student_id: string
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          prescription?: string | null
+          reason_category: Database["public"]["Enums"]["visit_reason"]
+          reason_notes?: string | null
+          reason_subcategory?: string | null
+          student_id: string
+          updated_at?: string
+          visit_date?: string
+        }
+        Update: {
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          prescription?: string | null
+          reason_category?: Database["public"]["Enums"]["visit_reason"]
+          reason_notes?: string | null
+          reason_subcategory?: string | null
+          student_id?: string
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_visits_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_visits_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       management_team: {
         Row: {
           created_at: string | null
@@ -141,6 +204,7 @@ export type Database = {
           photo_url: string | null
           qualification: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -154,6 +218,7 @@ export type Database = {
           photo_url?: string | null
           qualification: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -167,6 +232,111 @@ export type Database = {
           photo_url?: string | null
           qualification?: string
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mentors: {
+        Row: {
+          created_at: string
+          department: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          batch: string
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          mentor_id: string | null
+          phone: string | null
+          program: string
+          roll_number: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          batch: string
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          mentor_id?: string | null
+          phone?: string | null
+          program: string
+          roll_number: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          batch?: string
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          mentor_id?: string | null
+          phone?: string | null
+          program?: string
+          roll_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -247,10 +417,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "doctor" | "mentor" | "student"
       appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
+      visit_reason:
+        | "medical_illness"
+        | "injury"
+        | "mental_wellness"
+        | "vaccination"
+        | "routine_checkup"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -378,7 +562,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["doctor", "mentor", "student"],
       appointment_status: ["pending", "confirmed", "cancelled", "completed"],
+      visit_reason: [
+        "medical_illness",
+        "injury",
+        "mental_wellness",
+        "vaccination",
+        "routine_checkup",
+        "other",
+      ],
     },
   },
 } as const

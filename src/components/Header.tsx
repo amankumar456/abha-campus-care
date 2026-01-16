@@ -34,6 +34,9 @@ const Header = () => {
             <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               My Appointments
             </Link>
+            <Link to="/health-dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+              Health Records
+            </Link>
             <Button asChild variant="outline" size="sm">
               <Link to="/auth">Sign In</Link>
             </Button>
@@ -63,6 +66,9 @@ const Header = () => {
               </Link>
               <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                 My Appointments
+              </Link>
+              <Link to="/health-dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                Health Records
               </Link>
               <div className="flex flex-col gap-2 pt-2">
                 <Button asChild variant="outline" className="w-full">
