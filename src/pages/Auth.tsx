@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users } from "lucide-react";
 import { z } from "zod";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
-type UserType = "student" | "doctor";
+type UserType = "student" | "doctor" | "mentor";
 type AuthView = "select" | "signin" | "signup" | "forgot";
 
 export default function Auth() {
@@ -67,8 +67,8 @@ export default function Auth() {
       navigate('/admin');
     } else if (isDoctor || userType === 'doctor') {
       navigate('/doctor/dashboard');
-    } else if (isMentor) {
-      navigate('/health-dashboard');
+    } else if (isMentor || userType === 'mentor') {
+      navigate('/mentor/dashboard');
     } else {
       navigate('/health-dashboard');
     }
@@ -279,6 +279,18 @@ export default function Auth() {
                   <p className="text-xs text-muted-foreground">Medical Officers & Visiting Doctors</p>
                 </div>
               </Button>
+
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-green-600 hover:bg-green-50 transition-all"
+                onClick={() => selectUserType("mentor")}
+              >
+                <Users className="w-8 h-8 text-green-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Faculty Mentor</p>
+                  <p className="text-xs text-muted-foreground">Faculty Advisors & Student Mentors</p>
+                </div>
+              </Button>
             </CardContent>
           </Card>
         </main>
@@ -365,20 +377,24 @@ export default function Auth() {
           </Button>
           <CardHeader className="text-center pt-12">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              userType === "doctor" ? "bg-secondary/10" : "bg-primary/10"
+              userType === "doctor" ? "bg-secondary/10" : userType === "mentor" ? "bg-green-100" : "bg-primary/10"
             }`}>
               {userType === "doctor" ? (
                 <Stethoscope className="w-8 h-8 text-secondary" />
+              ) : userType === "mentor" ? (
+                <Users className="w-8 h-8 text-green-600" />
               ) : (
                 <GraduationCap className="w-8 h-8 text-primary" />
               )}
             </div>
             <CardTitle className="text-2xl">
-              {userType === "doctor" ? "Doctor Portal" : "Student Portal"}
+              {userType === "doctor" ? "Doctor Portal" : userType === "mentor" ? "Mentor Portal" : "Student Portal"}
             </CardTitle>
             <CardDescription>
               {userType === "doctor" 
                 ? "Sign in to access medical dashboard and patient records"
+                : userType === "mentor"
+                ? "Sign in to view mentee health information and reports"
                 : "Sign in to book appointments and access health services"
               }
             </CardDescription>
@@ -405,7 +421,7 @@ export default function Auth() {
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder={userType === "doctor" ? "doctor@nitw.ac.in" : "student@student.nitw.ac.in"}
+                        placeholder={userType === "doctor" ? "doctor@nitw.ac.in" : userType === "mentor" ? "mentor@nitw.ac.in" : "student@student.nitw.ac.in"}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -446,7 +462,7 @@ export default function Auth() {
 
                   <Button 
                     type="submit" 
-                    className={`w-full ${userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : ""}`}
+                    className={`w-full ${userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : userType === "mentor" ? "bg-green-600 hover:bg-green-700" : ""}`}
                     disabled={isLoading}
                   >
                     {isLoading ? "Signing In..." : "Sign In"}
@@ -463,7 +479,7 @@ export default function Auth() {
                       <Input
                         id="signup-name"
                         type="text"
-                        placeholder={userType === "doctor" ? "Dr. Aman Kumar" : "Aman Kumar"}
+                        placeholder={userType === "doctor" ? "Dr. Aman Kumar" : userType === "mentor" ? "Prof. Aman Kumar" : "Aman Kumar"}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="pl-10"
@@ -481,7 +497,7 @@ export default function Auth() {
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder={userType === "doctor" ? "doctor@nitw.ac.in" : "student@student.nitw.ac.in"}
+                        placeholder={userType === "doctor" ? "doctor@nitw.ac.in" : userType === "mentor" ? "mentor@nitw.ac.in" : "student@student.nitw.ac.in"}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -512,24 +528,26 @@ export default function Auth() {
 
                   <Button 
                     type="submit" 
-                    className={`w-full ${userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : ""}`}
+                    className={`w-full ${userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : userType === "mentor" ? "bg-green-600 hover:bg-green-700" : ""}`}
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
 
                   {/* Link to detailed registration */}
-                  <div className="text-center pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Need to complete full registration?{" "}
-                      <Link 
-                        to={userType === "doctor" ? "/doctor/register" : "/register"} 
-                        className="text-primary hover:underline font-medium"
-                      >
-                        {userType === "doctor" ? "Doctor Registration" : "Student Registration"}
-                      </Link>
-                    </p>
-                  </div>
+                  {userType !== "mentor" && (
+                    <div className="text-center pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Need to complete full registration?{" "}
+                        <Link 
+                          to={userType === "doctor" ? "/doctor/register" : "/student/register"} 
+                          className="text-primary hover:underline font-medium"
+                        >
+                          {userType === "doctor" ? "Doctor Registration" : "Student Registration"}
+                        </Link>
+                      </p>
+                    </div>
+                  )}
                 </form>
               </TabsContent>
             </Tabs>

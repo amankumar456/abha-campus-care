@@ -1,8 +1,9 @@
 import { UseFormReturn } from "react-hook-form";
-import { User, Phone, Mail, AlertCircle } from "lucide-react";
+import { User, Phone, Mail, AlertCircle, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FullRegistration } from "@/lib/validations/student-registration";
+import { Separator } from "@/components/ui/separator";
 
 interface PersonalInfoStepProps {
   form: UseFormReturn<FullRegistration>;
@@ -23,6 +24,7 @@ export function PersonalInfoStep({ form }: PersonalInfoStepProps) {
         </div>
       </div>
 
+      {/* Basic Details */}
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Label htmlFor="fullName">Full Name *</Label>
@@ -128,6 +130,162 @@ export function PersonalInfoStep({ form }: PersonalInfoStepProps) {
             <p className="text-sm text-destructive mt-1 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
               {errors.emergencyRelationship.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Parent Details Section */}
+      <Separator className="my-6" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+          <Users className="w-5 h-5 text-secondary" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Parent/Guardian Details</h3>
+          <p className="text-sm text-muted-foreground">Contact information for parents or guardians</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="fatherName">Father's Name *</Label>
+          <Input
+            id="fatherName"
+            placeholder="Father's full name"
+            {...register("fatherName")}
+            className={errors.fatherName ? "border-destructive" : ""}
+          />
+          {errors.fatherName && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.fatherName.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="fatherContact">Father's Contact Number *</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="fatherContact"
+              type="tel"
+              placeholder="10-digit mobile number"
+              className={`pl-10 ${errors.fatherContact ? "border-destructive" : ""}`}
+              {...register("fatherContact")}
+            />
+          </div>
+          {errors.fatherContact && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.fatherContact.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="motherName">Mother's Name *</Label>
+          <Input
+            id="motherName"
+            placeholder="Mother's full name"
+            {...register("motherName")}
+            className={errors.motherName ? "border-destructive" : ""}
+          />
+          {errors.motherName && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.motherName.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="motherContact">Mother's Contact Number *</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="motherContact"
+              type="tel"
+              placeholder="10-digit mobile number"
+              className={`pl-10 ${errors.motherContact ? "border-destructive" : ""}`}
+              {...register("motherContact")}
+            />
+          </div>
+          {errors.motherContact && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.motherContact.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Mentor Details Section */}
+      <Separator className="my-6" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+          <Users className="w-5 h-5 text-green-600" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Faculty Mentor Details</h3>
+          <p className="text-sm text-muted-foreground">Your assigned faculty mentor/advisor information</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Label htmlFor="mentorName">Mentor's Name *</Label>
+          <Input
+            id="mentorName"
+            placeholder="Prof. / Dr. Full Name"
+            {...register("mentorName")}
+            className={errors.mentorName ? "border-destructive" : ""}
+          />
+          {errors.mentorName && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.mentorName.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="mentorContact">Mentor's Contact Number *</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="mentorContact"
+              type="tel"
+              placeholder="10-digit mobile number"
+              className={`pl-10 ${errors.mentorContact ? "border-destructive" : ""}`}
+              {...register("mentorContact")}
+            />
+          </div>
+          {errors.mentorContact && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.mentorContact.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="mentorEmail">Mentor's Email *</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="mentorEmail"
+              type="email"
+              placeholder="mentor@nitw.ac.in"
+              className={`pl-10 ${errors.mentorEmail ? "border-destructive" : ""}`}
+              {...register("mentorEmail")}
+            />
+          </div>
+          {errors.mentorEmail && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.mentorEmail.message}
             </p>
           )}
         </div>
