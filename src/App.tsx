@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import HealthDashboard from "./pages/HealthDashboard";
 import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/health-dashboard" element={<HealthDashboard />} />
           <Route path="/student-profile/:rollNumber" element={<StudentProfile />} />
           <Route path="/new-visit" element={<NewVisit />} />
+          <Route path="/admin" element={<AdminPanel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
