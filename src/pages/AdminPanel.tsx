@@ -12,12 +12,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
 import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
 import MentorsTab from '@/components/admin/MentorsTab';
+import StudentMentorAssignment from '@/components/admin/StudentMentorAssignment';
 
 interface UserWithRoles {
   id: string;
@@ -396,10 +397,14 @@ const AdminPanel = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users & Roles
+            </TabsTrigger>
+            <TabsTrigger value="student-mentor" className="flex items-center gap-2">
+              <Link2 className="h-4 w-4" />
+              Student-Mentor
             </TabsTrigger>
             <TabsTrigger value="medical-officers" className="flex items-center gap-2">
               <Stethoscope className="h-4 w-4" />
@@ -414,6 +419,11 @@ const AdminPanel = () => {
               Mentors
             </TabsTrigger>
           </TabsList>
+
+          {/* Student-Mentor Assignment Tab */}
+          <TabsContent value="student-mentor">
+            <StudentMentorAssignment />
+          </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
         <Card>

@@ -180,16 +180,32 @@ export default function Auth() {
           variant: "destructive",
         });
       }
-    } else if (data.user && !data.session) {
-      // User created but needs email verification
-      navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
-    } else if (data.session) {
-      // Auto-confirm is enabled, user is already signed in
-      toast({
-        title: "Account Created!",
-        description: "Welcome to the Health Portal.",
-      });
-      navigate("/");
+    } else if (data.user) {
+      // Send registration confirmation email
+      try {
+        await supabase.functions.invoke('send-registration-email', {
+          body: {
+            email,
+            name: fullName,
+            userType: userType,
+          }
+        });
+      } catch (emailError) {
+        console.log('Registration email could not be sent:', emailError);
+        // Don't fail registration if email fails
+      }
+
+      if (!data.session) {
+        // User created but needs email verification
+        navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
+      } else {
+        // Auto-confirm is enabled, user is already signed in
+        toast({
+          title: "Account Created!",
+          description: "Welcome to the Health Portal. A confirmation email has been sent.",
+        });
+        navigate("/");
+      }
     }
   };
 
