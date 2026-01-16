@@ -2,8 +2,8 @@ import { Shield, Lock, UserCheck } from "lucide-react";
 
 const SecurityBanner = () => {
   return (
-    <section className="py-12 bg-accent">
-      <div className="container mx-auto px-4">
+    <section className="py-12">
+      <div className="container mx-auto px-4 bg-white/92 backdrop-blur-sm rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           {/* Security Message */}
           <div className="flex items-center gap-4">

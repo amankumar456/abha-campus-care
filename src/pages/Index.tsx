@@ -6,21 +6,24 @@ import QuickAccessSection from "@/components/QuickAccessSection";
 import HealthCentreInfo from "@/components/HealthCentreInfo";
 import SecurityBanner from "@/components/SecurityBanner";
 import Footer from "@/components/Footer";
+import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
+import AppointmentDashboard from "@/components/appointments/AppointmentDashboard";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <BackgroundWrapper>
       <EmergencyBar />
       <Header />
       <main>
         <HeroSection />
+        <AppointmentDashboard />
         <FeaturesSection />
         <QuickAccessSection />
         <SecurityBanner />
         <HealthCentreInfo />
       </main>
       <Footer />
-    </div>
+    </BackgroundWrapper>
   );
 };
 

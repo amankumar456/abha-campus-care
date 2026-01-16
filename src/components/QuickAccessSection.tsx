@@ -49,8 +49,8 @@ const quickAccessItems = [
 
 const QuickAccessSection = () => {
   return (
-    <section className="py-20 bg-card">
-      <div className="container mx-auto px-4">
+    <section className="py-20">
+      <div className="container mx-auto px-4 bg-white/92 backdrop-blur-sm rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="section-title">Quick Access</h2>

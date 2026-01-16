@@ -48,8 +48,8 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section className="py-20 bg-muted/30" id="services">
-      <div className="container mx-auto px-4">
+    <section className="py-20" id="services">
+      <div className="container mx-auto px-4 bg-white/92 backdrop-blur-sm rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="inline-block px-4 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">

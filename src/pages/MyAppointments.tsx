@@ -4,10 +4,13 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +32,10 @@ import {
   Plus,
   XCircle,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Search,
+  CalendarPlus,
+  RefreshCw
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -42,6 +48,7 @@ interface Appointment {
   appointment_time: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   reason: string | null;
+  notes: string | null;
   created_at: string;
   medical_officers?: {
     name: string;
@@ -64,20 +71,37 @@ const formatTime = (time: string) => {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'confirmed':
-      return <Badge className="bg-success text-success-foreground">Confirmed</Badge>;
+      return <Badge className="bg-green-600 text-white">Confirmed</Badge>;
     case 'pending':
-      return <Badge variant="outline" className="border-warning text-warning">Pending</Badge>;
+      return <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50">Pending</Badge>;
     case 'cancelled':
       return <Badge variant="destructive">Cancelled</Badge>;
     case 'completed':
-      return <Badge variant="secondary">Completed</Badge>;
+      return <Badge className="bg-blue-600 text-white">Completed</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
 };
 
+const getStatusBorderColor = (status: string) => {
+  switch (status) {
+    case 'confirmed':
+      return 'border-l-green-500';
+    case 'pending':
+      return 'border-l-yellow-500';
+    case 'completed':
+      return 'border-l-blue-500';
+    case 'cancelled':
+      return 'border-l-gray-400';
+    default:
+      return 'border-l-gray-300';
+  }
+};
+
 export default function MyAppointments() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -139,22 +163,52 @@ export default function MyAppointments() {
     }
   });
 
-  const upcomingAppointments = appointments?.filter(
-    a => a.status !== 'cancelled' && a.status !== 'completed' && !isPast(new Date(`${a.appointment_date}T${a.appointment_time}`))
-  ) || [];
+  const filterAndSortAppointments = (appointmentList: Appointment[]) => {
+    let filtered = appointmentList.filter(a => {
+      const doctorName = a.medical_officers?.name || a.visiting_doctors?.name || '';
+      return doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             (a.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    });
 
-  const pastAppointments = appointments?.filter(
-    a => a.status === 'completed' || (a.status !== 'cancelled' && isPast(new Date(`${a.appointment_date}T${a.appointment_time}`)))
-  ) || [];
+    if (sortBy === 'date') {
+      filtered.sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
+    } else if (sortBy === 'doctor') {
+      filtered.sort((a, b) => {
+        const nameA = a.medical_officers?.name || a.visiting_doctors?.name || '';
+        const nameB = b.medical_officers?.name || b.visiting_doctors?.name || '';
+        return nameA.localeCompare(nameB);
+      });
+    }
 
-  const cancelledAppointments = appointments?.filter(a => a.status === 'cancelled') || [];
+    return filtered;
+  };
+
+  const upcomingAppointments = filterAndSortAppointments(
+    appointments?.filter(
+      a => a.status !== 'cancelled' && a.status !== 'completed' && !isPast(new Date(`${a.appointment_date}T${a.appointment_time}`))
+    ) || []
+  );
+
+  const pastAppointments = filterAndSortAppointments(
+    appointments?.filter(
+      a => a.status === 'completed' || (a.status !== 'cancelled' && isPast(new Date(`${a.appointment_date}T${a.appointment_time}`)))
+    ) || []
+  );
+
+  const cancelledAppointments = filterAndSortAppointments(
+    appointments?.filter(a => a.status === 'cancelled') || []
+  );
+
+  const followUpAppointments = filterAndSortAppointments(
+    appointments?.filter(a => a.reason?.toLowerCase().includes('follow') && a.status !== 'cancelled') || []
+  );
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <BackgroundWrapper>
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Card className="w-full max-w-md mx-4">
+        <main className="flex-1 flex items-center justify-center min-h-[60vh]">
+          <Card className="w-full max-w-md mx-4 bg-white/95 backdrop-blur-sm shadow-xl">
             <CardHeader className="text-center">
               <Calendar className="w-12 h-12 mx-auto text-primary mb-4" />
               <CardTitle>Sign In Required</CardTitle>
@@ -170,7 +224,7 @@ export default function MyAppointments() {
           </Card>
         </main>
         <Footer />
-      </div>
+      </BackgroundWrapper>
     );
   }
 
@@ -179,61 +233,88 @@ export default function MyAppointments() {
     const doctorInfo = appointment.medical_officers?.designation || appointment.visiting_doctors?.specialization;
     const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
     const canCancel = showCancel && appointment.status !== 'cancelled' && !isPast(appointmentDate);
+    const appointmentNumber = `STU${new Date(appointment.created_at).getFullYear()}-${appointment.id.slice(0, 3).toUpperCase()}`;
 
     return (
-      <Card key={appointment.id} className="card-feature">
+      <Card 
+        key={appointment.id} 
+        className={`bg-white/95 backdrop-blur-sm shadow-lg border-l-4 ${getStatusBorderColor(appointment.status)} hover:shadow-xl transition-all duration-200 hover:scale-[1.01]`}
+      >
         <CardContent className="pt-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                appointment.doctor_type === 'medical_officer' ? 'bg-primary/10' : 'bg-secondary/10'
-              }`}>
-                {appointment.doctor_type === 'medical_officer' 
-                  ? <User className="w-6 h-6 text-primary" />
-                  : <Stethoscope className="w-6 h-6 text-secondary" />
-                }
-              </div>
-              <div>
-                <h3 className="font-semibold">{doctorName}</h3>
-                <p className="text-sm text-muted-foreground">{doctorInfo}</p>
-              </div>
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Stethoscope className="w-4 h-4" />
+              <span className="font-mono">{appointmentNumber}</span>
             </div>
             {getStatusBadge(appointment.status)}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span>{format(new Date(appointment.appointment_date), 'EEE, MMM d, yyyy')}</span>
+          {/* Doctor Info */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              appointment.doctor_type === 'medical_officer' ? 'bg-primary/10' : 'bg-secondary/10'
+            }`}>
+              {appointment.doctor_type === 'medical_officer' 
+                ? <User className="w-6 h-6 text-primary" />
+                : <Stethoscope className="w-6 h-6 text-secondary" />
+              }
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span>{formatTime(appointment.appointment_time)}</span>
+            <div>
+              <h3 className="font-semibold text-[#1A202C]">{doctorName}</h3>
+              <p className="text-sm text-[#4A5568]">{doctorInfo}</p>
             </div>
           </div>
 
+          {/* Date/Time */}
+          <div className="flex items-center gap-2 mb-3 text-sm">
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded ${
+              isToday(new Date(appointment.appointment_date)) 
+                ? 'bg-green-100 text-green-700 font-medium' 
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              <Calendar className="w-3 h-3" />
+              {isToday(new Date(appointment.appointment_date)) 
+                ? 'Today' 
+                : format(new Date(appointment.appointment_date), 'EEE, MMM d, yyyy')
+              }
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              {formatTime(appointment.appointment_time)}
+            </span>
+          </div>
+
+          {/* Reason */}
           {appointment.reason && (
-            <div className="mt-4 p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                <strong>Reason:</strong> {appointment.reason}
+            <div className="p-3 bg-muted/50 rounded-lg mb-3">
+              <p className="text-sm text-[#4A5568]">
+                <strong className="text-[#718096]">Reason:</strong> {appointment.reason}
               </p>
             </div>
           )}
 
-          {isToday(new Date(appointment.appointment_date)) && appointment.status !== 'cancelled' && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-success">
-              <CheckCircle className="w-4 h-4" />
-              <span className="font-medium">Today's Appointment</span>
+          {/* Notes */}
+          {appointment.notes && (
+            <div className="p-3 bg-blue-50 rounded-lg mb-3">
+              <p className="text-sm text-blue-800">
+                <strong>Notes:</strong> {appointment.notes}
+              </p>
             </div>
           )}
 
-          {canCancel && (
-            <div className="mt-4">
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Reschedule
+            </Button>
+            {canCancel && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Cancel Appointment
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <XCircle className="w-4 h-4 mr-1" />
+                    Cancel
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -256,30 +337,37 @@ export default function MyAppointments() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            </div>
-          )}
+            )}
+            <Button variant="ghost" size="sm">
+              <CalendarPlus className="w-4 h-4 mr-1" />
+              Add to Calendar
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <BackgroundWrapper>
       <Header />
       
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold">My Appointments</h1>
-              <p className="text-muted-foreground">Manage and view your appointment history</p>
+          {/* Header */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-[#1A202C]">My Appointments</h1>
+                <p className="text-[#4A5568]">Manage and view your appointment history</p>
+              </div>
+              <Button asChild size="lg" className="shadow-md">
+                <Link to="/appointments">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Book New Appointment
+                </Link>
+              </Button>
             </div>
-            <Button asChild>
-              <Link to="/appointments">
-                <Plus className="w-4 h-4 mr-2" />
-                Book New Appointment
-              </Link>
-            </Button>
           </div>
 
           {isLoading ? (
@@ -287,85 +375,130 @@ export default function MyAppointments() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : appointments && appointments.length === 0 ? (
-            <Card className="text-center py-12">
+            <Card className="text-center py-12 bg-white/95 backdrop-blur-sm shadow-lg">
               <CardContent>
-                <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold mb-2">No Appointments Yet</h2>
-                <p className="text-muted-foreground mb-6">
+                <Calendar className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h2 className="text-xl font-semibold mb-2 text-[#1A202C]">No Appointments Yet</h2>
+                <p className="text-[#4A5568] mb-6">
                   You haven't booked any appointments. Schedule your first visit today!
                 </p>
-                <Button asChild>
+                <Button asChild size="lg">
                   <Link to="/appointments">Book an Appointment</Link>
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <Tabs defaultValue="upcoming" className="w-full">
-              <TabsList className="mb-6">
-                <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  Upcoming ({upcomingAppointments.length})
-                </TabsTrigger>
-                <TabsTrigger value="past" className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Past ({pastAppointments.length})
-                </TabsTrigger>
-                <TabsTrigger value="cancelled" className="flex items-center gap-2">
-                  <XCircle className="w-4 h-4" />
-                  Cancelled ({cancelledAppointments.length})
-                </TabsTrigger>
-              </TabsList>
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-6">
+              {/* Filter Bar */}
+              <div className="flex flex-col md:flex-row gap-4 mb-6 pb-6 border-b">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by doctor or reason..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Date ⬇</SelectItem>
+                      <SelectItem value="doctor">Doctor A-Z</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-              <TabsContent value="upcoming">
-                {upcomingAppointments.length === 0 ? (
-                  <Card className="text-center py-8">
-                    <CardContent>
-                      <p className="text-muted-foreground">No upcoming appointments</p>
-                      <Button asChild className="mt-4">
-                        <Link to="/appointments">Book an Appointment</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {upcomingAppointments.map(appointment => renderAppointmentCard(appointment))}
-                  </div>
-                )}
-              </TabsContent>
+              <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="mb-6 bg-muted/50">
+                  <TabsTrigger value="upcoming" className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Upcoming ({upcomingAppointments.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="past" className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Past ({pastAppointments.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="followups" className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4" />
+                    Follow-ups ({followUpAppointments.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="cancelled" className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4" />
+                    Cancelled ({cancelledAppointments.length})
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="past">
-                {pastAppointments.length === 0 ? (
-                  <Card className="text-center py-8">
-                    <CardContent>
-                      <p className="text-muted-foreground">No past appointments</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {pastAppointments.map(appointment => renderAppointmentCard(appointment, false))}
-                  </div>
-                )}
-              </TabsContent>
+                <TabsContent value="upcoming">
+                  {upcomingAppointments.length === 0 ? (
+                    <Card className="text-center py-8 bg-muted/30">
+                      <CardContent>
+                        <p className="text-muted-foreground">No upcoming appointments</p>
+                        <Button asChild className="mt-4">
+                          <Link to="/appointments">Book an Appointment</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {upcomingAppointments.map(appointment => renderAppointmentCard(appointment))}
+                    </div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="cancelled">
-                {cancelledAppointments.length === 0 ? (
-                  <Card className="text-center py-8">
-                    <CardContent>
-                      <p className="text-muted-foreground">No cancelled appointments</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {cancelledAppointments.map(appointment => renderAppointmentCard(appointment, false))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="past">
+                  {pastAppointments.length === 0 ? (
+                    <Card className="text-center py-8 bg-muted/30">
+                      <CardContent>
+                        <p className="text-muted-foreground">No past appointments</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {pastAppointments.map(appointment => renderAppointmentCard(appointment, false))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="followups">
+                  {followUpAppointments.length === 0 ? (
+                    <Card className="text-center py-8 bg-muted/30">
+                      <CardContent>
+                        <p className="text-muted-foreground">No follow-up appointments</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {followUpAppointments.map(appointment => renderAppointmentCard(appointment))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="cancelled">
+                  {cancelledAppointments.length === 0 ? (
+                    <Card className="text-center py-8 bg-muted/30">
+                      <CardContent>
+                        <p className="text-muted-foreground">No cancelled appointments</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {cancelledAppointments.map(appointment => renderAppointmentCard(appointment, false))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
         </div>
       </main>
       
       <Footer />
-    </div>
+    </BackgroundWrapper>
   );
 }
