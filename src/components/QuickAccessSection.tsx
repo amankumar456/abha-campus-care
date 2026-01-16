@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { 
   Calendar, 
   FileHeart, 
@@ -13,37 +14,37 @@ const quickAccessItems = [
     icon: Calendar,
     title: "Book Appointment",
     description: "Schedule OPD visits",
-    href: "#"
+    href: "/appointments"
   },
   {
     icon: FileHeart,
     title: "Health Records",
     description: "View your medical history",
-    href: "#"
+    href: "#health-services"
   },
   {
     icon: Pill,
     title: "Pharmacy",
     description: "Prescription & medications",
-    href: "#"
+    href: "#health-services"
   },
   {
     icon: Stethoscope,
     title: "Specialist Visits",
     description: "Book specialist consultations",
-    href: "#"
+    href: "/medical-team"
   },
   {
     icon: ClipboardList,
     title: "Medical Certificates",
     description: "Request sick leave docs",
-    href: "#"
+    href: "#health-services"
   },
   {
     icon: UserCheck,
     title: "Health Check-ups",
     description: "Preventive care programs",
-    href: "#"
+    href: "#health-services"
   }
 ];
 
@@ -62,24 +63,45 @@ const QuickAccessSection = () => {
         {/* Quick Access Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickAccessItems.map((item) => (
-            <a 
-              key={item.title}
-              href={item.href}
-              className="card-quick-access flex items-center gap-4"
-            >
-              <div className="icon-container-primary shrink-0">
-                <item.icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-muted-foreground truncate">
-                  {item.description}
-                </p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
-            </a>
+            item.href.startsWith('/') ? (
+              <Link 
+                key={item.title}
+                to={item.href}
+                className="card-quick-access flex items-center gap-4"
+              >
+                <div className="icon-container-primary shrink-0">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {item.description}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+              </Link>
+            ) : (
+              <a 
+                key={item.title}
+                href={item.href}
+                className="card-quick-access flex items-center gap-4"
+              >
+                <div className="icon-container-primary shrink-0">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {item.description}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
+              </a>
+            )
           ))}
         </div>
       </div>
