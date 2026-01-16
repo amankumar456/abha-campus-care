@@ -14,7 +14,234 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ambulance_service: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          equipment: string[] | null
+          id: string
+          is_active: boolean | null
+          phone_landline: string
+          phone_mobile: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          equipment?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          phone_landline: string
+          phone_mobile: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          equipment?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          phone_landline?: string
+          phone_mobile?: string
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string | null
+          doctor_type: string
+          id: string
+          medical_officer_id: string | null
+          notes: string | null
+          patient_id: string
+          reason: string | null
+          status: Database["public"]["Enums"]["appointment_status"] | null
+          updated_at: string | null
+          visiting_doctor_id: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string | null
+          doctor_type: string
+          id?: string
+          medical_officer_id?: string | null
+          notes?: string | null
+          patient_id: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          updated_at?: string | null
+          visiting_doctor_id?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string | null
+          doctor_type?: string
+          id?: string
+          medical_officer_id?: string | null
+          notes?: string | null
+          patient_id?: string
+          reason?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          updated_at?: string | null
+          visiting_doctor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_medical_officer_id_fkey"
+            columns: ["medical_officer_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_visiting_doctor_id_fkey"
+            columns: ["visiting_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "visiting_doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      management_team: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          name: string
+          position: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          position: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          position?: string
+        }
+        Relationships: []
+      }
+      medical_officers: {
+        Row: {
+          created_at: string | null
+          designation: string
+          email: string | null
+          id: string
+          is_senior: boolean | null
+          name: string
+          phone_mobile: string[] | null
+          phone_office: string | null
+          photo_url: string | null
+          qualification: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          designation: string
+          email?: string | null
+          id?: string
+          is_senior?: boolean | null
+          name: string
+          phone_mobile?: string[] | null
+          phone_office?: string | null
+          photo_url?: string | null
+          qualification: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          designation?: string
+          email?: string | null
+          id?: string
+          is_senior?: boolean | null
+          name?: string
+          phone_mobile?: string[] | null
+          phone_office?: string | null
+          photo_url?: string | null
+          qualification?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      visiting_doctors: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_monthly: boolean | null
+          month_week: number | null
+          name: string
+          photo_url: string | null
+          specialization: string
+          updated_at: string | null
+          visit_day: string
+          visit_time_end: string
+          visit_time_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_monthly?: boolean | null
+          month_week?: number | null
+          name: string
+          photo_url?: string | null
+          specialization: string
+          updated_at?: string | null
+          visit_day: string
+          visit_time_end: string
+          visit_time_start: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_monthly?: boolean | null
+          month_week?: number | null
+          name?: string
+          photo_url?: string | null
+          specialization?: string
+          updated_at?: string | null
+          visit_day?: string
+          visit_time_end?: string
+          visit_time_start?: string
+        }
+        Relationships: []
+      }
+      working_staff: {
+        Row: {
+          created_at: string | null
+          designation: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          photo_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          designation: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          designation?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +250,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +377,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      appointment_status: ["pending", "confirmed", "cancelled", "completed"],
+    },
   },
 } as const
