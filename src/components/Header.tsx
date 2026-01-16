@@ -1,5 +1,6 @@
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
@@ -10,7 +11,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section */}
-          <div className="flex items-center gap-4">
+          <Link to="/" className="flex items-center gap-4">
             <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">NIT</span>
             </div>
@@ -20,24 +21,24 @@ const Header = () => {
               </h1>
               <p className="text-sm text-muted-foreground">Warangal, Telangana</p>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#services" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              Services
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              About
-            </a>
-            <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              Contact
-            </a>
-            <Button variant="outline" size="sm">
-              Student Login
+            <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+              Medical Team
+            </Link>
+            <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+              Book Appointment
+            </Link>
+            <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+              My Appointments
+            </Link>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/auth">Sign In</Link>
             </Button>
-            <Button size="sm">
-              Doctor Portal
+            <Button asChild size="sm">
+              <Link to="/doctor/register">Doctor Portal</Link>
             </Button>
           </nav>
 
@@ -54,21 +55,21 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              <a href="#services" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                Services
-              </a>
-              <a href="#about" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                About
-              </a>
-              <a href="#contact" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                Contact
-              </a>
+              <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                Medical Team
+              </Link>
+              <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                Book Appointment
+              </Link>
+              <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                My Appointments
+              </Link>
               <div className="flex flex-col gap-2 pt-2">
-                <Button variant="outline" className="w-full">
-                  Student Login
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/auth">Sign In</Link>
                 </Button>
-                <Button className="w-full">
-                  Doctor Portal
+                <Button asChild className="w-full">
+                  <Link to="/doctor/register">Doctor Portal</Link>
                 </Button>
               </div>
             </div>
