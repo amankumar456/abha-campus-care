@@ -1,6 +1,7 @@
 import EmergencyBar from "@/components/EmergencyBar";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import InspirationalSection from "@/components/InspirationalSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import QuickAccessSection from "@/components/QuickAccessSection";
 import HealthCentreInfo from "@/components/HealthCentreInfo";
@@ -16,6 +17,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <InspirationalSection />
         <AppointmentDashboard />
         <FeaturesSection />
         <QuickAccessSection />
