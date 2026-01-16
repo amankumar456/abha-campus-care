@@ -11,6 +11,7 @@ import MedicalTeam from "./pages/MedicalTeam";
 import Appointments from "./pages/Appointments";
 import MyAppointments from "./pages/MyAppointments";
 import Auth from "./pages/Auth";
+import EmailConfirmation from "./pages/EmailConfirmation";
 import HealthDashboard from "./pages/HealthDashboard";
 import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
@@ -30,6 +31,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/email-confirmation" element={<EmailConfirmation />} />
           <Route path="/student/register" element={<StudentRegistration />} />
           <Route path="/doctor/register" element={<DoctorRegistration />} />
           <Route path="/doctor/dashboard" element={<DoctorDashboard />} />

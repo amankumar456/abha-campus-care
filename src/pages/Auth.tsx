@@ -124,11 +124,11 @@ export default function Auth() {
     
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: `${window.location.origin}/email-confirmation`,
         data: {
           full_name: fullName,
           user_type: userType,
@@ -152,12 +152,16 @@ export default function Auth() {
           variant: "destructive",
         });
       }
-    } else {
+    } else if (data.user && !data.session) {
+      // User created but needs email verification
+      navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
+    } else if (data.session) {
+      // Auto-confirm is enabled, user is already signed in
       toast({
         title: "Account Created!",
-        description: "You can now sign in with your credentials.",
+        description: "Welcome to the Health Portal.",
       });
-      setAuthView("signin");
+      navigate("/");
     }
   };
 
