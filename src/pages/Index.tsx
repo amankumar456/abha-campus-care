@@ -1,4 +1,3 @@
-import EmergencyBar from "@/components/EmergencyBar";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import InspirationalSection from "@/components/InspirationalSection";
@@ -13,7 +12,6 @@ import AppointmentDashboard from "@/components/appointments/AppointmentDashboard
 const Index = () => {
   return (
     <BackgroundWrapper>
-      <EmergencyBar />
       <Header />
       <main>
         <HeroSection />
