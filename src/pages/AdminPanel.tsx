@@ -8,12 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
+import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
 
 interface UserWithRoles {
   id: string;
@@ -37,6 +40,29 @@ interface Mentor {
   user_id: string | null;
 }
 
+interface MedicalOfficer {
+  id: string;
+  name: string;
+  designation: string;
+  qualification: string;
+  email: string | null;
+  phone_office: string | null;
+  phone_mobile: string[] | null;
+  is_senior: boolean;
+  user_id: string | null;
+}
+
+interface VisitingDoctor {
+  id: string;
+  name: string;
+  specialization: string;
+  visit_day: string;
+  visit_time_start: string;
+  visit_time_end: string;
+  is_monthly: boolean;
+  month_week: number | null;
+}
+
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-500',
   doctor: 'bg-blue-500',
@@ -50,9 +76,12 @@ const AdminPanel = () => {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [medicalOfficers, setMedicalOfficers] = useState<MedicalOfficer[]>([]);
+  const [visitingDoctors, setVisitingDoctors] = useState<VisitingDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('users');
   
   // Dialog states
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
@@ -109,7 +138,7 @@ const AdminPanel = () => {
       if (response.error) throw response.error;
       setUsers(response.data.users || []);
 
-      // Fetch unlinked doctors
+      // Fetch unlinked doctors for role linking
       const { data: doctorsData } = await supabase
         .from('medical_officers')
         .select('id, name, user_id');
@@ -120,6 +149,20 @@ const AdminPanel = () => {
         .from('mentors')
         .select('id, name, user_id');
       setMentors(mentorsData || []);
+
+      // Fetch all medical officers for management
+      const { data: medicalOfficersData } = await supabase
+        .from('medical_officers')
+        .select('*')
+        .order('name');
+      setMedicalOfficers(medicalOfficersData || []);
+
+      // Fetch all visiting doctors for management
+      const { data: visitingDoctorsData } = await supabase
+        .from('visiting_doctors')
+        .select('*')
+        .order('name');
+      setVisitingDoctors(visitingDoctorsData || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -276,13 +319,13 @@ const AdminPanel = () => {
                 <Shield className="h-8 w-8 text-primary" />
                 Admin Panel
               </h1>
-              <p className="text-muted-foreground">Manage user roles and permissions</p>
+              <p className="text-muted-foreground">Manage users, doctors, and system settings</p>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -293,7 +336,15 @@ const AdminPanel = () => {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Doctors</CardTitle>
+              <CardTitle className="text-sm font-medium">Admins</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('admin')).length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Doctor Roles</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('doctor')).length}</div>
@@ -301,23 +352,40 @@ const AdminPanel = () => {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Mentors</CardTitle>
+              <CardTitle className="text-sm font-medium">Medical Officers</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('mentor')).length}</div>
+              <div className="text-2xl font-bold">{medicalOfficers.length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Admins</CardTitle>
+              <CardTitle className="text-sm font-medium">Visiting Doctors</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('admin')).length}</div>
+              <div className="text-2xl font-bold">{visitingDoctors.length}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Users Table */}
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Users & Roles
+            </TabsTrigger>
+            <TabsTrigger value="medical-officers" className="flex items-center gap-2">
+              <Stethoscope className="h-4 w-4" />
+              Medical Officers
+            </TabsTrigger>
+            <TabsTrigger value="visiting-doctors" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              Visiting Doctors
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-4">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -411,86 +479,96 @@ const AdminPanel = () => {
           </CardContent>
         </Card>
 
-        {/* Add Role Dialog */}
-        <Dialog open={addRoleDialogOpen} onOpenChange={setAddRoleDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Role to User</DialogTitle>
-              <DialogDescription>
-                Assign a role and optionally link a profile
-              </DialogDescription>
-            </DialogHeader>
+            {/* Add Role Dialog */}
+            <Dialog open={addRoleDialogOpen} onOpenChange={setAddRoleDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Role to User</DialogTitle>
+                  <DialogDescription>
+                    Assign a role and optionally link a profile
+                  </DialogDescription>
+                </DialogHeader>
 
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                    <SelectItem value="mentor">Mentor</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="doctor">Doctor</SelectItem>
+                        <SelectItem value="mentor">Mentor</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {selectedRole === 'doctor' && unlinkedDoctors.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Link Doctor Profile (Optional)</Label>
-                  <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a doctor profile" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unlinkedDoctors.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {selectedRole === 'doctor' && unlinkedDoctors.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Link Doctor Profile (Optional)</Label>
+                      <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a doctor profile" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {unlinkedDoctors.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {selectedRole === 'mentor' && unlinkedMentors.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Link Mentor Profile (Optional)</Label>
+                      <Select value={selectedMentorId} onValueChange={setSelectedMentorId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a mentor profile" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {unlinkedMentors.map((m) => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {selectedRole === 'mentor' && unlinkedMentors.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Link Mentor Profile (Optional)</Label>
-                  <Select value={selectedMentorId} onValueChange={setSelectedMentorId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a mentor profile" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unlinkedMentors.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddRoleDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddRole} disabled={!selectedRole || submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      'Add Role'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAddRoleDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddRole} disabled={!selectedRole || submitting}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  'Add Role'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <TabsContent value="medical-officers">
+            <MedicalOfficersTab officers={medicalOfficers} onRefresh={fetchData} />
+          </TabsContent>
+
+          <TabsContent value="visiting-doctors">
+            <VisitingDoctorsTab doctors={visitingDoctors} onRefresh={fetchData} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
