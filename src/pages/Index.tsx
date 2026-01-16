@@ -10,12 +10,14 @@ import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
 import AppointmentDashboard from "@/components/appointments/AppointmentDashboard";
 import HealthServicesSection from "@/components/HealthServicesSection";
 import HospitalIntegration from "@/components/HospitalIntegration";
+import WelcomeBanner from "@/components/WelcomeBanner";
 
 const Index = () => {
   return (
     <BackgroundWrapper>
       <Header />
       <main>
+        <WelcomeBanner />
         <HeroSection />
         <InspirationalSection />
         <AppointmentDashboard />
