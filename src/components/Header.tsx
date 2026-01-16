@@ -40,6 +40,9 @@ const Header = () => {
             <Button asChild variant="outline" size="sm">
               <Link to="/auth">Sign In</Link>
             </Button>
+            <Button asChild variant="secondary" size="sm">
+              <Link to="/admin">Admin Portal</Link>
+            </Button>
             <Button asChild size="sm">
               <Link to="/doctor/register">Doctor Portal</Link>
             </Button>
@@ -73,6 +76,9 @@ const Header = () => {
               <div className="flex flex-col gap-2 pt-2">
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button asChild variant="secondary" className="w-full">
+                  <Link to="/admin">Admin Portal</Link>
                 </Button>
                 <Button asChild className="w-full">
                   <Link to="/doctor/register">Doctor Portal</Link>
