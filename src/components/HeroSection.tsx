@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { GraduationCap, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-health-center.jpg";
+import heroImage from "@/assets/nitw-building.png";
 
 const HeroSection = () => {
   return (
