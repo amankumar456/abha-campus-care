@@ -2,8 +2,8 @@ import { Clock, MapPin, Phone, Mail } from "lucide-react";
 
 const HealthCentreInfo = () => {
   return (
-    <section className="py-20 bg-muted/30" id="about">
-      <div className="container mx-auto px-4">
+    <section className="py-20" id="about">
+      <div className="container mx-auto px-4 bg-white/92 backdrop-blur-sm rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] p-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Info Content */}
           <div>

@@ -2,19 +2,22 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import nitwLogo from "@/assets/nitw-logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-card border-b border-border sticky top-0 z-50">
+    <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">NIT</span>
-            </div>
+            <img 
+              src={nitwLogo} 
+              alt="NIT Warangal Logo" 
+              className="w-14 h-14 object-contain"
+            />
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-foreground leading-tight">
                 National Institute of Technology
