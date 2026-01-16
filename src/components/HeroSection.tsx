@@ -45,11 +45,13 @@ const HeroSection = () => {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Button className="btn-hero-secondary group">
-              <Stethoscope className="h-5 w-5" />
-              Medical Staff Access
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
+            <Link to="/doctor/register">
+              <Button className="btn-hero-secondary group w-full sm:w-auto">
+                <Stethoscope className="h-5 w-5" />
+                Medical Staff Access
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
           </div>
 
           {/* Stats */}
