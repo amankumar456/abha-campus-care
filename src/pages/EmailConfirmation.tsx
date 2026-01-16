@@ -5,10 +5,15 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Mail, CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw, Lock, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 
-type ConfirmationState = "pending" | "verifying" | "success" | "error";
+type ConfirmationState = "pending" | "verifying" | "success" | "error" | "reset-password" | "password-updated";
+
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
 export default function EmailConfirmation() {
   const navigate = useNavigate();
@@ -18,6 +23,10 @@ export default function EmailConfirmation() {
   const [state, setState] = useState<ConfirmationState>("pending");
   const [email, setEmail] = useState<string>("");
   const [isResending, setIsResending] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
     // Get email from URL params (passed from signup)
@@ -31,18 +40,75 @@ export default function EmailConfirmation() {
     const type = searchParams.get("type");
 
     if (token_hash && type) {
-      handleVerification(token_hash, type);
+      if (type === "recovery") {
+        // Handle password reset
+        handlePasswordResetVerification(token_hash);
+      } else {
+        handleVerification(token_hash, type);
+      }
     }
 
     // Also handle the case where Supabase redirects with access_token in hash
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get("access_token");
     const refreshToken = hashParams.get("refresh_token");
+    const hashType = hashParams.get("type");
 
     if (accessToken && refreshToken) {
-      handleTokenVerification(accessToken, refreshToken);
+      if (hashType === "recovery") {
+        handlePasswordResetSession(accessToken, refreshToken);
+      } else {
+        handleTokenVerification(accessToken, refreshToken);
+      }
     }
   }, [searchParams]);
+
+  const handlePasswordResetVerification = async (tokenHash: string) => {
+    setState("verifying");
+    
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: "recovery",
+      });
+
+      if (error) {
+        console.error("Password reset verification error:", error);
+        setState("error");
+        toast({
+          title: "Reset Link Invalid",
+          description: "The password reset link may have expired. Please request a new one.",
+          variant: "destructive",
+        });
+      } else {
+        setState("reset-password");
+      }
+    } catch (error) {
+      console.error("Password reset verification error:", error);
+      setState("error");
+    }
+  };
+
+  const handlePasswordResetSession = async (accessToken: string, refreshToken: string) => {
+    setState("verifying");
+    
+    try {
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error) {
+        console.error("Session error:", error);
+        setState("error");
+      } else {
+        setState("reset-password");
+      }
+    } catch (error) {
+      console.error("Session error:", error);
+      setState("error");
+    }
+  };
 
   const handleVerification = async (tokenHash: string, type: string) => {
     setState("verifying");
@@ -67,7 +133,6 @@ export default function EmailConfirmation() {
           title: "Email Verified!",
           description: "Your email has been verified successfully.",
         });
-        // Redirect to home after a short delay
         setTimeout(() => navigate("/"), 2000);
       }
     } catch (error) {
@@ -99,6 +164,49 @@ export default function EmailConfirmation() {
     } catch (error) {
       console.error("Session error:", error);
       setState("error");
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+
+    // Validate password
+    try {
+      passwordSchema.parse(newPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setPasswordError(error.errors[0].message);
+        return;
+      }
+    }
+
+    // Check passwords match
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    setIsUpdatingPassword(false);
+
+    if (error) {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setState("password-updated");
+      toast({
+        title: "Password Updated!",
+        description: "Your password has been changed successfully.",
+      });
     }
   };
 
@@ -138,6 +246,105 @@ export default function EmailConfirmation() {
     }
   };
 
+  // Password reset form
+  if (state === "reset-password") {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <KeyRound className="w-8 h-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Set New Password</CardTitle>
+              <CardDescription>
+                Enter your new password below
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {passwordError && (
+                  <p className="text-sm text-destructive">{passwordError}</p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isUpdatingPassword}>
+                  {isUpdatingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Password updated success
+  if (state === "password-updated") {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <Card className="w-full max-w-md text-center">
+            <CardHeader>
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl text-green-600">Password Updated!</CardTitle>
+              <CardDescription>
+                Your password has been changed successfully. You can now sign in with your new password.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/auth")} className="w-full">
+                Go to Sign In
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // Verifying state
   if (state === "verifying") {
     return (
@@ -149,9 +356,9 @@ export default function EmailConfirmation() {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
-              <CardTitle className="text-2xl">Verifying Email</CardTitle>
+              <CardTitle className="text-2xl">Verifying</CardTitle>
               <CardDescription>
-                Please wait while we verify your email address...
+                Please wait while we verify your request...
               </CardDescription>
             </CardHeader>
           </Card>
@@ -202,7 +409,7 @@ export default function EmailConfirmation() {
               </div>
               <CardTitle className="text-2xl text-red-600">Verification Failed</CardTitle>
               <CardDescription>
-                The verification link may have expired or is invalid. Please try again.
+                The link may have expired or is invalid. Please try again.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
