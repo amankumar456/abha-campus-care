@@ -20,6 +20,7 @@ import {
   LogOut,
   Settings,
   User,
+  UserSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 
 // Mock data
 const mockDoctor = {
@@ -71,6 +73,7 @@ const mockRecentPatients = [
 
 export default function DoctorDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,7 +141,7 @@ export default function DoctorDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Section */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">
             Good Morning, {mockDoctor.name}
           </h1>
@@ -147,27 +150,42 @@ export default function DoctorDashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {mockStats.map((stat) => (
-            <Card key={stat.label} className="border">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  </div>
-                  <div className={`w-12 h-12 rounded-xl bg-muted flex items-center justify-center ${stat.color}`}>
-                    <stat.icon className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="student-search" className="flex items-center gap-2">
+              <UserSearch className="w-4 h-4" />
+              Student Records
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Main Dashboard Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {mockStats.map((stat) => (
+                <Card key={stat.label} className="border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                        <p className="text-sm text-muted-foreground">{stat.label}</p>
+                      </div>
+                      <div className={`w-12 h-12 rounded-xl bg-muted flex items-center justify-center ${stat.color}`}>
+                        <stat.icon className="w-6 h-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Main Dashboard Grid */}
+            <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Appointments */}
           <div className="lg:col-span-2 space-y-6">
             {/* Search Bar */}
@@ -375,6 +393,13 @@ export default function DoctorDashboard() {
             </Card>
           </div>
         </div>
+          </TabsContent>
+
+          {/* Student Search Tab */}
+          <TabsContent value="student-search">
+            <StudentSearchPanel />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
