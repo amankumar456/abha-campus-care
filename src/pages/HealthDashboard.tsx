@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Calendar, AlertTriangle, Activity, Plus, Search, FileText, Download, Eye } from 'lucide-react';
+import { 
+  Users, Calendar, AlertTriangle, Activity, Plus, Search, FileText, Download, Eye,
+  CalendarCheck, Heart, ClipboardList, Pill, Stethoscope, Clock, ArrowRight, User
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 interface DashboardStats {
   totalStudents: number;
@@ -85,6 +90,19 @@ const DUMMY_SLOTS = [
   { time: '03:00 PM', doctor: 'Dr. Lakshmi Devi (Derma)', available: 1 },
 ];
 
+// Dummy student appointments
+const DUMMY_STUDENT_APPOINTMENTS = [
+  { id: '1', date: '2026-01-20', time: '10:00 AM', doctor: 'Dr. Rajesh Kumar', type: 'General Checkup', status: 'confirmed' },
+  { id: '2', date: '2026-01-25', time: '02:30 PM', doctor: 'Dr. Priya Sharma', type: 'Follow-up', status: 'pending' },
+];
+
+// Dummy student visits
+const DUMMY_STUDENT_VISITS = [
+  { id: '1', date: '2026-01-05', reason: 'Fever & Cold', doctor: 'Dr. Rajesh Kumar', prescription: 'Paracetamol, Rest' },
+  { id: '2', date: '2025-12-15', reason: 'Routine Checkup', doctor: 'Dr. Priya Sharma', prescription: 'Vitamin supplements' },
+  { id: '3', date: '2025-11-20', reason: 'Sports Injury', doctor: 'Dr. Suresh Menon', prescription: 'Physiotherapy' },
+];
+
 const HealthDashboard = () => {
   const navigate = useNavigate();
   const { user, isDoctor, isMentor, loading: roleLoading, mentorId } = useUserRole();
@@ -100,8 +118,13 @@ const HealthDashboard = () => {
   }, [user, roleLoading, navigate]);
 
   useEffect(() => {
-    if (!roleLoading && user && (isDoctor || isMentor)) {
-      fetchDashboardData();
+    if (!roleLoading && user) {
+      if (isDoctor || isMentor) {
+        fetchDashboardData();
+      } else {
+        // Student view - just set loading to false
+        setLoading(false);
+      }
     }
   }, [roleLoading, user, isDoctor, isMentor, mentorId]);
 
@@ -141,7 +164,7 @@ const HealthDashboard = () => {
         .order('visit_date', { ascending: false })
         .limit(5);
 
-      // Calculate frequent visitors (students with 3+ visits in last 3 months)
+      // Calculate frequent visitors
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       
@@ -218,10 +241,15 @@ const HealthDashboard = () => {
     }
   };
 
+  const getUserDisplayName = () => {
+    return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  };
+
   if (roleLoading || loading) {
     return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-7xl mx-auto p-8 space-y-8">
           <Skeleton className="h-12 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
@@ -229,28 +257,227 @@ const HealthDashboard = () => {
             ))}
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
+  // Student Dashboard View
   if (!isDoctor && !isMentor) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Access Restricted</CardTitle>
-            <CardDescription>
-              You don't have permission to access the Health Dashboard. 
-              Please contact an administrator to get the appropriate role assigned.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="max-w-7xl mx-auto p-8 space-y-8">
+          {/* Welcome Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Welcome, {getUserDisplayName()}!</h1>
+              <p className="text-muted-foreground mt-1">
+                Your personal health dashboard
+              </p>
+            </div>
+            <Button asChild>
+              <Link to="/appointments">
+                <CalendarCheck className="h-4 w-4 mr-2" />
+                Book Appointment
+              </Link>
+            </Button>
+          </div>
+
+          {/* Quick Stats for Students */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/my-appointments')}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
+                <Calendar className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{DUMMY_STUDENT_APPOINTMENTS.length}</div>
+                <p className="text-xs text-muted-foreground">Scheduled visits</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Visits</CardTitle>
+                <Heart className="h-4 w-4 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{DUMMY_STUDENT_VISITS.length}</div>
+                <p className="text-xs text-muted-foreground">This year</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Health Records</CardTitle>
+                <FileText className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">5</div>
+                <p className="text-xs text-muted-foreground">Documents available</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Next Appointment</CardTitle>
+                <Clock className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-bold">Jan 20</div>
+                <p className="text-xs text-muted-foreground">10:00 AM - Dr. Rajesh</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upcoming Appointments */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarCheck className="h-5 w-5 text-primary" />
+                      Upcoming Appointments
+                    </CardTitle>
+                    <CardDescription>Your scheduled visits</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/my-appointments">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {DUMMY_STUDENT_APPOINTMENTS.map((apt) => (
+                    <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Stethoscope className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{apt.doctor}</p>
+                          <p className="text-sm text-muted-foreground">{apt.type}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{format(new Date(apt.date), 'MMM d, yyyy')}</p>
+                        <p className="text-sm text-muted-foreground">{apt.time}</p>
+                        <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
+                          {apt.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Visit History */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Recent Visit History
+                </CardTitle>
+                <CardDescription>Your past health centre visits</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {DUMMY_STUDENT_VISITS.map((visit) => (
+                    <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div>
+                        <p className="font-medium">{visit.reason}</p>
+                        <p className="text-sm text-muted-foreground">{visit.doctor}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm">{format(new Date(visit.date), 'MMM d, yyyy')}</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <Pill className="h-3 w-3" />
+                          {visit.prescription}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks you can do</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+                  <Link to="/appointments">
+                    <CalendarCheck className="h-6 w-6" />
+                    <span>Book Appointment</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+                  <Link to="/my-appointments">
+                    <Calendar className="h-6 w-6" />
+                    <span>My Appointments</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+                  <Link to="/medical-team">
+                    <Stethoscope className="h-6 w-6" />
+                    <span>Medical Team</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+                  <Link to="/student/register">
+                    <User className="h-6 w-6" />
+                    <span>Update Profile</span>
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Today's Available Slots */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Today's Available Appointment Slots
+              </CardTitle>
+              <CardDescription>Quick view of available slots for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {DUMMY_SLOTS.map((slot, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-lg border text-center hover:border-primary transition-colors cursor-pointer"
+                    onClick={() => navigate('/appointments')}
+                  >
+                    <p className="font-semibold text-lg">{slot.time}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
+                    <Badge variant={slot.available > 2 ? "secondary" : "destructive"}>
+                      {slot.available} slots left
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
       </div>
     );
   }
 
+  // Doctor/Mentor Dashboard View
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="max-w-7xl mx-auto p-8 space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -477,6 +704,7 @@ const HealthDashboard = () => {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 };

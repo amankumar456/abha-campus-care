@@ -31,20 +31,48 @@ export default function Auth() {
   const [authView, setAuthView] = useState<AuthView>("select");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSessionAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/');
+        await redirectBasedOnRole(session.user);
       }
-    });
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session) {
-        navigate('/');
+    checkSessionAndRedirect();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session && event === 'SIGNED_IN') {
+        await redirectBasedOnRole(session.user);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const redirectBasedOnRole = async (authUser: any) => {
+    // Check user type from metadata
+    const userType = authUser?.user_metadata?.user_type;
+    
+    // Check if user has doctor role in database
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', authUser.id);
+    
+    const isDoctor = roles?.some(r => r.role === 'doctor');
+    const isMentor = roles?.some(r => r.role === 'mentor');
+    const isAdmin = roles?.some(r => r.role === 'admin');
+
+    if (isAdmin) {
+      navigate('/admin');
+    } else if (isDoctor || userType === 'doctor') {
+      navigate('/doctor/dashboard');
+    } else if (isMentor) {
+      navigate('/health-dashboard');
+    } else {
+      navigate('/health-dashboard');
+    }
+  };
 
   const resetForm = () => {
     setEmail("");
