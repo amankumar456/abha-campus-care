@@ -25,7 +25,7 @@ const BackgroundWrapper = ({ children, className = "" }: BackgroundWrapperProps)
       <div 
         className="fixed inset-0 -z-10"
         style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.88)',
+          backgroundColor: 'rgba(255, 255, 255, 0.65)',
         }}
       />
       
