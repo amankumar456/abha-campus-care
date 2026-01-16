@@ -88,21 +88,6 @@ const HealthCentreInfo = () => {
                 </div>
               </div>
             </div>
-
-            {/* Specialist Services */}
-            <div className="mt-8 pt-6 border-t border-white/20">
-              <h4 className="font-semibold mb-3">Visiting Specialists</h4>
-              <div className="flex flex-wrap gap-2">
-                {["Orthopaedics", "Dermatology", "Gynaecology", "Ophthalmology", "Psychiatry"].map((spec) => (
-                  <span 
-                    key={spec}
-                    className="px-3 py-1 bg-white/10 rounded-full text-sm"
-                  >
-                    {spec}
-                  </span>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>
