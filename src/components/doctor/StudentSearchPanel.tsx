@@ -17,8 +17,11 @@ import {
   ChevronRight,
   AlertCircle,
   Loader2,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Student {
   id: string;
@@ -127,6 +130,118 @@ const StudentSearchPanel = () => {
     }
   };
 
+  const exportToPDF = () => {
+    if (!selectedStudent) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(0, 51, 102);
+    doc.text("NIT Warangal Health Centre", pageWidth / 2, 20, { align: "center" });
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Student Health Records", pageWidth / 2, 28, { align: "center" });
+
+    // Student Info
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Student: ${selectedStudent.full_name}`, 14, 45);
+    doc.text(`Roll Number: ${selectedStudent.roll_number}`, 14, 52);
+    doc.text(`Program: ${selectedStudent.program} | Batch: ${selectedStudent.batch}`, 14, 59);
+    if (selectedStudent.email) {
+      doc.text(`Email: ${selectedStudent.email}`, 14, 66);
+    }
+    
+    doc.text(`Report Generated: ${format(new Date(), "dd MMM yyyy, hh:mm a")}`, 14, 76);
+
+    // Divider
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 82, pageWidth - 14, 82);
+
+    // Health Visits Table
+    if (healthVisits && healthVisits.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(0, 51, 102);
+      doc.text("Health Visit History", 14, 92);
+
+      const visitData = healthVisits.map((visit) => [
+        format(new Date(visit.visit_date), "dd MMM yyyy"),
+        formatReasonCategory(visit.reason_category),
+        visit.reason_subcategory || "-",
+        visit.diagnosis || "-",
+        visit.prescription || "-",
+        visit.follow_up_required ? "Yes" : "No",
+      ]);
+
+      autoTable(doc, {
+        startY: 98,
+        head: [["Date", "Reason", "Sub-Category", "Diagnosis", "Prescription", "Follow-up"]],
+        body: visitData,
+        theme: "striped",
+        headStyles: { fillColor: [0, 51, 102] },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 45 },
+          5: { cellWidth: 20 },
+        },
+      });
+    } else {
+      doc.setFontSize(11);
+      doc.setTextColor(100, 100, 100);
+      doc.text("No health visit records found.", 14, 92);
+    }
+
+    // Appointments Table
+    const finalY = (doc as any).lastAutoTable?.finalY || 100;
+    
+    if (appointments && appointments.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(0, 51, 102);
+      doc.text("Appointment History", 14, finalY + 15);
+
+      const appointmentData = appointments.map((apt) => [
+        format(new Date(apt.appointment_date), "dd MMM yyyy"),
+        apt.appointment_time,
+        apt.doctor_type,
+        apt.reason || "-",
+        apt.status?.charAt(0).toUpperCase() + apt.status?.slice(1) || "-",
+      ]);
+
+      autoTable(doc, {
+        startY: finalY + 21,
+        head: [["Date", "Time", "Doctor Type", "Reason", "Status"]],
+        body: appointmentData,
+        theme: "striped",
+        headStyles: { fillColor: [0, 102, 51] },
+        styles: { fontSize: 9, cellPadding: 3 },
+      });
+    }
+
+    // Footer
+    const pageCount = doc.internal.pages.length - 1;
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        "This is a confidential medical document. Unauthorized distribution is prohibited.",
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    }
+
+    // Save
+    doc.save(`${selectedStudent.roll_number}_health_records.pdf`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Search Section */}
@@ -230,15 +345,25 @@ const StudentSearchPanel = () => {
                   )}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedStudent(null);
-                  setSearchQuery("");
-                }}
-              >
-                Clear
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  onClick={exportToPDF}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedStudent(null);
+                    setSearchQuery("");
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
