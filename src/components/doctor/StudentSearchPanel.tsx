@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   User,
@@ -18,10 +26,22 @@ import {
   AlertCircle,
   Loader2,
   Download,
+  Filter,
+  X,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter, isBefore, parseISO, startOfDay, endOfDay } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+const REASON_CATEGORIES = [
+  { value: "all", label: "All Categories" },
+  { value: "medical_illness", label: "Medical Illness" },
+  { value: "injury", label: "Injury" },
+  { value: "mental_wellness", label: "Mental Wellness" },
+  { value: "vaccination", label: "Vaccination" },
+  { value: "routine_checkup", label: "Routine Checkup" },
+  { value: "other", label: "Other" },
+];
 
 interface Student {
   id: string;
@@ -56,6 +76,11 @@ interface Appointment {
 const StudentSearchPanel = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  
+  // Filter states
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Search students by name or roll number
   const { data: students, isLoading: isSearching } = useQuery({
@@ -110,6 +135,45 @@ const StudentSearchPanel = () => {
     },
     enabled: !!selectedStudent,
   });
+
+  // Filter health visits based on date range and category
+  const filteredHealthVisits = useMemo(() => {
+    if (!healthVisits) return [];
+    
+    return healthVisits.filter((visit) => {
+      // Category filter
+      if (selectedCategory !== "all" && visit.reason_category !== selectedCategory) {
+        return false;
+      }
+      
+      // Date range filter
+      const visitDate = parseISO(visit.visit_date);
+      
+      if (dateFrom) {
+        const fromDate = startOfDay(parseISO(dateFrom));
+        if (isBefore(visitDate, fromDate)) {
+          return false;
+        }
+      }
+      
+      if (dateTo) {
+        const toDate = endOfDay(parseISO(dateTo));
+        if (isAfter(visitDate, toDate)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [healthVisits, dateFrom, dateTo, selectedCategory]);
+
+  const clearFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setSelectedCategory("all");
+  };
+
+  const hasActiveFilters = dateFrom || dateTo || selectedCategory !== "all";
 
   const formatReasonCategory = (category: string) => {
     return category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
@@ -381,13 +445,76 @@ const StudentSearchPanel = () => {
 
               {/* Health History Tab */}
               <TabsContent value="health-history" className="mt-4">
+                {/* Filters Section */}
+                <Card className="mb-4 bg-muted/30">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Filters</span>
+                      {hasActiveFilters && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearFilters}
+                          className="ml-auto h-7 text-xs"
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="date-from" className="text-xs">From Date</Label>
+                        <Input
+                          id="date-from"
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="date-to" className="text-xs">To Date</Label>
+                        <Input
+                          id="date-to"
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="category" className="text-xs">Reason Category</Label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger id="category" className="h-9">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {REASON_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {hasActiveFilters && (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Showing {filteredHealthVisits.length} of {healthVisits?.length || 0} records
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
                 {isLoadingVisits ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   </div>
-                ) : healthVisits && healthVisits.length > 0 ? (
+                ) : filteredHealthVisits.length > 0 ? (
                   <div className="space-y-3">
-                    {healthVisits.map((visit) => (
+                    {filteredHealthVisits.map((visit) => (
                       <Card key={visit.id} className="border-l-4 border-l-primary">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
@@ -442,6 +569,14 @@ const StudentSearchPanel = () => {
                         </CardContent>
                       </Card>
                     ))}
+                  </div>
+                ) : healthVisits && healthVisits.length > 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <Filter className="w-12 h-12 mb-3 opacity-50" />
+                    <p>No records match your filters</p>
+                    <Button variant="link" onClick={clearFilters} className="mt-2">
+                      Clear filters
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
