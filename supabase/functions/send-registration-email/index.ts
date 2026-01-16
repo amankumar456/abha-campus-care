@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
-
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +16,20 @@ interface RegistrationEmailRequest {
   rollNumber?: string;
 }
 
+// Input validation schemas
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 255;
+};
+
+const validateName = (name: string): boolean => {
+  return name.length >= 2 && name.length <= 100 && /^[a-zA-Z\s.'-]+$/.test(name);
+};
+
+const validateUserType = (type: string): type is "student" | "doctor" | "mentor" => {
+  return ["student", "doctor", "mentor"].includes(type);
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -24,7 +37,69 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, userType, rollNumber }: RegistrationEmailRequest = await req.json();
+    // Verify JWT token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Validate the JWT
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !data?.user) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const body = await req.json();
+    const { email, name, userType, rollNumber }: RegistrationEmailRequest = body;
+
+    // Validate inputs
+    if (!email || !validateEmail(email)) {
+      return new Response(JSON.stringify({ error: 'Invalid email format' }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (!name || !validateName(name)) {
+      return new Response(JSON.stringify({ error: 'Invalid name format' }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (!userType || !validateUserType(userType)) {
+      return new Response(JSON.stringify({ error: 'Invalid user type' }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Sanitize name for HTML
+    const sanitizedName = name.replace(/[<>&"']/g, (char) => {
+      const entities: Record<string, string> = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return entities[char] || char;
+    });
 
     const userTypeLabels = {
       student: "Student",
@@ -77,11 +152,11 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-            <h2 style="color: #1a365d; margin-top: 0;">Welcome, ${name}! 🎉</h2>
+            <h2 style="color: #1a365d; margin-top: 0;">Welcome, ${sanitizedName}! 🎉</h2>
             
             <p>Thank you for registering with the NIT Warangal Health Portal as a <strong>${userTypeLabels[userType]}</strong>.</p>
             
-            ${rollNumber ? `<p><strong>Roll Number:</strong> ${rollNumber}</p>` : ''}
+            ${rollNumber ? `<p><strong>Roll Number:</strong> ${rollNumber.replace(/[<>&"']/g, '')}</p>` : ''}
             
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
               ${welcomeMessages[userType]}
