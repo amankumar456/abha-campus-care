@@ -30,6 +30,39 @@ export const personalInfoSchema = z.object({
     .trim()
     .min(2, "Relationship must be at least 2 characters")
     .max(50, "Relationship must be less than 50 characters"),
+  // Parent Details
+  fatherName: z
+    .string()
+    .trim()
+    .min(2, "Father's name must be at least 2 characters")
+    .max(100, "Father's name must be less than 100 characters"),
+  fatherContact: z
+    .string()
+    .trim()
+    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
+  motherName: z
+    .string()
+    .trim()
+    .min(2, "Mother's name must be at least 2 characters")
+    .max(100, "Mother's name must be less than 100 characters"),
+  motherContact: z
+    .string()
+    .trim()
+    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
+  // Mentor Details
+  mentorName: z
+    .string()
+    .trim()
+    .min(2, "Mentor name must be at least 2 characters")
+    .max(100, "Mentor name must be less than 100 characters"),
+  mentorContact: z
+    .string()
+    .trim()
+    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
+  mentorEmail: z
+    .string()
+    .trim()
+    .email("Invalid email address"),
 });
 
 export const academicInfoSchema = z.object({

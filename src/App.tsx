@@ -16,6 +16,7 @@ import HealthDashboard from "./pages/HealthDashboard";
 import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
 import AdminPanel from "./pages/AdminPanel";
+import MentorDashboard from "./pages/MentorDashboard";
 import NotFound from "./pages/NotFound";
 import BackNavigation from "./components/BackNavigation";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -63,6 +64,9 @@ const App = () => (
           } />
           <Route path="/admin" element={
             <ProtectedRoute><AdminPanel /></ProtectedRoute>
+          } />
+          <Route path="/mentor/dashboard" element={
+            <ProtectedRoute><MentorDashboard /></ProtectedRoute>
           } />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
