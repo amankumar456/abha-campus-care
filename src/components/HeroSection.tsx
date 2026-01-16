@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { GraduationCap, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-health-center.jpg";
@@ -37,11 +38,13 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <Button className="btn-hero-primary group">
-              <GraduationCap className="h-5 w-5" />
-              Student Portal
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
+            <Link to="/student/register">
+              <Button className="btn-hero-primary group w-full sm:w-auto">
+                <GraduationCap className="h-5 w-5" />
+                Student Registration
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
             <Button className="btn-hero-secondary group">
               <Stethoscope className="h-5 w-5" />
               Medical Staff Access
