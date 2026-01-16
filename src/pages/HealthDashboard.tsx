@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Calendar, AlertTriangle, Activity, Plus, Search } from 'lucide-react';
+import { Users, Calendar, AlertTriangle, Activity, Plus, Search, FileText, Download, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 
@@ -31,6 +31,59 @@ interface RecentVisit {
     full_name: string;
   };
 }
+
+// Dummy health records data
+const DUMMY_HEALTH_RECORDS = [
+  {
+    id: '1',
+    title: 'Annual Health Checkup Report',
+    date: '2026-01-10',
+    type: 'Medical Report',
+    student: 'Rahul Sharma (21CS1001)',
+    pdfUrl: '#'
+  },
+  {
+    id: '2',
+    title: 'Blood Test Results',
+    date: '2026-01-08',
+    type: 'Lab Report',
+    student: 'Priya Patel (21EC2002)',
+    pdfUrl: '#'
+  },
+  {
+    id: '3',
+    title: 'Vaccination Certificate - COVID-19',
+    date: '2025-12-15',
+    type: 'Certificate',
+    student: 'Arun Kumar (22ME3003)',
+    pdfUrl: '#'
+  },
+  {
+    id: '4',
+    title: 'Fitness Certificate for Sports',
+    date: '2025-12-10',
+    type: 'Certificate',
+    student: 'Sneha Reddy (22CE4004)',
+    pdfUrl: '#'
+  },
+  {
+    id: '5',
+    title: 'Mental Wellness Assessment',
+    date: '2025-11-28',
+    type: 'Assessment',
+    student: 'Vikram Singh (23EE5005)',
+    pdfUrl: '#'
+  }
+];
+
+// Dummy upcoming appointment slots
+const DUMMY_SLOTS = [
+  { time: '09:00 AM', doctor: 'Dr. Rajesh Kumar', available: 3 },
+  { time: '10:00 AM', doctor: 'Dr. Priya Sharma', available: 2 },
+  { time: '11:00 AM', doctor: 'Dr. Suresh Menon (Ortho)', available: 5 },
+  { time: '02:00 PM', doctor: 'Dr. Anil Reddy', available: 4 },
+  { time: '03:00 PM', doctor: 'Dr. Lakshmi Devi (Derma)', available: 1 },
+];
 
 const HealthDashboard = () => {
   const navigate = useNavigate();
@@ -153,6 +206,16 @@ const HealthDashboard = () => {
 
   const formatReasonCategory = (category: string) => {
     return category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getRecordTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'Medical Report': return 'bg-blue-100 text-blue-800';
+      case 'Lab Report': return 'bg-purple-100 text-purple-800';
+      case 'Certificate': return 'bg-green-100 text-green-800';
+      case 'Assessment': return 'bg-amber-100 text-amber-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (roleLoading || loading) {
@@ -339,6 +402,80 @@ const HealthDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Health Records Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Health Records & Documents
+            </CardTitle>
+            <CardDescription>Recent medical reports, certificates, and assessments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {DUMMY_HEALTH_RECORDS.map((record) => (
+                <div
+                  key={record.id}
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{record.title}</p>
+                      <p className="text-sm text-muted-foreground">{record.student}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRecordTypeBadgeColor(record.type)}`}>
+                      {record.type}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(record.date), 'MMM d, yyyy')}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Today's Available Slots */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Today's Available Appointment Slots
+            </CardTitle>
+            <CardDescription>Quick view of available slots for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {DUMMY_SLOTS.map((slot, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-lg border text-center hover:border-primary transition-colors"
+                >
+                  <p className="font-semibold text-lg">{slot.time}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
+                  <Badge variant={slot.available > 2 ? "secondary" : "destructive"}>
+                    {slot.available} slots left
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
