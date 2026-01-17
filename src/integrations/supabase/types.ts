@@ -332,42 +332,57 @@ export type Database = {
       students: {
         Row: {
           batch: string
+          branch: string | null
           created_at: string
           email: string | null
           full_name: string
           id: string
+          mentor_contact: string | null
+          mentor_email: string | null
           mentor_id: string | null
+          mentor_name: string | null
           phone: string | null
           program: string
           roll_number: string
           updated_at: string
           user_id: string | null
+          year_of_study: string | null
         }
         Insert: {
           batch: string
+          branch?: string | null
           created_at?: string
           email?: string | null
           full_name: string
           id?: string
+          mentor_contact?: string | null
+          mentor_email?: string | null
           mentor_id?: string | null
+          mentor_name?: string | null
           phone?: string | null
           program: string
           roll_number: string
           updated_at?: string
           user_id?: string | null
+          year_of_study?: string | null
         }
         Update: {
           batch?: string
+          branch?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
           id?: string
+          mentor_contact?: string | null
+          mentor_email?: string | null
           mentor_id?: string | null
+          mentor_name?: string | null
           phone?: string | null
           program?: string
           roll_number?: string
           updated_at?: string
           user_id?: string | null
+          year_of_study?: string | null
         }
         Relationships: [
           {

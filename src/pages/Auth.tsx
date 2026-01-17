@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone } from "lucide-react";
 import { z } from "zod";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { 
@@ -18,9 +19,34 @@ import {
   loginPasswordSchema,
   nameSchema 
 } from "@/lib/security/validation";
+import { DEPARTMENTS, YEARS_OF_STUDY, PROGRAMMES } from "@/lib/validations/student-registration";
 
 type UserType = "student" | "doctor" | "mentor";
 type AuthView = "select" | "signin" | "signup" | "forgot";
+
+interface StudentFormData {
+  rollNumber: string;
+  branch: string;
+  yearOfStudy: string;
+  programme: string;
+  mentorName: string;
+  mentorContact: string;
+  mentorEmail: string;
+  phone: string;
+}
+
+interface FormErrors {
+  email?: string;
+  password?: string;
+  fullName?: string;
+  rollNumber?: string;
+  branch?: string;
+  yearOfStudy?: string;
+  programme?: string;
+  mentorName?: string;
+  mentorContact?: string;
+  phone?: string;
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -30,9 +56,21 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [userType, setUserType] = useState<UserType | null>(null);
   const [authView, setAuthView] = useState<AuthView>("select");
+  
+  // Student-specific registration fields
+  const [studentData, setStudentData] = useState<StudentFormData>({
+    rollNumber: "",
+    branch: "",
+    yearOfStudy: "",
+    programme: "",
+    mentorName: "",
+    mentorContact: "",
+    mentorEmail: "",
+    phone: "",
+  });
 
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
@@ -83,6 +121,16 @@ export default function Auth() {
     setPassword("");
     setFullName("");
     setErrors({});
+    setStudentData({
+      rollNumber: "",
+      branch: "",
+      yearOfStudy: "",
+      programme: "",
+      mentorName: "",
+      mentorContact: "",
+      mentorEmail: "",
+      phone: "",
+    });
   };
 
   const handleBack = () => {
@@ -96,7 +144,7 @@ export default function Auth() {
   };
 
   const validateForm = (isSignUp: boolean) => {
-    const newErrors: { email?: string; password?: string; fullName?: string } = {};
+    const newErrors: FormErrors = {};
     
     // Validate email
     try {
@@ -111,10 +159,8 @@ export default function Auth() {
     if (authView !== "forgot") {
       try {
         if (isSignUp) {
-          // Strong password requirements for new accounts
           strongPasswordSchema.parse(password);
         } else {
-          // Just check presence for login (don't reveal requirements)
           loginPasswordSchema.parse(password);
         }
       } catch (e) {
@@ -131,6 +177,31 @@ export default function Auth() {
       } catch (e) {
         if (e instanceof z.ZodError) {
           newErrors.fullName = e.errors[0].message;
+        }
+      }
+      
+      // Student-specific validation
+      if (userType === "student") {
+        if (!studentData.rollNumber.trim() || studentData.rollNumber.length < 5) {
+          newErrors.rollNumber = "Roll number is required (min 5 characters)";
+        }
+        if (!studentData.branch) {
+          newErrors.branch = "Please select your branch/department";
+        }
+        if (!studentData.yearOfStudy) {
+          newErrors.yearOfStudy = "Please select your year of study";
+        }
+        if (!studentData.programme) {
+          newErrors.programme = "Please select your programme";
+        }
+        if (!studentData.mentorName.trim()) {
+          newErrors.mentorName = "Mentor name is required";
+        }
+        if (!studentData.mentorContact.trim() || !/^[6-9]\d{9}$/.test(studentData.mentorContact)) {
+          newErrors.mentorContact = "Enter valid 10-digit mentor contact";
+        }
+        if (studentData.phone && !/^[6-9]\d{9}$/.test(studentData.phone)) {
+          newErrors.phone = "Enter valid 10-digit phone number";
         }
       }
     }
@@ -169,8 +240,6 @@ export default function Auth() {
 
     setIsLoading(true);
     
-    const redirectUrl = `${window.location.origin}/`;
-    
     const { error, data } = await supabase.auth.signUp({
       email,
       password,
@@ -183,9 +252,8 @@ export default function Auth() {
       }
     });
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       if (error.message.includes("already registered")) {
         toast({
           title: "Account Exists",
@@ -199,7 +267,41 @@ export default function Auth() {
           variant: "destructive",
         });
       }
-    } else if (data.user) {
+      return;
+    }
+    
+    if (data.user) {
+      // For students, create the student profile with all details
+      if (userType === "student") {
+        const { error: studentError } = await supabase
+          .from('students')
+          .insert({
+            user_id: data.user.id,
+            full_name: fullName,
+            email: email,
+            phone: studentData.phone || null,
+            roll_number: studentData.rollNumber,
+            program: studentData.programme,
+            batch: studentData.yearOfStudy,
+            branch: studentData.branch,
+            year_of_study: studentData.yearOfStudy,
+            mentor_name: studentData.mentorName,
+            mentor_contact: studentData.mentorContact,
+            mentor_email: studentData.mentorEmail || null,
+          });
+
+        if (studentError) {
+          console.error('Error creating student profile:', studentError);
+          // Don't fail registration, but log the error
+        }
+        
+        // Also add student role
+        await supabase.from('user_roles').insert({
+          user_id: data.user.id,
+          role: 'student'
+        });
+      }
+
       // Send registration confirmation email
       try {
         await supabase.functions.invoke('send-registration-email', {
@@ -207,24 +309,26 @@ export default function Auth() {
             email,
             name: fullName,
             userType: userType,
+            rollNumber: userType === "student" ? studentData.rollNumber : undefined,
           }
         });
       } catch (emailError) {
         console.log('Registration email could not be sent:', emailError);
-        // Don't fail registration if email fails
       }
 
+      setIsLoading(false);
+
       if (!data.session) {
-        // User created but needs email verification
         navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
       } else {
-        // Auto-confirm is enabled, user is already signed in
         toast({
           title: "Account Created!",
-          description: "Welcome to the Health Portal. A confirmation email has been sent.",
+          description: "Welcome to the Health Portal. Your profile has been set up.",
         });
-        navigate("/");
+        navigate("/health-dashboard");
       }
+    } else {
+      setIsLoading(false);
     }
   };
 
@@ -563,6 +667,160 @@ export default function Auth() {
                     )}
                   </div>
 
+                  {/* Student-specific registration fields */}
+                  {userType === "student" && (
+                    <>
+                      <div className="border-t pt-4 mt-4">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <BookOpen className="w-4 h-4" />
+                          Academic Details
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="rollNumber">Roll Number *</Label>
+                            <Input
+                              id="rollNumber"
+                              placeholder="e.g., 21CS1234"
+                              value={studentData.rollNumber}
+                              onChange={(e) => setStudentData(prev => ({ ...prev, rollNumber: e.target.value }))}
+                            />
+                            {errors.rollNumber && (
+                              <p className="text-xs text-destructive">{errors.rollNumber}</p>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone (Optional)</Label>
+                            <Input
+                              id="phone"
+                              placeholder="10-digit mobile"
+                              value={studentData.phone}
+                              onChange={(e) => setStudentData(prev => ({ ...prev, phone: e.target.value }))}
+                            />
+                            {errors.phone && (
+                              <p className="text-xs text-destructive">{errors.phone}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                          <div className="space-y-2">
+                            <Label>Programme *</Label>
+                            <Select 
+                              value={studentData.programme} 
+                              onValueChange={(value) => setStudentData(prev => ({ ...prev, programme: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select programme" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PROGRAMMES.map((prog) => (
+                                  <SelectItem key={prog} value={prog}>{prog}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {errors.programme && (
+                              <p className="text-xs text-destructive">{errors.programme}</p>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>Year of Study *</Label>
+                            <Select 
+                              value={studentData.yearOfStudy} 
+                              onValueChange={(value) => setStudentData(prev => ({ ...prev, yearOfStudy: value }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select year" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {YEARS_OF_STUDY.map((year) => (
+                                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {errors.yearOfStudy && (
+                              <p className="text-xs text-destructive">{errors.yearOfStudy}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 mt-3">
+                          <Label>Branch/Department *</Label>
+                          <Select 
+                            value={studentData.branch} 
+                            onValueChange={(value) => setStudentData(prev => ({ ...prev, branch: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DEPARTMENTS.map((dept) => (
+                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {errors.branch && (
+                            <p className="text-xs text-destructive">{errors.branch}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          Mentor Details
+                        </h4>
+                        
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="mentorName">Mentor Name *</Label>
+                            <Input
+                              id="mentorName"
+                              placeholder="e.g., Prof. Rajesh Kumar"
+                              value={studentData.mentorName}
+                              onChange={(e) => setStudentData(prev => ({ ...prev, mentorName: e.target.value }))}
+                            />
+                            {errors.mentorName && (
+                              <p className="text-xs text-destructive">{errors.mentorName}</p>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="mentorContact">Mentor Contact *</Label>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  id="mentorContact"
+                                  placeholder="10-digit mobile"
+                                  value={studentData.mentorContact}
+                                  onChange={(e) => setStudentData(prev => ({ ...prev, mentorContact: e.target.value }))}
+                                  className="pl-10"
+                                />
+                              </div>
+                              {errors.mentorContact && (
+                                <p className="text-xs text-destructive">{errors.mentorContact}</p>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="mentorEmail">Mentor Email</Label>
+                              <Input
+                                id="mentorEmail"
+                                type="email"
+                                placeholder="mentor@nitw.ac.in"
+                                value={studentData.mentorEmail}
+                                onChange={(e) => setStudentData(prev => ({ ...prev, mentorEmail: e.target.value }))}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <Button 
                     type="submit" 
                     className={`w-full ${userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : userType === "mentor" ? "bg-green-600 hover:bg-green-700" : ""}`}
@@ -571,16 +829,16 @@ export default function Auth() {
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
 
-                  {/* Link to detailed registration */}
-                  {userType !== "mentor" && (
+                  {/* Link to detailed registration for doctors only */}
+                  {userType === "doctor" && (
                     <div className="text-center pt-2">
                       <p className="text-sm text-muted-foreground">
                         Need to complete full registration?{" "}
                         <Link 
-                          to={userType === "doctor" ? "/doctor/register" : "/student/register"} 
+                          to="/doctor/register" 
                           className="text-primary hover:underline font-medium"
                         >
-                          {userType === "doctor" ? "Doctor Registration" : "Student Registration"}
+                          Doctor Registration
                         </Link>
                       </p>
                     </div>
