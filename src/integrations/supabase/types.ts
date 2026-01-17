@@ -474,10 +474,49 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mentor_health_visits_view: {
+        Row: {
+          created_at: string | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string | null
+          reason_category: Database["public"]["Enums"]["visit_reason"] | null
+          student_id: string | null
+          visit_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string | null
+          reason_category?: Database["public"]["Enums"]["visit_reason"] | null
+          student_id?: string | null
+          visit_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string | null
+          reason_category?: Database["public"]["Enums"]["visit_reason"] | null
+          student_id?: string | null
+          visit_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_visits_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      archive_old_audit_logs: { Args: never; Returns: undefined }
       check_login_rate_limit: { Args: { p_email: string }; Returns: boolean }
+      cleanup_old_login_attempts: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
