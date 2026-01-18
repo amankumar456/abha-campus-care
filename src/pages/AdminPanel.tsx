@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2 } from 'lucide-react';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
 import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
 import MentorsTab from '@/components/admin/MentorsTab';
 import StudentMentorAssignment from '@/components/admin/StudentMentorAssignment';
+import SecurityDashboard from '@/components/admin/SecurityDashboard';
 
 interface UserWithRoles {
   id: string;
@@ -397,7 +398,7 @@ const AdminPanel = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users & Roles
@@ -418,7 +419,16 @@ const AdminPanel = () => {
               <GraduationCap className="h-4 w-4" />
               Mentors
             </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4" />
+              Security
+            </TabsTrigger>
           </TabsList>
+
+          {/* Security Dashboard Tab */}
+          <TabsContent value="security">
+            <SecurityDashboard />
+          </TabsContent>
 
           {/* Student-Mentor Assignment Tab */}
           <TabsContent value="student-mentor">
