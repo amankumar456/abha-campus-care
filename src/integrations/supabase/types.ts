@@ -165,6 +165,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "health_visits_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       login_attempts: {
@@ -523,6 +530,63 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_visits_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students_doctor_view: {
+        Row: {
+          batch: string | null
+          branch: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          mentor_id: string | null
+          program: string | null
+          roll_number: string | null
+          updated_at: string | null
+          user_id: string | null
+          year_of_study: string | null
+        }
+        Insert: {
+          batch?: string | null
+          branch?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          mentor_id?: string | null
+          program?: string | null
+          roll_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          year_of_study?: string | null
+        }
+        Update: {
+          batch?: string | null
+          branch?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          mentor_id?: string | null
+          program?: string | null
+          roll_number?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          year_of_study?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
             referencedColumns: ["id"]
           },
         ]
