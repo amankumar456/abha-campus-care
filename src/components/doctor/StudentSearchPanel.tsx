@@ -49,8 +49,9 @@ interface Student {
   roll_number: string;
   program: string;
   batch: string;
-  email: string | null;
-  phone: string | null;
+  branch: string | null;
+  year_of_study: string | null;
+  // Note: email and phone are NOT included for privacy - doctors use limited view
 }
 
 interface HealthVisit {
@@ -82,15 +83,16 @@ const StudentSearchPanel = () => {
   const [dateTo, setDateTo] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Search students by name or roll number
+  // Search students by name or roll number - using limited view for privacy
   const { data: students, isLoading: isSearching } = useQuery({
     queryKey: ["student-search", searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
       
+      // Use the limited view that excludes contact information
       const { data, error } = await supabase
-        .from("students")
-        .select("*")
+        .from("students_doctor_view")
+        .select("id, full_name, roll_number, program, batch, branch, year_of_study")
         .or(`full_name.ilike.%${searchQuery}%,roll_number.ilike.%${searchQuery}%`)
         .limit(10);
 
@@ -215,8 +217,8 @@ const StudentSearchPanel = () => {
     doc.text(`Student: ${selectedStudent.full_name}`, 14, 45);
     doc.text(`Roll Number: ${selectedStudent.roll_number}`, 14, 52);
     doc.text(`Program: ${selectedStudent.program} | Batch: ${selectedStudent.batch}`, 14, 59);
-    if (selectedStudent.email) {
-      doc.text(`Email: ${selectedStudent.email}`, 14, 66);
+    if (selectedStudent.branch) {
+      doc.text(`Branch: ${selectedStudent.branch}`, 14, 66);
     }
     
     doc.text(`Report Generated: ${format(new Date(), "dd MMM yyyy, hh:mm a")}`, 14, 76);
@@ -404,8 +406,8 @@ const StudentSearchPanel = () => {
                     {selectedStudent.roll_number} • {selectedStudent.program} •{" "}
                     {selectedStudent.batch}
                   </p>
-                  {selectedStudent.email && (
-                    <p className="text-sm text-muted-foreground">{selectedStudent.email}</p>
+                  {selectedStudent.branch && (
+                    <p className="text-sm text-muted-foreground">Branch: {selectedStudent.branch}</p>
                   )}
                 </div>
               </div>
