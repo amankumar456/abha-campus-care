@@ -17,6 +17,7 @@ import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
 import AdminPanel from "./pages/AdminPanel";
 import MentorDashboard from "./pages/MentorDashboard";
+import MedicalLeave from "./pages/MedicalLeave";
 import NotFound from "./pages/NotFound";
 import BackNavigation from "./components/BackNavigation";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -67,6 +68,9 @@ const App = () => (
           } />
           <Route path="/mentor/dashboard" element={
             <ProtectedRoute><MentorDashboard /></ProtectedRoute>
+          } />
+          <Route path="/medical-leave" element={
+            <ProtectedRoute><MedicalLeave /></ProtectedRoute>
           } />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
