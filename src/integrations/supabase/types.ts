@@ -222,6 +222,103 @@ export type Database = {
         }
         Relationships: []
       }
+      medical_leave_requests: {
+        Row: {
+          accompanist_contact: string | null
+          accompanist_name: string | null
+          accompanist_relationship: string | null
+          accompanist_type: string | null
+          actual_return_date: string | null
+          created_at: string
+          doctor_notes: string | null
+          expected_duration: string
+          expected_return_date: string | null
+          follow_up_notes: string | null
+          hospital_discharge_date: string | null
+          id: string
+          illness_description: string | null
+          leave_start_date: string | null
+          referral_date: string | null
+          referral_hospital: string
+          referring_doctor_id: string | null
+          return_submitted_at: string | null
+          status: Database["public"]["Enums"]["medical_leave_status"]
+          student_form_submitted_at: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          accompanist_contact?: string | null
+          accompanist_name?: string | null
+          accompanist_relationship?: string | null
+          accompanist_type?: string | null
+          actual_return_date?: string | null
+          created_at?: string
+          doctor_notes?: string | null
+          expected_duration: string
+          expected_return_date?: string | null
+          follow_up_notes?: string | null
+          hospital_discharge_date?: string | null
+          id?: string
+          illness_description?: string | null
+          leave_start_date?: string | null
+          referral_date?: string | null
+          referral_hospital: string
+          referring_doctor_id?: string | null
+          return_submitted_at?: string | null
+          status?: Database["public"]["Enums"]["medical_leave_status"]
+          student_form_submitted_at?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          accompanist_contact?: string | null
+          accompanist_name?: string | null
+          accompanist_relationship?: string | null
+          accompanist_type?: string | null
+          actual_return_date?: string | null
+          created_at?: string
+          doctor_notes?: string | null
+          expected_duration?: string
+          expected_return_date?: string | null
+          follow_up_notes?: string | null
+          hospital_discharge_date?: string | null
+          id?: string
+          illness_description?: string | null
+          leave_start_date?: string | null
+          referral_date?: string | null
+          referral_hospital?: string
+          referring_doctor_id?: string | null
+          return_submitted_at?: string | null
+          status?: Database["public"]["Enums"]["medical_leave_status"]
+          student_form_submitted_at?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_leave_requests_referring_doctor_id_fkey"
+            columns: ["referring_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_leave_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_leave_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_officers: {
         Row: {
           created_at: string | null
@@ -616,6 +713,13 @@ export type Database = {
     Enums: {
       app_role: "doctor" | "mentor" | "student" | "admin"
       appointment_status: "pending" | "confirmed" | "cancelled" | "completed"
+      medical_leave_status:
+        | "doctor_referred"
+        | "student_form_pending"
+        | "on_leave"
+        | "return_pending"
+        | "returned"
+        | "cancelled"
       visit_reason:
         | "medical_illness"
         | "injury"
@@ -752,6 +856,14 @@ export const Constants = {
     Enums: {
       app_role: ["doctor", "mentor", "student", "admin"],
       appointment_status: ["pending", "confirmed", "cancelled", "completed"],
+      medical_leave_status: [
+        "doctor_referred",
+        "student_form_pending",
+        "on_leave",
+        "return_pending",
+        "returned",
+        "cancelled",
+      ],
       visit_reason: [
         "medical_illness",
         "injury",
