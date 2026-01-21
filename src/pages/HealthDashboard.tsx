@@ -103,6 +103,125 @@ const DUMMY_STUDENT_VISITS = [
   { id: '3', date: '2025-11-20', reason: 'Sports Injury', doctor: 'Dr. Suresh Menon', prescription: 'Physiotherapy' },
 ];
 
+// Dummy mentor portal - recent visits with detailed info
+const DUMMY_MENTOR_RECENT_VISITS = [
+  { 
+    id: '1', 
+    visit_date: '2026-01-18T10:30:00', 
+    reason_category: 'medical_illness',
+    reason_notes: 'High fever (102°F) with cold symptoms for 3 days',
+    diagnosis: 'Viral infection',
+    prescription: 'Paracetamol 500mg, Cetirizine, Rest for 3 days',
+    follow_up_required: true,
+    follow_up_date: '2026-01-25',
+    students: { roll_number: '22EI1001', full_name: 'Priya Sharma', email: 'priya.22ei1001@student.nitw.ac.in', phone: '+91 9876543001' }
+  },
+  { 
+    id: '2', 
+    visit_date: '2026-01-19T09:00:00', 
+    reason_category: 'mental_wellness',
+    reason_notes: 'Academic stress and anxiety, difficulty sleeping',
+    diagnosis: 'Mild anxiety disorder',
+    prescription: 'Counseling session scheduled, relaxation techniques advised',
+    follow_up_required: true,
+    follow_up_date: '2026-01-26',
+    students: { roll_number: '22EI1002', full_name: 'Arjun Kumar', email: 'arjun.22ei1002@student.nitw.ac.in', phone: '+91 9876543002' }
+  },
+  { 
+    id: '3', 
+    visit_date: '2026-01-15T11:30:00', 
+    reason_category: 'injury',
+    reason_notes: 'Ankle sprain during basketball practice',
+    diagnosis: 'Grade 1 ankle sprain',
+    prescription: 'Ice pack, compression bandage, avoid sports for 2 weeks',
+    follow_up_required: false,
+    follow_up_date: null,
+    students: { roll_number: '22EI1003', full_name: 'Ananya Reddy', email: 'ananya.22ei1003@student.nitw.ac.in', phone: '+91 9876543003' }
+  },
+  { 
+    id: '4', 
+    visit_date: '2026-01-20T15:00:00', 
+    reason_category: 'vaccination',
+    reason_notes: 'COVID-19 booster dose administered',
+    diagnosis: 'Vaccination completed',
+    prescription: 'Monitor for side effects, paracetamol if fever occurs',
+    follow_up_required: false,
+    follow_up_date: null,
+    students: { roll_number: '23EI1001', full_name: 'Vikash Singh', email: 'vikash.23ei1001@student.nitw.ac.in', phone: '+91 9876543004' }
+  },
+  { 
+    id: '5', 
+    visit_date: '2026-01-17T16:30:00', 
+    reason_category: 'mental_wellness',
+    reason_notes: 'Feeling overwhelmed with project deadlines',
+    diagnosis: 'Situational stress',
+    prescription: 'Time management counseling, breathing exercises',
+    follow_up_required: true,
+    follow_up_date: '2026-01-24',
+    students: { roll_number: '23EI1002', full_name: 'Meera Patel', email: 'meera.23ei1002@student.nitw.ac.in', phone: '+91 9876543005' }
+  }
+];
+
+// Dummy mentor portal - students needing attention with detailed health patterns
+const DUMMY_STUDENTS_NEEDING_ATTENTION = [
+  { 
+    student_id: '1', 
+    roll_number: '22EI1002', 
+    full_name: 'Arjun Kumar',
+    email: 'arjun.22ei1002@student.nitw.ac.in',
+    phone: '+91 9876543002',
+    batch: '2022',
+    branch: 'Electronics & Instrumentation',
+    visit_count: 5, 
+    primary_concern: 'Mental Wellness',
+    last_visit: '2026-01-19',
+    risk_level: 'high',
+    notes: 'Multiple stress-related visits, recommend regular counseling'
+  },
+  { 
+    student_id: '2', 
+    roll_number: '23EI1002', 
+    full_name: 'Meera Patel',
+    email: 'meera.23ei1002@student.nitw.ac.in',
+    phone: '+91 9876543005',
+    batch: '2023',
+    branch: 'Electronics & Instrumentation',
+    visit_count: 4, 
+    primary_concern: 'Mental Wellness',
+    last_visit: '2026-01-17',
+    risk_level: 'medium',
+    notes: 'Academic pressure related stress, follow-up scheduled'
+  },
+  { 
+    student_id: '3', 
+    roll_number: '22EI1001', 
+    full_name: 'Priya Sharma',
+    email: 'priya.22ei1001@student.nitw.ac.in',
+    phone: '+91 9876543001',
+    batch: '2022',
+    branch: 'Electronics & Instrumentation',
+    visit_count: 3, 
+    primary_concern: 'Recurring Illness',
+    last_visit: '2026-01-18',
+    risk_level: 'medium',
+    notes: 'Frequent fever episodes, immunity check recommended'
+  },
+  { 
+    student_id: '4', 
+    roll_number: '22EI1003', 
+    full_name: 'Ananya Reddy',
+    email: 'ananya.22ei1003@student.nitw.ac.in',
+    phone: '+91 9876543003',
+    batch: '2022',
+    branch: 'Electronics & Instrumentation',
+    visit_count: 3, 
+    primary_concern: 'Sports Injuries',
+    last_visit: '2026-01-15',
+    risk_level: 'low',
+    notes: 'Active in sports, proper warm-up guidance needed'
+  }
+];
+
 const HealthDashboard = () => {
   const navigate = useNavigate();
   const { user, isDoctor, isMentor, loading: roleLoading, mentorId } = useUserRole();
@@ -559,71 +678,219 @@ const HealthDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Visits */}
+          {/* Recent Visits - Enhanced for Mentor Portal */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Visits</CardTitle>
-              <CardDescription>Latest health centre visits</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Recent Visits
+              </CardTitle>
+              <CardDescription>Latest health centre visits by your mentees</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentVisits.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No recent visits</p>
-                ) : (
-                  recentVisits.map((visit) => (
+                {isMentor ? (
+                  DUMMY_MENTOR_RECENT_VISITS.map((visit) => (
                     <div
                       key={visit.id}
-                      className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => navigate(`/student-profile/${visit.students?.roll_number}`)}
+                      className="p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                     >
-                      <div>
-                        <p className="font-medium">{visit.students?.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{visit.students?.roll_number}</p>
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-semibold text-foreground">{visit.students.full_name}</p>
+                          <p className="text-sm text-muted-foreground">{visit.students.roll_number}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            variant="secondary"
+                            className={
+                              visit.reason_category === 'mental_wellness' 
+                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
+                                : visit.reason_category === 'medical_illness'
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                : visit.reason_category === 'injury'
+                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            }
+                          >
+                            {formatReasonCategory(visit.reason_category)}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(visit.visit_date), 'MMM d, yyyy • h:mm a')}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <Badge variant="secondary">
-                          {formatReasonCategory(visit.reason_category)}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(visit.visit_date), 'MMM d, yyyy')}
-                        </p>
+                      
+                      <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Complaint:</span>
+                          <span className="ml-2 text-foreground">{visit.reason_notes}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Diagnosis:</span>
+                          <span className="ml-2 text-foreground">{visit.diagnosis}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Prescription:</span>
+                          <span className="ml-2 text-foreground">{visit.prescription}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                        <div className="flex items-center gap-4 text-xs">
+                          <a href={`mailto:${visit.students.email}`} className="text-primary hover:underline flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Email
+                          </a>
+                          <a href={`tel:${visit.students.phone}`} className="text-primary hover:underline flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            Call
+                          </a>
+                        </div>
+                        {visit.follow_up_required ? (
+                          <Badge variant="outline" className="text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-600">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Follow-up: {format(new Date(visit.follow_up_date!), 'MMM d')}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
+                            Completed
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))
+                ) : (
+                  recentVisits.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No recent visits</p>
+                  ) : (
+                    recentVisits.map((visit) => (
+                      <div
+                        key={visit.id}
+                        className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate(`/student-profile/${visit.students?.roll_number}`)}
+                      >
+                        <div>
+                          <p className="font-medium">{visit.students?.full_name}</p>
+                          <p className="text-sm text-muted-foreground">{visit.students?.roll_number}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="secondary">
+                            {formatReasonCategory(visit.reason_category)}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(visit.visit_date), 'MMM d, yyyy')}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Frequent Visitors Alert */}
+          {/* Students Needing Attention - Enhanced for Mentor Portal */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 Students Needing Attention
               </CardTitle>
-              <CardDescription>Students with frequent health visits</CardDescription>
+              <CardDescription>Students requiring your attention based on health patterns</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats?.frequentVisitors.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No alerts</p>
-                ) : (
-                  stats?.frequentVisitors.slice(0, 5).map((student) => (
+                {isMentor ? (
+                  DUMMY_STUDENTS_NEEDING_ATTENTION.map((student) => (
                     <div
                       key={student.student_id}
-                      className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => navigate(`/student-profile/${student.roll_number}`)}
+                      className={`p-4 rounded-lg border-l-4 ${
+                        student.risk_level === 'high' 
+                          ? 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10' 
+                          : student.risk_level === 'medium'
+                          ? 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10'
+                          : 'border-l-green-500 bg-green-50/50 dark:bg-green-900/10'
+                      }`}
                     >
-                      <div>
-                        <p className="font-medium">{student.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{student.roll_number}</p>
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-foreground">{student.full_name}</p>
+                            <Badge 
+                              variant={student.risk_level === 'high' ? 'destructive' : student.risk_level === 'medium' ? 'secondary' : 'outline'}
+                              className="text-xs"
+                            >
+                              {student.risk_level === 'high' ? 'High Priority' : student.risk_level === 'medium' ? 'Medium' : 'Low'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{student.roll_number} • {student.batch}</p>
+                        </div>
+                        <Badge variant="destructive" className="text-xs">
+                          {student.visit_count} visits
+                        </Badge>
                       </div>
-                      <Badge variant="destructive">
-                        {student.visit_count} visits
-                      </Badge>
+                      
+                      <div className="space-y-1.5 text-sm mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Branch:</span>
+                          <span className="text-foreground">{student.branch}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Primary Concern:</span>
+                          <Badge variant="outline" className="text-xs">{student.primary_concern}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Last Visit:</span>
+                          <span className="text-foreground">{format(new Date(student.last_visit), 'MMM d, yyyy')}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/50 rounded p-2 text-sm">
+                        <span className="text-muted-foreground">Notes: </span>
+                        <span className="text-foreground">{student.notes}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs">
+                        <a href={`mailto:${student.email}`} className="text-primary hover:underline flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          {student.email}
+                        </a>
+                        <a href={`tel:${student.phone}`} className="text-primary hover:underline flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          {student.phone}
+                        </a>
+                      </div>
                     </div>
                   ))
+                ) : (
+                  stats?.frequentVisitors.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No alerts</p>
+                  ) : (
+                    stats?.frequentVisitors.slice(0, 5).map((student) => (
+                      <div
+                        key={student.student_id}
+                        className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate(`/student-profile/${student.roll_number}`)}
+                      >
+                        <div>
+                          <p className="font-medium">{student.full_name}</p>
+                          <p className="text-sm text-muted-foreground">{student.roll_number}</p>
+                        </div>
+                        <Badge variant="destructive">
+                          {student.visit_count} visits
+                        </Badge>
+                      </div>
+                    ))
+                  )
                 )}
               </div>
             </CardContent>
