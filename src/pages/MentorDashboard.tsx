@@ -6,19 +6,19 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import MenteeCard from "@/components/mentor/MenteeCard";
+import MentorProfileCard from "@/components/mentor/MentorProfileCard";
+import RecentVisitsList from "@/components/mentor/RecentVisitsList";
 import { 
   Users, 
   AlertCircle, 
-  Calendar, 
   Activity,
   UserCheck,
-  Clock,
   ArrowRight,
-  Phone,
-  Mail,
-  BookOpen
+  Search,
+  HeartPulse
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -30,6 +30,8 @@ interface Student {
   phone: string | null;
   program: string;
   batch: string;
+  branch: string | null;
+  year_of_study: string | null;
 }
 
 interface HealthVisit {
@@ -37,6 +39,16 @@ interface HealthVisit {
   visit_date: string;
   reason_category: string;
   student_id: string;
+  follow_up_required?: boolean;
+  follow_up_date?: string | null;
+}
+
+interface MentorProfile {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  department: string;
 }
 
 export default function MentorDashboard() {
@@ -44,7 +56,10 @@ export default function MentorDashboard() {
   const { user, isMentor, loading: roleLoading, mentorId } = useUserRole();
   const [students, setStudents] = useState<Student[]>([]);
   const [recentVisits, setRecentVisits] = useState<HealthVisit[]>([]);
+  const [mentorProfile, setMentorProfile] = useState<MentorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [studentVisitCounts, setStudentVisitCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!roleLoading && !isMentor) {
@@ -62,11 +77,22 @@ export default function MentorDashboard() {
       if (!mentorId) return;
       
       try {
+        // Fetch mentor profile
+        const { data: mentorData, error: mentorError } = await supabase
+          .from('mentors')
+          .select('id, name, email, phone, department')
+          .eq('id', mentorId)
+          .maybeSingle();
+
+        if (mentorError) throw mentorError;
+        setMentorProfile(mentorData);
+
         // Fetch students assigned to this mentor
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
-          .select('*')
-          .eq('mentor_id', mentorId);
+          .select('id, full_name, roll_number, email, phone, program, batch, branch, year_of_study')
+          .eq('mentor_id', mentorId)
+          .order('full_name');
 
         if (studentsError) throw studentsError;
         setStudents(studentsData || []);
@@ -76,13 +102,20 @@ export default function MentorDashboard() {
           const studentIds = studentsData.map(s => s.id);
           const { data: visitsData, error: visitsError } = await supabase
             .from('health_visits')
-            .select('id, visit_date, reason_category, student_id')
+            .select('id, visit_date, reason_category, student_id, follow_up_required, follow_up_date')
             .in('student_id', studentIds)
             .order('visit_date', { ascending: false })
-            .limit(10);
+            .limit(15);
 
           if (visitsError) throw visitsError;
           setRecentVisits(visitsData || []);
+
+          // Calculate visit counts per student
+          const counts: Record<string, number> = {};
+          (visitsData || []).forEach(visit => {
+            counts[visit.student_id] = (counts[visit.student_id] || 0) + 1;
+          });
+          setStudentVisitCounts(counts);
         }
       } catch (error) {
         console.error('Error fetching mentor data:', error);
@@ -103,22 +136,14 @@ export default function MentorDashboard() {
     }
   }, [mentorId, roleLoading]);
 
-  const getReasonLabel = (reason: string) => {
-    const labels: Record<string, string> = {
-      medical_illness: "Medical Illness",
-      injury: "Injury",
-      mental_wellness: "Mental Wellness",
-      vaccination: "Vaccination",
-      routine_checkup: "Routine Checkup",
-      other: "Other",
-    };
-    return labels[reason] || reason;
-  };
+  const filteredStudents = students.filter(student => 
+    student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.roll_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const getStudentName = (studentId: string) => {
-    const student = students.find(s => s.id === studentId);
-    return student?.full_name || "Unknown Student";
-  };
+  const wellnessVisitsCount = recentVisits.filter(v => v.reason_category === 'mental_wellness').length;
+  const followUpRequiredCount = recentVisits.filter(v => v.follow_up_required).length;
 
   if (roleLoading || loading) {
     return (
@@ -127,10 +152,15 @@ export default function MentorDashboard() {
         <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             <Skeleton className="h-32 w-full" />
-            <div className="grid md:grid-cols-3 gap-6">
-              <Skeleton className="h-40" />
-              <Skeleton className="h-40" />
-              <Skeleton className="h-40" />
+            <div className="grid md:grid-cols-4 gap-6">
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+            </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+              <Skeleton className="h-96" />
+              <Skeleton className="h-96" />
             </div>
           </div>
         </main>
@@ -144,16 +174,25 @@ export default function MentorDashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
+        {/* Welcome Section & Mentor Profile */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Monitor your mentees' health visits and wellbeing
-          </p>
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
+              <p className="text-muted-foreground mt-1">
+                Monitor your mentees' health visits and wellbeing
+              </p>
+            </div>
+            {mentorProfile && (
+              <div className="w-full lg:w-96">
+                <MentorProfileCard profile={mentorProfile} menteeCount={students.length} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -171,26 +210,12 @@ export default function MentorDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                  <UserCheck className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{students.length}</p>
-                  <p className="text-sm text-muted-foreground">Active Students</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-secondary" />
+                <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <UserCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{recentVisits.length}</p>
-                  <p className="text-sm text-muted-foreground">Recent Visits</p>
+                  <p className="text-sm text-muted-foreground">Total Visits</p>
                 </div>
               </div>
             </CardContent>
@@ -199,14 +224,26 @@ export default function MentorDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-amber-600" />
+                <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <HeartPulse className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">
-                    {recentVisits.filter(v => v.reason_category === 'mental_wellness').length}
-                  </p>
+                  <p className="text-2xl font-bold">{wellnessVisitsCount}</p>
                   <p className="text-sm text-muted-foreground">Wellness Visits</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{followUpRequiredCount}</p>
+                  <p className="text-sm text-muted-foreground">Need Follow-up</p>
                 </div>
               </div>
             </CardContent>
@@ -214,54 +251,42 @@ export default function MentorDashboard() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Assigned Students */}
+          {/* My Mentees Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                My Mentees
-              </CardTitle>
-              <CardDescription>Students assigned to you</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    My Mentees
+                  </CardTitle>
+                  <CardDescription>Students assigned to you with full contact details</CardDescription>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, roll number, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </CardHeader>
-            <CardContent>
-              {students.length === 0 ? (
+            <CardContent className="max-h-[600px] overflow-y-auto">
+              {filteredStudents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No students assigned yet</p>
+                  <p>{searchQuery ? "No mentees match your search" : "No students assigned yet"}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {students.map((student) => (
-                    <div
+                  {filteredStudents.map((student) => (
+                    <MenteeCard
                       key={student.id}
-                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold">{student.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{student.roll_number}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <BookOpen className="w-3 h-3" />
-                              {student.program} - {student.batch}
-                            </span>
-                          </div>
-                          {student.email && (
-                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                              <Mail className="w-3 h-3" />
-                              {student.email}
-                            </p>
-                          )}
-                          {student.phone && (
-                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                              <Phone className="w-3 h-3" />
-                              {student.phone}
-                            </p>
-                          )}
-                        </div>
-                        <Badge variant="outline">{student.batch}</Badge>
-                      </div>
-                    </div>
+                      student={student}
+                      visitCount={studentVisitCounts[student.id] || 0}
+                    />
                   ))}
                 </div>
               )}
@@ -269,47 +294,7 @@ export default function MentorDashboard() {
           </Card>
 
           {/* Recent Health Visits */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-secondary" />
-                Recent Health Visits
-              </CardTitle>
-              <CardDescription>Latest health centre visits by your mentees</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentVisits.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No recent visits</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentVisits.map((visit) => (
-                    <div
-                      key={visit.id}
-                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-semibold">{getStudentName(visit.student_id)}</p>
-                          <Badge variant="secondary" className="mt-1">
-                            {getReasonLabel(visit.reason_category)}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {new Date(visit.visit_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <RecentVisitsList visits={recentVisits} students={students} />
         </div>
 
         {/* Quick Actions */}
