@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import StudentProfileCard from '@/components/profile/StudentProfileCard';
 
 interface DashboardStats {
   totalStudents: number;
@@ -229,6 +230,8 @@ const HealthDashboard = () => {
   const [recentVisits, setRecentVisits] = useState<RecentVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchRoll, setSearchRoll] = useState('');
+  const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [studentHealthStats, setStudentHealthStats] = useState<any>(null);
 
   useEffect(() => {
     if (!roleLoading && !user) {
@@ -241,11 +244,85 @@ const HealthDashboard = () => {
       if (isDoctor || isMentor) {
         fetchDashboardData();
       } else {
-        // Student view - just set loading to false
-        setLoading(false);
+        // Student view - fetch student profile
+        fetchStudentProfile();
       }
     }
   }, [roleLoading, user, isDoctor, isMentor, mentorId]);
+
+  const fetchStudentProfile = async () => {
+    try {
+      // Fetch student profile
+      const { data: studentData } = await supabase
+        .from('students')
+        .select(`
+          id,
+          full_name,
+          roll_number,
+          email,
+          phone,
+          program,
+          branch,
+          batch,
+          year_of_study,
+          mentor_name,
+          mentor_email,
+          mentor_contact,
+          mentors (
+            name,
+            email,
+            phone
+          )
+        `)
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (studentData) {
+        setStudentProfile({
+          fullName: studentData.full_name,
+          rollNumber: studentData.roll_number,
+          email: studentData.email,
+          phone: studentData.phone,
+          program: studentData.program,
+          branch: studentData.branch,
+          batch: studentData.batch,
+          yearOfStudy: studentData.year_of_study,
+          mentorName: studentData.mentors?.name || studentData.mentor_name,
+          mentorEmail: studentData.mentors?.email || studentData.mentor_email,
+          mentorPhone: studentData.mentors?.phone || studentData.mentor_contact,
+        });
+
+        // Fetch health stats
+        const currentMonth = new Date();
+        const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+
+        const { data: visits } = await supabase
+          .from('health_visits')
+          .select('id, visit_date, follow_up_required')
+          .eq('student_id', studentData.id)
+          .order('visit_date', { ascending: false });
+
+        const thisMonthVisits = visits?.filter(v => 
+          new Date(v.visit_date) >= firstDayOfMonth
+        ).length || 0;
+
+        const pendingFollowups = visits?.filter(v => v.follow_up_required).length || 0;
+
+        setStudentHealthStats({
+          totalVisits: visits?.length || 0,
+          thisMonthVisits,
+          pendingFollowups,
+          lastVisitDate: visits?.[0]?.visit_date 
+            ? format(new Date(visits[0].visit_date), 'MMM d, yyyy')
+            : null
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching student profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -450,78 +527,106 @@ const HealthDashboard = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Upcoming Appointments */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <CalendarCheck className="h-5 w-5 text-primary" />
-                      Upcoming Appointments
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* My Profile Card */}
+            <div className="lg:col-span-1">
+              {studentProfile ? (
+                <StudentProfileCard 
+                  profile={studentProfile}
+                  healthStats={studentHealthStats}
+                />
+              ) : (
+                <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <User className="w-5 h-5 text-primary" />
+                      My Profile
                     </CardTitle>
-                    <CardDescription>Your scheduled visits</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/my-appointments">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {DUMMY_STUDENT_APPOINTMENTS.map((apt) => (
-                    <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Stethoscope className="h-6 w-6 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{apt.doctor}</p>
-                          <p className="text-sm text-muted-foreground">{apt.type}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{format(new Date(apt.date), 'MMM d, yyyy')}</p>
-                        <p className="text-sm text-muted-foreground">{apt.time}</p>
-                        <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
-                          {apt.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardHeader>
+                  <CardContent className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">Complete your profile to see your details here</p>
+                    <Button asChild>
+                      <Link to="/student/register">Complete Profile</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
-            {/* Recent Visit History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-primary" />
-                  Recent Visit History
-                </CardTitle>
-                <CardDescription>Your past health centre visits</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {DUMMY_STUDENT_VISITS.map((visit) => (
-                    <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
-                      <div>
-                        <p className="font-medium">{visit.reason}</p>
-                        <p className="text-sm text-muted-foreground">{visit.doctor}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm">{format(new Date(visit.date), 'MMM d, yyyy')}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                          <Pill className="h-3 w-3" />
-                          {visit.prescription}
+            {/* Right Column - Appointments & Visits */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Upcoming Appointments */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarCheck className="h-5 w-5 text-primary" />
+                        Upcoming Appointments
+                      </CardTitle>
+                      <CardDescription>Your scheduled visits</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to="/my-appointments">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {DUMMY_STUDENT_APPOINTMENTS.map((apt) => (
+                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Stethoscope className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{apt.doctor}</p>
+                            <p className="text-sm text-muted-foreground">{apt.type}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{format(new Date(apt.date), 'MMM d, yyyy')}</p>
+                          <p className="text-sm text-muted-foreground">{apt.time}</p>
+                          <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
+                            {apt.status}
+                          </Badge>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Visit History */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                    Recent Visit History
+                  </CardTitle>
+                  <CardDescription>Your past health centre visits</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {DUMMY_STUDENT_VISITS.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
+                        <div>
+                          <p className="font-medium">{visit.reason}</p>
+                          <p className="text-sm text-muted-foreground">{visit.doctor}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm">{format(new Date(visit.date), 'MMM d, yyyy')}</p>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                            <Pill className="h-3 w-3" />
+                            {visit.prescription}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Quick Actions */}

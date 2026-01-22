@@ -20,6 +20,7 @@ import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
 import MentorsTab from '@/components/admin/MentorsTab';
 import StudentMentorAssignment from '@/components/admin/StudentMentorAssignment';
 import SecurityDashboard from '@/components/admin/SecurityDashboard';
+import AdminProfileCard from '@/components/profile/AdminProfileCard';
 
 interface UserWithRoles {
   id: string;
@@ -327,8 +328,8 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header with Profile */}
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -341,6 +342,24 @@ const AdminPanel = () => {
               </h1>
               <p className="text-muted-foreground">Manage users, doctors, and system settings</p>
             </div>
+          </div>
+          {/* Admin Profile Card */}
+          <div className="w-full lg:w-96">
+            <AdminProfileCard 
+              profile={{
+                email: user?.email || '',
+                name: user?.user_metadata?.full_name || 'Administrator',
+                lastSignIn: user?.last_sign_in_at 
+                  ? format(new Date(user.last_sign_in_at), 'MMM d, yyyy h:mm a')
+                  : undefined
+              }}
+              stats={{
+                totalUsers: users.length,
+                totalDoctors: users.filter(u => u.roles.includes('doctor')).length,
+                totalMentors: users.filter(u => u.roles.includes('mentor')).length,
+                totalStudents: users.filter(u => u.roles.includes('student')).length
+              }}
+            />
           </div>
         </div>
 

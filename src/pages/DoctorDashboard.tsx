@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   Users,
   Calendar,
@@ -36,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
+import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
 
 // Mock data
 const mockDoctor = {
@@ -72,8 +75,47 @@ const mockRecentPatients = [
 ];
 
 export default function DoctorDashboard() {
+  const navigate = useNavigate();
+  const { user, doctorId, loading: roleLoading } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [doctorProfile, setDoctorProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!roleLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, roleLoading, navigate]);
+
+  useEffect(() => {
+    if (doctorId) {
+      fetchDoctorProfile();
+    }
+  }, [doctorId]);
+
+  const fetchDoctorProfile = async () => {
+    try {
+      const { data } = await supabase
+        .from('medical_officers')
+        .select('*')
+        .eq('id', doctorId)
+        .maybeSingle();
+
+      if (data) {
+        setDoctorProfile({
+          name: data.name,
+          designation: data.designation,
+          qualification: data.qualification,
+          email: data.email,
+          phoneOffice: data.phone_office,
+          phoneMobile: data.phone_mobile,
+          isSenior: data.is_senior,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching doctor profile:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -300,8 +342,19 @@ export default function DoctorDashboard() {
             </Card>
           </div>
 
-          {/* Right Column - Access Requests & Quick Actions */}
+          {/* Right Column - Profile, Access Requests & Quick Actions */}
           <div className="space-y-6">
+            {/* Doctor Profile Card */}
+            {doctorProfile && (
+              <DoctorProfileCard 
+                profile={doctorProfile}
+                stats={{
+                  todayAppointments: 12,
+                  pendingApprovals: 5,
+                  totalPatients: 48
+                }}
+              />
+            )}
             {/* Access Requests */}
             <Card className="border-l-4 border-l-warning">
               <CardHeader className="pb-3">
