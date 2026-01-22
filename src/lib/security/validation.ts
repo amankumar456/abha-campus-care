@@ -34,7 +34,7 @@ export const institutionalEmailSchema = z
   .string()
   .trim()
   .email("Please enter a valid email address")
-  .regex(/@(nitw\.ac\.in|student\.nitw\.ac\.in)$/i, "Must be an official NIT Warangal email")
+  .regex(/@(nitw\.ac\.in|student\.nitw\.ac\.in|student\.nit\.ac\.in)$/i, "Must be an official NIT Warangal email (e.g., ak25edi0022@student.nit.ac.in)")
   .max(255, "Email must be less than 255 characters")
   .transform(email => email.toLowerCase());
 
