@@ -16,7 +16,7 @@ export const personalInfoSchema = z.object({
     .string()
     .trim()
     .email("Invalid email address")
-    .regex(/@nitw\.ac\.in$/, "Must be an official NIT Warangal email (@nitw.ac.in)"),
+    .regex(/@(nitw\.ac\.in|student\.nitw\.ac\.in|student\.nit\.ac\.in)$/i, "Must be an official NIT email (e.g., ak25edi0022@student.nit.ac.in)"),
   personalContact: z
     .string()
     .trim()
