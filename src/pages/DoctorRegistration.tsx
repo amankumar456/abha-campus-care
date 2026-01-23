@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Check, Loader2, Stethoscope } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -83,18 +84,84 @@ export default function DoctorRegistration() {
   const onSubmit = async (data: FullDoctorRegistration) => {
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in first to complete registration.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        navigate("/auth");
+        return;
+      }
 
-    console.log("Doctor registration submitted successfully");
+      // Check if doctor profile already exists
+      const { data: existingDoctor } = await supabase
+        .from('medical_officers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    toast({
-      title: "Registration Submitted!",
-      description: "Your application is under review. You will receive an email once approved.",
-    });
+      const doctorData = {
+        name: `${data.title} ${data.fullName}`,
+        designation: data.systemRole,
+        qualification: data.qualifications + (data.additionalQualifications ? `, ${data.additionalQualifications}` : ''),
+        email: data.officialEmail,
+        phone_mobile: [data.contactNumber],
+        is_senior: data.approvalAuthority === 'Senior Medical Officer (SMO)',
+        updated_at: new Date().toISOString(),
+      };
 
-    setIsSubmitting(false);
-    navigate("/doctor/dashboard");
+      if (existingDoctor) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('medical_officers')
+          .update(doctorData)
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new profile
+        const { error: insertError } = await supabase
+          .from('medical_officers')
+          .insert({
+            ...doctorData,
+            user_id: user.id,
+          });
+
+        if (insertError) throw insertError;
+
+        // Add doctor role if not exists (ignore error if already exists)
+        try {
+          await supabase.from('user_roles').insert({
+            user_id: user.id,
+            role: 'doctor'
+          });
+        } catch {
+          // Role may already exist, ignore
+        }
+      }
+
+      toast({
+        title: "Registration Successful!",
+        description: "Your medical staff profile has been saved.",
+      });
+
+      navigate("/doctor/dashboard");
+    } catch (error: any) {
+      console.error("Doctor registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStep = () => {

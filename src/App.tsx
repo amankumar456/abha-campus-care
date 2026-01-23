@@ -17,6 +17,7 @@ import StudentProfile from "./pages/StudentProfile";
 import NewVisit from "./pages/NewVisit";
 import AdminPanel from "./pages/AdminPanel";
 import MentorDashboard from "./pages/MentorDashboard";
+import MentorProfile from "./pages/MentorProfile";
 import MedicalLeave from "./pages/MedicalLeave";
 import NotFound from "./pages/NotFound";
 import BackNavigation from "./components/BackNavigation";
@@ -68,6 +69,9 @@ const App = () => (
           } />
           <Route path="/mentor/dashboard" element={
             <ProtectedRoute><MentorDashboard /></ProtectedRoute>
+          } />
+          <Route path="/mentor/profile" element={
+            <ProtectedRoute><MentorProfile /></ProtectedRoute>
           } />
           <Route path="/medical-leave" element={
             <ProtectedRoute><MedicalLeave /></ProtectedRoute>

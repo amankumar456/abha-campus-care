@@ -1,11 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   User, 
   Mail, 
   Phone, 
   Building2,
-  Users
+  Users,
+  Edit
 } from "lucide-react";
 
 interface MentorProfile {
@@ -21,13 +24,26 @@ interface MentorProfileCardProps {
 }
 
 export default function MentorProfileCard({ profile, menteeCount }: MentorProfileCardProps) {
+  const navigate = useNavigate();
+
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <User className="w-5 h-5 text-primary" />
-          My Profile
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="w-5 h-5 text-primary" />
+            My Profile
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/mentor/profile")}
+            className="text-primary hover:text-primary/80"
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex items-start gap-4">
