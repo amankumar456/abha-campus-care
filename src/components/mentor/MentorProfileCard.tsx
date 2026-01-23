@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { 
   User, 
   Mail, 
@@ -10,6 +11,7 @@ import {
   Users,
   Edit
 } from "lucide-react";
+import ProfileCompletionIndicator from "@/components/profile/ProfileCompletionIndicator";
 
 interface MentorProfile {
   name: string;
@@ -25,6 +27,14 @@ interface MentorProfileCardProps {
 
 export default function MentorProfileCard({ profile, menteeCount }: MentorProfileCardProps) {
   const navigate = useNavigate();
+
+  // Define profile fields for completion tracking
+  const profileFields = [
+    { name: "name", label: "Full Name", filled: !!profile.name, required: true },
+    { name: "department", label: "Department", filled: !!profile.department, required: true },
+    { name: "email", label: "Email", filled: !!profile.email, required: false },
+    { name: "phone", label: "Phone", filled: !!profile.phone, required: false },
+  ];
 
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
@@ -45,7 +55,12 @@ export default function MentorProfileCard({ profile, menteeCount }: MentorProfil
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Profile Completion Indicator */}
+        <ProfileCompletionIndicator fields={profileFields} showMissingFields={false} />
+        
+        <Separator />
+
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
