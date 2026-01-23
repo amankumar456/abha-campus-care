@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { 
   User, 
   Mail, 
@@ -13,6 +14,7 @@ import {
   FileCheck,
   Edit
 } from "lucide-react";
+import ProfileCompletionIndicator from "./ProfileCompletionIndicator";
 
 interface DoctorProfileCardProps {
   profile: {
@@ -32,6 +34,16 @@ interface DoctorProfileCardProps {
 }
 
 export default function DoctorProfileCard({ profile, stats }: DoctorProfileCardProps) {
+  // Define profile fields for completion tracking
+  const profileFields = [
+    { name: "name", label: "Full Name", filled: !!profile.name, required: true },
+    { name: "designation", label: "Designation", filled: !!profile.designation, required: true },
+    { name: "qualification", label: "Qualification", filled: !!profile.qualification, required: true },
+    { name: "email", label: "Email", filled: !!profile.email, required: true },
+    { name: "phoneOffice", label: "Office Phone", filled: !!profile.phoneOffice, required: false },
+    { name: "phoneMobile", label: "Mobile Phone", filled: !!(profile.phoneMobile && profile.phoneMobile.length > 0), required: true },
+  ];
+
   return (
     <Card className="bg-gradient-to-br from-blue-500/5 to-blue-600/10 border-blue-500/20">
       <CardHeader className="pb-3">
@@ -54,6 +66,11 @@ export default function DoctorProfileCard({ profile, stats }: DoctorProfileCardP
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Profile Completion Indicator */}
+        <ProfileCompletionIndicator fields={profileFields} />
+        
+        <Separator />
+
         {/* Doctor Info */}
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">

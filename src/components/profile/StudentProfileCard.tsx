@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { 
   User, 
   Mail, 
@@ -14,6 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import ProfileCompletionIndicator from "./ProfileCompletionIndicator";
 
 interface StudentProfileCardProps {
   profile: {
@@ -38,6 +40,21 @@ interface StudentProfileCardProps {
 }
 
 export default function StudentProfileCard({ profile, healthStats }: StudentProfileCardProps) {
+  // Define profile fields for completion tracking
+  const profileFields = [
+    { name: "fullName", label: "Full Name", filled: !!profile.fullName, required: true },
+    { name: "rollNumber", label: "Roll Number", filled: !!profile.rollNumber, required: true },
+    { name: "email", label: "Email", filled: !!profile.email, required: true },
+    { name: "phone", label: "Phone", filled: !!profile.phone, required: true },
+    { name: "program", label: "Program", filled: !!profile.program, required: true },
+    { name: "batch", label: "Batch", filled: !!profile.batch, required: true },
+    { name: "branch", label: "Branch/Department", filled: !!profile.branch, required: false },
+    { name: "yearOfStudy", label: "Year of Study", filled: !!profile.yearOfStudy, required: false },
+    { name: "mentorName", label: "Mentor Name", filled: !!profile.mentorName, required: true },
+    { name: "mentorEmail", label: "Mentor Email", filled: !!profile.mentorEmail, required: false },
+    { name: "mentorPhone", label: "Mentor Phone", filled: !!profile.mentorPhone, required: false },
+  ];
+
   return (
     <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       <CardHeader className="pb-3">
@@ -47,6 +64,11 @@ export default function StudentProfileCard({ profile, healthStats }: StudentProf
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Profile Completion Indicator */}
+        <ProfileCompletionIndicator fields={profileFields} />
+        
+        <Separator />
+
         {/* Personal Info */}
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
