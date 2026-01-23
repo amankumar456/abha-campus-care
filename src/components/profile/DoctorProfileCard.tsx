@@ -1,5 +1,7 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   User, 
   Mail, 
@@ -8,8 +10,8 @@ import {
   Award,
   Building2,
   Calendar,
-  Users,
-  FileCheck
+  FileCheck,
+  Edit
 } from "lucide-react";
 
 interface DoctorProfileCardProps {
@@ -33,10 +35,23 @@ export default function DoctorProfileCard({ profile, stats }: DoctorProfileCardP
   return (
     <Card className="bg-gradient-to-br from-blue-500/5 to-blue-600/10 border-blue-500/20">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <User className="w-5 h-5 text-blue-600" />
-          My Profile
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="w-5 h-5 text-blue-600" />
+            My Profile
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="text-blue-600 hover:text-blue-700"
+          >
+            <Link to="/doctor/register">
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Doctor Info */}

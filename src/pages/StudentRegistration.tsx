@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -99,19 +100,97 @@ export default function StudentRegistration() {
   const onSubmit = async (data: FullRegistration) => {
     setIsSubmitting(true);
     
-    // Simulate API call - in production, this would save to database
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Don't log sensitive data in production
-    console.log("Registration submitted successfully");
-    
-    toast({
-      title: "Registration Successful!",
-      description: "Your health portal account has been created. You can now log in.",
-    });
-    
-    setIsSubmitting(false);
-    navigate("/");
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in first to complete registration.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        navigate("/auth");
+        return;
+      }
+
+      // Check if student profile already exists
+      const { data: existingStudent } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingStudent) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('students')
+          .update({
+            full_name: data.fullName,
+            roll_number: data.rollNumber,
+            email: data.officialEmail,
+            phone: data.personalContact,
+            program: data.programme,
+            branch: data.department,
+            batch: data.yearOfStudy,
+            year_of_study: data.yearOfStudy,
+            mentor_name: data.mentorName,
+            mentor_contact: data.mentorContact,
+            mentor_email: data.mentorEmail,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new profile
+        const { error: insertError } = await supabase
+          .from('students')
+          .insert({
+            user_id: user.id,
+            full_name: data.fullName,
+            roll_number: data.rollNumber,
+            email: data.officialEmail,
+            phone: data.personalContact,
+            program: data.programme,
+            branch: data.department,
+            batch: data.yearOfStudy,
+            year_of_study: data.yearOfStudy,
+            mentor_name: data.mentorName,
+            mentor_contact: data.mentorContact,
+            mentor_email: data.mentorEmail,
+          });
+
+        if (insertError) throw insertError;
+
+        // Add student role if not exists (ignore error if already exists)
+        try {
+          await supabase.from('user_roles').insert({
+            user_id: user.id,
+            role: 'student'
+          });
+        } catch {
+          // Role may already exist, ignore
+        }
+      }
+      
+      toast({
+        title: "Registration Successful!",
+        description: "Your health portal profile has been saved.",
+      });
+      
+      navigate("/health-dashboard");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStep = () => {
