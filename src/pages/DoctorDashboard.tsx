@@ -18,6 +18,7 @@ import {
   Settings,
   User,
   UserSearch,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
 import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
+import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -206,14 +208,18 @@ export default function DoctorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+          <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Dashboard
             </TabsTrigger>
+            <TabsTrigger value="medical-leave" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Medical Leave
+            </TabsTrigger>
             <TabsTrigger value="student-search" className="flex items-center gap-2">
               <UserSearch className="w-4 h-4" />
-              Student Records
+              Records
             </TabsTrigger>
           </TabsList>
 
@@ -301,6 +307,11 @@ export default function DoctorDashboard() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Medical Leave Tab */}
+          <TabsContent value="medical-leave">
+            <MedicalLeaveTab />
           </TabsContent>
 
           {/* Student Search Tab */}
