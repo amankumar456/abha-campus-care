@@ -16,6 +16,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   User,
   GraduationCap,
   Building2,
@@ -23,6 +30,7 @@ import {
   FileText,
   Send,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Student {
@@ -43,6 +51,7 @@ interface MedicalLeaveDialogProps {
   student: Student;
   doctorId: string;
   appointmentId: string;
+  healthPriority?: string;
 }
 
 const MedicalLeaveDialog = ({
@@ -51,11 +60,13 @@ const MedicalLeaveDialog = ({
   student,
   doctorId,
   appointmentId,
+  healthPriority = "medium",
 }: MedicalLeaveDialogProps) => {
   const queryClient = useQueryClient();
   const [referralHospital, setReferralHospital] = useState("");
   const [restDays, setRestDays] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
+  const [selectedPriority, setSelectedPriority] = useState(healthPriority);
 
   const createLeaveMutation = useMutation({
     mutationFn: async () => {
@@ -76,6 +87,8 @@ const MedicalLeaveDialog = ({
         academic_leave_approved: true,
         approved_by_doctor_id: doctorId,
         approval_date: new Date().toISOString(),
+        health_priority: selectedPriority,
+        appointment_id: appointmentId,
       });
 
       if (error) throw error;
@@ -97,6 +110,7 @@ const MedicalLeaveDialog = ({
       setReferralHospital("");
       setRestDays("");
       setDoctorNotes("");
+      setSelectedPriority("medium");
     },
     onError: (error: any) => {
       toast.error("Failed to create leave request", {
@@ -176,6 +190,45 @@ const MedicalLeaveDialog = ({
             <div className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4 text-primary" />
               <Label className="text-base font-semibold">Leave Details</Label>
+            </div>
+
+            {/* Health Priority Selector */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Health Condition Priority <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={selectedPriority}
+                onValueChange={setSelectedPriority}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select priority level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      Low - Minor illness, rest recommended
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      Medium - Moderate condition, treatment required
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="high">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-destructive" />
+                      High - Serious condition, urgent care needed
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This priority level will be pre-filled on the student's leave form
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

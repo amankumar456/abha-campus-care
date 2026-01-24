@@ -48,11 +48,15 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          approved_at: string | null
           created_at: string | null
+          denial_reason: string | null
+          denied_at: string | null
           doctor_type: string
           health_priority: string | null
           id: string
           medical_officer_id: string | null
+          needs_medical_leave: boolean | null
           notes: string | null
           patient_id: string
           reason: string | null
@@ -63,11 +67,15 @@ export type Database = {
         Insert: {
           appointment_date: string
           appointment_time: string
+          approved_at?: string | null
           created_at?: string | null
+          denial_reason?: string | null
+          denied_at?: string | null
           doctor_type: string
           health_priority?: string | null
           id?: string
           medical_officer_id?: string | null
+          needs_medical_leave?: boolean | null
           notes?: string | null
           patient_id: string
           reason?: string | null
@@ -78,11 +86,15 @@ export type Database = {
         Update: {
           appointment_date?: string
           appointment_time?: string
+          approved_at?: string | null
           created_at?: string | null
+          denial_reason?: string | null
+          denied_at?: string | null
           doctor_type?: string
           health_priority?: string | null
           id?: string
           medical_officer_id?: string | null
+          needs_medical_leave?: boolean | null
           notes?: string | null
           patient_id?: string
           reason?: string | null
@@ -233,6 +245,7 @@ export type Database = {
           accompanist_relationship: string | null
           accompanist_type: string | null
           actual_return_date: string | null
+          appointment_id: string | null
           approval_date: string | null
           approved_by_doctor_id: string | null
           created_at: string
@@ -240,6 +253,7 @@ export type Database = {
           expected_duration: string
           expected_return_date: string | null
           follow_up_notes: string | null
+          health_priority: string | null
           hospital_discharge_date: string | null
           id: string
           illness_description: string | null
@@ -261,6 +275,7 @@ export type Database = {
           accompanist_relationship?: string | null
           accompanist_type?: string | null
           actual_return_date?: string | null
+          appointment_id?: string | null
           approval_date?: string | null
           approved_by_doctor_id?: string | null
           created_at?: string
@@ -268,6 +283,7 @@ export type Database = {
           expected_duration: string
           expected_return_date?: string | null
           follow_up_notes?: string | null
+          health_priority?: string | null
           hospital_discharge_date?: string | null
           id?: string
           illness_description?: string | null
@@ -289,6 +305,7 @@ export type Database = {
           accompanist_relationship?: string | null
           accompanist_type?: string | null
           actual_return_date?: string | null
+          appointment_id?: string | null
           approval_date?: string | null
           approved_by_doctor_id?: string | null
           created_at?: string
@@ -296,6 +313,7 @@ export type Database = {
           expected_duration?: string
           expected_return_date?: string | null
           follow_up_notes?: string | null
+          health_priority?: string | null
           hospital_discharge_date?: string | null
           id?: string
           illness_description?: string | null
@@ -311,6 +329,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "medical_leave_requests_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "medical_leave_requests_approved_by_doctor_id_fkey"
             columns: ["approved_by_doctor_id"]
