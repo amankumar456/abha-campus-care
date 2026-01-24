@@ -12,12 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, Home, Printer, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, FileText, Home, Printer, Stethoscope, User } from "lucide-react";
 import DoctorReferralForm from "@/components/medical-leave/DoctorReferralForm";
 import StudentLeaveForm from "@/components/medical-leave/StudentLeaveForm";
 import ReturnNotificationForm from "@/components/medical-leave/ReturnNotificationForm";
 import LeaveStatusCard from "@/components/medical-leave/LeaveStatusCard";
 import PrintableLeaveLetter from "@/components/medical-leave/PrintableLeaveLetter";
+import LeaveStatusTimeline from "@/components/medical-leave/LeaveStatusTimeline";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -83,6 +84,7 @@ const MedicalLeave = () => {
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showLeaveLetter, setShowLeaveLetter] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // Fetch student profile for leave letter
   const { data: studentProfile } = useQuery({
@@ -171,6 +173,18 @@ const MedicalLeave = () => {
   const activeLeaveRequest = studentLeaveRequest && ["on_leave", "return_pending"].includes(studentLeaveRequest.status) 
     ? studentLeaveRequest : null;
 
+  const toggleRowExpanded = (id: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -219,13 +233,22 @@ const MedicalLeave = () => {
             {/* Main Content */}
             {!showLeaveLetter && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Status Card */}
+                {/* Status Card & Timeline */}
                 <div className="lg:col-span-1 space-y-4">
                   <LeaveStatusCard
                     leaveRequest={studentLeaveRequest}
                     onFillForm={() => setShowLeaveForm(true)}
                     onSubmitReturn={() => setShowReturnForm(true)}
                   />
+                  
+                  {/* Timeline for active leave requests */}
+                  {studentLeaveRequest && (
+                    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                      <CardContent className="pt-6">
+                        <LeaveStatusTimeline leaveRequest={studentLeaveRequest} />
+                      </CardContent>
+                    </Card>
+                  )}
                   
                   {/* View Leave Letter Button */}
                   {studentLeaveRequest && ["on_leave", "return_pending", "returned"].includes(studentLeaveRequest.status) && (
@@ -375,6 +398,7 @@ const MedicalLeave = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-8"></TableHead>
                             <TableHead>Student</TableHead>
                             <TableHead>Hospital</TableHead>
                             <TableHead>Date</TableHead>
@@ -383,21 +407,41 @@ const MedicalLeave = () => {
                         </TableHeader>
                         <TableBody>
                           {allLeaveRequests?.map((request) => (
-                            <TableRow key={request.id}>
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium">{request.students?.full_name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {request.students?.roll_number}
-                                  </p>
-                                </div>
-                              </TableCell>
-                              <TableCell>{request.referral_hospital}</TableCell>
-                              <TableCell>
-                                {format(new Date(request.referral_date), "PP")}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(request.status)}</TableCell>
-                            </TableRow>
+                            <>
+                              <TableRow 
+                                key={request.id} 
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => toggleRowExpanded(request.id)}
+                              >
+                                <TableCell className="p-2">
+                                  {expandedRows.has(request.id) ? (
+                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{request.students?.full_name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {request.students?.roll_number}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{request.referral_hospital}</TableCell>
+                                <TableCell>
+                                  {format(new Date(request.referral_date), "PP")}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(request.status)}</TableCell>
+                              </TableRow>
+                              {expandedRows.has(request.id) && (
+                                <TableRow key={`${request.id}-timeline`}>
+                                  <TableCell colSpan={5} className="bg-muted/30 p-4">
+                                    <LeaveStatusTimeline leaveRequest={request} />
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </>
                           ))}
                         </TableBody>
                       </Table>
@@ -441,71 +485,111 @@ const MedicalLeave = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-8"></TableHead>
                         <TableHead>Student</TableHead>
                         <TableHead>Hospital</TableHead>
                         <TableHead>Referred By</TableHead>
                         <TableHead>Leave Period</TableHead>
-                        <TableHead>Accompanist</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {allLeaveRequests?.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{request.students?.full_name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {request.students?.roll_number} • {request.students?.program}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>{request.referral_hospital}</p>
-                              {request.illness_description && (
-                                <p className="text-sm text-muted-foreground truncate max-w-[150px]">
-                                  {request.illness_description}
-                                </p>
+                        <>
+                          <TableRow 
+                            key={request.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => toggleRowExpanded(request.id)}
+                          >
+                            <TableCell className="p-2">
+                              {expandedRows.has(request.id) ? (
+                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>{request.medical_officers?.name || "—"}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {format(new Date(request.referral_date), "PP")}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {request.leave_start_date ? (
-                              <div className="text-sm">
-                                <p>{format(new Date(request.leave_start_date), "PP")}</p>
-                                <p className="text-muted-foreground">
-                                  to {request.expected_return_date 
-                                    ? format(new Date(request.expected_return_date), "PP")
-                                    : "TBD"}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{request.students?.full_name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {request.students?.roll_number} • {request.students?.program}
                                 </p>
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {request.accompanist_name ? (
-                              <div className="text-sm">
-                                <p>{request.accompanist_name}</p>
-                                <p className="text-muted-foreground">
-                                  {request.accompanist_relationship}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p>{request.referral_hospital}</p>
+                                {request.illness_description && (
+                                  <p className="text-sm text-muted-foreground truncate max-w-[150px]">
+                                    {request.illness_description}
+                                  </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p>{request.medical_officers?.name || "—"}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(new Date(request.referral_date), "PP")}
                                 </p>
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(request.status)}</TableCell>
-                        </TableRow>
+                            </TableCell>
+                            <TableCell>
+                              {request.leave_start_date ? (
+                                <div className="text-sm">
+                                  <p>{format(new Date(request.leave_start_date), "PP")}</p>
+                                  <p className="text-muted-foreground">
+                                    to {request.expected_return_date 
+                                      ? format(new Date(request.expected_return_date), "PP")
+                                      : "TBD"}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(request.status)}</TableCell>
+                          </TableRow>
+                          {expandedRows.has(request.id) && (
+                            <TableRow key={`${request.id}-timeline`}>
+                              <TableCell colSpan={6} className="bg-muted/30 p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <LeaveStatusTimeline leaveRequest={request} />
+                                  <div className="space-y-3">
+                                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                                      Additional Details
+                                    </h4>
+                                    {request.accompanist_name && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Accompanist</p>
+                                        <p className="text-muted-foreground">
+                                          {request.accompanist_name} ({request.accompanist_relationship})
+                                        </p>
+                                        {request.accompanist_contact && (
+                                          <p className="text-muted-foreground">
+                                            Contact: {request.accompanist_contact}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                    {request.doctor_notes && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Doctor's Notes</p>
+                                        <p className="text-muted-foreground">{request.doctor_notes}</p>
+                                      </div>
+                                    )}
+                                    {request.rest_days && (
+                                      <div className="text-sm">
+                                        <p className="font-medium">Approved Rest Days</p>
+                                        <p className="text-muted-foreground">{request.rest_days} days</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </>
                       ))}
                     </TableBody>
                   </Table>
