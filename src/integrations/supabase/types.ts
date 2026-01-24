@@ -50,6 +50,7 @@ export type Database = {
           appointment_time: string
           created_at: string | null
           doctor_type: string
+          health_priority: string | null
           id: string
           medical_officer_id: string | null
           notes: string | null
@@ -64,6 +65,7 @@ export type Database = {
           appointment_time: string
           created_at?: string | null
           doctor_type: string
+          health_priority?: string | null
           id?: string
           medical_officer_id?: string | null
           notes?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           appointment_time?: string
           created_at?: string | null
           doctor_type?: string
+          health_priority?: string | null
           id?: string
           medical_officer_id?: string | null
           notes?: string | null
@@ -224,11 +227,14 @@ export type Database = {
       }
       medical_leave_requests: {
         Row: {
+          academic_leave_approved: boolean | null
           accompanist_contact: string | null
           accompanist_name: string | null
           accompanist_relationship: string | null
           accompanist_type: string | null
           actual_return_date: string | null
+          approval_date: string | null
+          approved_by_doctor_id: string | null
           created_at: string
           doctor_notes: string | null
           expected_duration: string
@@ -241,6 +247,7 @@ export type Database = {
           referral_date: string | null
           referral_hospital: string
           referring_doctor_id: string | null
+          rest_days: number | null
           return_submitted_at: string | null
           status: Database["public"]["Enums"]["medical_leave_status"]
           student_form_submitted_at: string | null
@@ -248,11 +255,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_leave_approved?: boolean | null
           accompanist_contact?: string | null
           accompanist_name?: string | null
           accompanist_relationship?: string | null
           accompanist_type?: string | null
           actual_return_date?: string | null
+          approval_date?: string | null
+          approved_by_doctor_id?: string | null
           created_at?: string
           doctor_notes?: string | null
           expected_duration: string
@@ -265,6 +275,7 @@ export type Database = {
           referral_date?: string | null
           referral_hospital: string
           referring_doctor_id?: string | null
+          rest_days?: number | null
           return_submitted_at?: string | null
           status?: Database["public"]["Enums"]["medical_leave_status"]
           student_form_submitted_at?: string | null
@@ -272,11 +283,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_leave_approved?: boolean | null
           accompanist_contact?: string | null
           accompanist_name?: string | null
           accompanist_relationship?: string | null
           accompanist_type?: string | null
           actual_return_date?: string | null
+          approval_date?: string | null
+          approved_by_doctor_id?: string | null
           created_at?: string
           doctor_notes?: string | null
           expected_duration?: string
@@ -289,6 +303,7 @@ export type Database = {
           referral_date?: string | null
           referral_hospital?: string
           referring_doctor_id?: string | null
+          rest_days?: number | null
           return_submitted_at?: string | null
           status?: Database["public"]["Enums"]["medical_leave_status"]
           student_form_submitted_at?: string | null
@@ -296,6 +311,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "medical_leave_requests_approved_by_doctor_id_fkey"
+            columns: ["approved_by_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "medical_leave_requests_referring_doctor_id_fkey"
             columns: ["referring_doctor_id"]

@@ -28,6 +28,7 @@ interface LeaveRequest {
   referral_date: string;
   referral_hospital: string;
   expected_duration: string;
+  rest_days: number | null;
   doctor_notes: string | null;
   illness_description: string | null;
   leave_start_date: string | null;
@@ -41,6 +42,9 @@ interface LeaveRequest {
   hospital_discharge_date: string | null;
   follow_up_notes: string | null;
   return_submitted_at: string | null;
+  academic_leave_approved: boolean | null;
+  approved_by_doctor_id: string | null;
+  approval_date: string | null;
   status: MedicalLeaveStatus;
   created_at: string;
   updated_at: string;
@@ -96,14 +100,14 @@ const MedicalLeave = () => {
         .from("medical_leave_requests")
         .select(`
           *,
-          medical_officers(name)
+          medical_officers!referring_doctor_id(name)
         `)
         .eq("student_id", studentData.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") throw error;
+      if (error) throw error;
       return data as LeaveRequest | null;
     },
     enabled: isStudent && !!user,
@@ -118,12 +122,12 @@ const MedicalLeave = () => {
         .select(`
           *,
           students(full_name, roll_number, program),
-          medical_officers(name)
+          medical_officers!referring_doctor_id(name)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as LeaveRequest[];
+      return (data || []) as LeaveRequest[];
     },
     enabled: (isDoctor || isMentor || isAdmin) && !!user,
   });
