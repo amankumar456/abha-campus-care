@@ -14,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Printer, Search, Send, Stethoscope, User } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Search, Send, Stethoscope, User, Clock, FileText, AlertTriangle } from "lucide-react";
 import { z } from "zod";
 import PrintableHospitalCard from "./PrintableHospitalCard";
+import PrintableReferralLetter from "./PrintableReferralLetter";
 
 // Hospital contact information type
 interface HospitalInfo {
@@ -311,23 +313,49 @@ const getHospitalByName = (name: string): HospitalInfo | null => {
 };
 
 // Hospital Details Card Component
-const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber }: { 
+const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, showReferralLetter, referralData }: { 
   hospital: HospitalInfo; 
   studentName?: string;
   studentRollNumber?: string;
+  showReferralLetter?: boolean;
+  referralData?: {
+    program?: string;
+    branch?: string | null;
+    illnessDescription: string;
+    leaveDays: number;
+    healthPriority: string;
+    doctorNotes?: string;
+  };
 }) => (
   <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
     <div className="space-y-3">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
           <h4 className="font-semibold text-foreground">{hospital.name}</h4>
         </div>
-        <PrintableHospitalCard 
-          hospital={hospital} 
-          studentName={studentName}
-          studentRollNumber={studentRollNumber}
-        />
+        <div className="flex gap-2 flex-wrap">
+          <PrintableHospitalCard 
+            hospital={hospital} 
+            studentName={studentName}
+            studentRollNumber={studentRollNumber}
+          />
+          {showReferralLetter && referralData && studentName && studentRollNumber && (
+            <PrintableReferralLetter
+              data={{
+                studentName,
+                rollNumber: studentRollNumber,
+                program: referralData.program,
+                branch: referralData.branch,
+                hospital,
+                illnessDescription: referralData.illnessDescription,
+                leaveDays: referralData.leaveDays,
+                healthPriority: referralData.healthPriority,
+                doctorNotes: referralData.doctorNotes,
+              }}
+            />
+          )}
+        </div>
       </div>
       
       {hospital.address && (
@@ -408,6 +436,9 @@ const referralFormSchema = z.object({
   ),
   referralHospital: z.string().min(2, "Hospital name is required"),
   expectedDuration: z.string().min(1, "Expected duration is required"),
+  illnessDescription: z.string().min(3, "Please describe the illness/condition"),
+  leaveDays: z.coerce.number().min(1, "At least 1 day required").max(90, "Maximum 90 days"),
+  healthPriority: z.enum(["low", "medium", "high"]),
   doctorNotes: z.string().optional(),
 });
 
@@ -427,6 +458,9 @@ const DoctorReferralForm = () => {
       email: "",
       referralHospital: "",
       expectedDuration: "",
+      illnessDescription: "",
+      leaveDays: 3,
+      healthPriority: "medium",
       doctorNotes: "",
     },
   });
@@ -495,12 +529,20 @@ const DoctorReferralForm = () => {
       if (!doctorId) throw new Error("Doctor ID not found");
       if (!foundStudent) throw new Error("Please verify student first");
 
+      const leaveStartDate = new Date();
+      const expectedReturnDate = new Date(Date.now() + data.leaveDays * 24 * 60 * 60 * 1000);
+
       const { error } = await supabase.from("medical_leave_requests").insert({
         student_id: foundStudent.id,
         referring_doctor_id: doctorId,
         referral_hospital: data.referralHospital,
         expected_duration: data.expectedDuration,
+        illness_description: data.illnessDescription,
+        health_priority: data.healthPriority,
         doctor_notes: data.doctorNotes || null,
+        leave_start_date: leaveStartDate.toISOString().split('T')[0],
+        expected_return_date: expectedReturnDate.toISOString().split('T')[0],
+        rest_days: data.leaveDays,
         status: "student_form_pending",
       });
 
@@ -755,15 +797,6 @@ const DoctorReferralForm = () => {
                     )}
                   />
 
-                  {/* Show hospital details when selected */}
-                  {selectedHospital && (
-                    <HospitalDetailsCard 
-                      hospital={selectedHospital} 
-                      studentName={foundStudent?.full_name}
-                      studentRollNumber={foundStudent?.roll_number}
-                    />
-                  )}
-
                   {selectedHospitalName === "other" && (
                     <FormItem>
                       <FormLabel>Other Hospital Name</FormLabel>
@@ -776,44 +809,154 @@ const DoctorReferralForm = () => {
                     </FormItem>
                   )}
 
-                  <FormField
-                    control={form.control}
-                    name="expectedDuration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Expected Treatment Duration
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., 3-5 days, 1 week..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Medical Leave Details Section */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Medical Leave Details
+                    </Label>
 
-                  <FormField
-                    control={form.control}
-                    name="doctorNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Medical Notes (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Add any relevant medical notes..."
-                            className="resize-none"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          These notes will be visible to authorized personnel only
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="illnessDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Stethoscope className="h-4 w-4" />
+                            Illness / Condition Description
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe the medical condition requiring external treatment..."
+                              className="resize-none"
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="leaveDays"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              Medical Leave Days
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={1} 
+                                max={90} 
+                                placeholder="Number of days"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Recommended rest period (1-90 days)
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="healthPriority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              Health Priority
+                            </FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="flex gap-4"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="low" id="priority-low" />
+                                  <Label htmlFor="priority-low" className="text-primary font-medium cursor-pointer">Low</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="medium" id="priority-medium" />
+                                  <Label htmlFor="priority-medium" className="text-accent-foreground font-medium cursor-pointer">Medium</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="high" id="priority-high" />
+                                  <Label htmlFor="priority-high" className="text-destructive font-medium cursor-pointer">High</Label>
+                                </div>
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="expectedDuration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Expected Treatment Duration
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 3-5 days, 1 week..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="doctorNotes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Doctor's Notes (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Add any relevant medical notes, instructions, or recommendations..."
+                              className="resize-none"
+                              rows={3}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            These notes will appear on the referral letter
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Show hospital details with referral letter button when form is filled */}
+                  {selectedHospital && (
+                    <HospitalDetailsCard 
+                      hospital={selectedHospital} 
+                      studentName={foundStudent?.full_name}
+                      studentRollNumber={foundStudent?.roll_number}
+                      showReferralLetter={!!form.watch("illnessDescription") && form.watch("leaveDays") > 0}
+                      referralData={{
+                        program: foundStudent?.program,
+                        branch: foundStudent?.branch,
+                        illnessDescription: form.watch("illnessDescription"),
+                        leaveDays: form.watch("leaveDays"),
+                        healthPriority: form.watch("healthPriority"),
+                        doctorNotes: form.watch("doctorNotes"),
+                      }}
+                    />
+                  )}
                 </div>
 
                 {/* Declaration */}
