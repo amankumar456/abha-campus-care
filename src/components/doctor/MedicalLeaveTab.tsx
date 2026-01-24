@@ -186,6 +186,9 @@ export default function MedicalLeaveTab() {
         <TabsContent value="emergency" className="mt-0">
           <EmergencyDashboard />
         </TabsContent>
+
+        {/* New Referral Tab */}
+        <TabsContent value="new-referral" className="mt-0">
           <DoctorReferralForm />
         </TabsContent>
 
