@@ -50,12 +50,12 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
 
       if (error) throw error;
 
-      // Fetch student details for each appointment
+      // Fetch student details for each appointment using the doctor view (avoids RLS recursion)
       const patientIds = [...new Set(data.map((apt) => apt.patient_id))];
       
       const { data: students, error: studentsError } = await supabase
-        .from("students")
-        .select("id, user_id, full_name, roll_number, program, branch, batch, year_of_study, email, phone")
+        .from("students_doctor_view")
+        .select("id, user_id, full_name, roll_number, program, branch, batch, year_of_study")
         .in("user_id", patientIds);
 
       if (studentsError) {
