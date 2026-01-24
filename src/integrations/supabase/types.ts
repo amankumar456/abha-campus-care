@@ -14,6 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
+      ambulance_requests: {
+        Row: {
+          accompanying_person: string | null
+          accompanying_person_type: string | null
+          actual_arrival_minutes: number | null
+          ambulance_type: string
+          arrived_at: string | null
+          completed_at: string | null
+          condition_during_transit: string | null
+          created_at: string
+          destination_hospital: string
+          dispatched_at: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          estimated_arrival_minutes: number | null
+          handover_notes: string | null
+          hospital_arrival_at: string | null
+          id: string
+          medical_leave_request_id: string | null
+          paramedic_instructions: string | null
+          pickup_location: string
+          priority_level: string
+          receiving_doctor_name: string | null
+          requesting_doctor_id: string | null
+          special_equipment_needed: string[] | null
+          status: string
+          student_id: string
+          triage_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          accompanying_person?: string | null
+          accompanying_person_type?: string | null
+          actual_arrival_minutes?: number | null
+          ambulance_type: string
+          arrived_at?: string | null
+          completed_at?: string | null
+          condition_during_transit?: string | null
+          created_at?: string
+          destination_hospital: string
+          dispatched_at?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          estimated_arrival_minutes?: number | null
+          handover_notes?: string | null
+          hospital_arrival_at?: string | null
+          id?: string
+          medical_leave_request_id?: string | null
+          paramedic_instructions?: string | null
+          pickup_location?: string
+          priority_level: string
+          receiving_doctor_name?: string | null
+          requesting_doctor_id?: string | null
+          special_equipment_needed?: string[] | null
+          status?: string
+          student_id: string
+          triage_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accompanying_person?: string | null
+          accompanying_person_type?: string | null
+          actual_arrival_minutes?: number | null
+          ambulance_type?: string
+          arrived_at?: string | null
+          completed_at?: string | null
+          condition_during_transit?: string | null
+          created_at?: string
+          destination_hospital?: string
+          dispatched_at?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          estimated_arrival_minutes?: number | null
+          handover_notes?: string | null
+          hospital_arrival_at?: string | null
+          id?: string
+          medical_leave_request_id?: string | null
+          paramedic_instructions?: string | null
+          pickup_location?: string
+          priority_level?: string
+          receiving_doctor_name?: string | null
+          requesting_doctor_id?: string | null
+          special_equipment_needed?: string[] | null
+          status?: string
+          student_id?: string
+          triage_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ambulance_requests_medical_leave_request_id_fkey"
+            columns: ["medical_leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "medical_leave_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ambulance_requests_requesting_doctor_id_fkey"
+            columns: ["requesting_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ambulance_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ambulance_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ambulance_service: {
         Row: {
           created_at: string | null
@@ -185,6 +304,96 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_approval_workflow: {
+        Row: {
+          bypass_reason: string | null
+          bypass_witness: string | null
+          created_at: string
+          current_approval_level: number
+          id: string
+          is_emergency_bypass: boolean | null
+          level1_approved_at: string | null
+          level1_approved_by: string | null
+          level1_notes: string | null
+          level2_approved_at: string | null
+          level2_approved_by: string | null
+          level2_notes: string | null
+          level2_required: boolean | null
+          level3_approved_at: string | null
+          level3_approved_by: string | null
+          level3_notes: string | null
+          level3_required: boolean | null
+          medical_leave_request_id: string
+          rejection_reason: string | null
+          required_approval_level: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bypass_reason?: string | null
+          bypass_witness?: string | null
+          created_at?: string
+          current_approval_level?: number
+          id?: string
+          is_emergency_bypass?: boolean | null
+          level1_approved_at?: string | null
+          level1_approved_by?: string | null
+          level1_notes?: string | null
+          level2_approved_at?: string | null
+          level2_approved_by?: string | null
+          level2_notes?: string | null
+          level2_required?: boolean | null
+          level3_approved_at?: string | null
+          level3_approved_by?: string | null
+          level3_notes?: string | null
+          level3_required?: boolean | null
+          medical_leave_request_id: string
+          rejection_reason?: string | null
+          required_approval_level?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bypass_reason?: string | null
+          bypass_witness?: string | null
+          created_at?: string
+          current_approval_level?: number
+          id?: string
+          is_emergency_bypass?: boolean | null
+          level1_approved_at?: string | null
+          level1_approved_by?: string | null
+          level1_notes?: string | null
+          level2_approved_at?: string | null
+          level2_approved_by?: string | null
+          level2_notes?: string | null
+          level2_required?: boolean | null
+          level3_approved_at?: string | null
+          level3_approved_by?: string | null
+          level3_notes?: string | null
+          level3_required?: boolean | null
+          medical_leave_request_id?: string
+          rejection_reason?: string | null
+          required_approval_level?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_approval_workflow_level1_approved_by_fkey"
+            columns: ["level1_approved_by"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_approval_workflow_medical_leave_request_id_fkey"
+            columns: ["medical_leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "medical_leave_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -443,6 +652,101 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      priority_assessments: {
+        Row: {
+          ambulance_required: boolean | null
+          ambulance_type_recommended: string | null
+          assessing_doctor_id: string | null
+          clinical_notes: string | null
+          created_at: string
+          exams_affected: string[] | null
+          id: string
+          labs_affected: string[] | null
+          leave_duration_category: string | null
+          leave_required: boolean | null
+          medical_leave_request_id: string | null
+          modified_academic_plan: Json | null
+          priority_level: string
+          recommended_leave_days: number | null
+          special_accommodations: string[] | null
+          student_id: string
+          symptoms: string[]
+          updated_at: string
+          vital_signs: Json | null
+        }
+        Insert: {
+          ambulance_required?: boolean | null
+          ambulance_type_recommended?: string | null
+          assessing_doctor_id?: string | null
+          clinical_notes?: string | null
+          created_at?: string
+          exams_affected?: string[] | null
+          id?: string
+          labs_affected?: string[] | null
+          leave_duration_category?: string | null
+          leave_required?: boolean | null
+          medical_leave_request_id?: string | null
+          modified_academic_plan?: Json | null
+          priority_level: string
+          recommended_leave_days?: number | null
+          special_accommodations?: string[] | null
+          student_id: string
+          symptoms: string[]
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Update: {
+          ambulance_required?: boolean | null
+          ambulance_type_recommended?: string | null
+          assessing_doctor_id?: string | null
+          clinical_notes?: string | null
+          created_at?: string
+          exams_affected?: string[] | null
+          id?: string
+          labs_affected?: string[] | null
+          leave_duration_category?: string | null
+          leave_required?: boolean | null
+          medical_leave_request_id?: string | null
+          modified_academic_plan?: Json | null
+          priority_level?: string
+          recommended_leave_days?: number | null
+          special_accommodations?: string[] | null
+          student_id?: string
+          symptoms?: string[]
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "priority_assessments_assessing_doctor_id_fkey"
+            columns: ["assessing_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "priority_assessments_medical_leave_request_id_fkey"
+            columns: ["medical_leave_request_id"]
+            isOneToOne: false
+            referencedRelation: "medical_leave_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "priority_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "priority_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       security_audit_log: {
         Row: {

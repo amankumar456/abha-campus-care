@@ -19,7 +19,9 @@ import {
   Printer,
   MoreHorizontal,
   Send,
-  RefreshCw
+  RefreshCw,
+  Siren,
+  Activity
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Skeleton } from "@/components/ui/skeleton";
 import DoctorReferralForm from "@/components/medical-leave/DoctorReferralForm";
 import PrintableReferralLetter from "@/components/medical-leave/PrintableReferralLetter";
+import EmergencyDashboard from "@/components/doctor/EmergencyDashboard";
 
 interface LeaveRequest {
   id: string;
@@ -149,16 +152,18 @@ export default function MedicalLeaveTab() {
       {/* Sub-tabs for Medical Leave actions */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-          <TabsList className="grid w-full sm:w-auto grid-cols-3">
+          <TabsList className="grid w-full sm:w-auto grid-cols-4">
+            <TabsTrigger value="emergency" className="gap-2">
+              <Siren className="h-4 w-4" />
+              <span className="hidden sm:inline">Emergency</span>
+            </TabsTrigger>
             <TabsTrigger value="new-referral" className="gap-2">
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">New Referral</span>
-              <span className="sm:hidden">New</span>
+              <span className="hidden sm:inline">Referral</span>
             </TabsTrigger>
             <TabsTrigger value="my-referrals" className="gap-2">
               <ClipboardList className="h-4 w-4" />
-              <span className="hidden sm:inline">My Referrals</span>
-              <span className="sm:hidden">Referrals</span>
+              <span className="hidden sm:inline">My Cases</span>
               {stats.pending > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5">
                   {stats.pending}
@@ -168,7 +173,6 @@ export default function MedicalLeaveTab() {
             <TabsTrigger value="follow-ups" className="gap-2">
               <CalendarClock className="h-4 w-4" />
               <span className="hidden sm:inline">Follow-ups</span>
-              <span className="sm:hidden">Follow</span>
             </TabsTrigger>
           </TabsList>
 
@@ -178,8 +182,10 @@ export default function MedicalLeaveTab() {
           </Button>
         </div>
 
-        {/* New Referral Tab */}
-        <TabsContent value="new-referral" className="mt-0">
+        {/* Emergency Dashboard Tab */}
+        <TabsContent value="emergency" className="mt-0">
+          <EmergencyDashboard />
+        </TabsContent>
           <DoctorReferralForm />
         </TabsContent>
 
