@@ -14,8 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Search, Send, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Printer, Search, Send, Stethoscope, User } from "lucide-react";
 import { z } from "zod";
+import PrintableHospitalCard from "./PrintableHospitalCard";
 
 // Hospital contact information type
 interface HospitalInfo {
@@ -310,72 +311,81 @@ const getHospitalByName = (name: string): HospitalInfo | null => {
 };
 
 // Hospital Details Card Component
-const HospitalDetailsCard = ({ hospital }: { hospital: HospitalInfo }) => (
+const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber }: { 
+  hospital: HospitalInfo; 
+  studentName?: string;
+  studentRollNumber?: string;
+}) => (
   <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex-1 space-y-3">
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
           <h4 className="font-semibold text-foreground">{hospital.name}</h4>
         </div>
-        
-        {hospital.address && (
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-            <span className="text-muted-foreground">{hospital.address}</span>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-3">
-          {hospital.phone && (
-            <a 
-              href={`tel:${hospital.phone}`} 
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              <Phone className="h-3.5 w-3.5" />
-              {hospital.phone}
-            </a>
-          )}
-          {hospital.emergency && (
-            <a 
-              href={`tel:${hospital.emergency}`} 
-              className="inline-flex items-center gap-1.5 text-sm text-destructive font-medium hover:underline"
-            >
-              <Phone className="h-3.5 w-3.5" />
-              Emergency: {hospital.emergency}
-            </a>
-          )}
+        <PrintableHospitalCard 
+          hospital={hospital} 
+          studentName={studentName}
+          studentRollNumber={studentRollNumber}
+        />
+      </div>
+      
+      {hospital.address && (
+        <div className="flex items-start gap-2 text-sm">
+          <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+          <span className="text-muted-foreground">{hospital.address}</span>
         </div>
+      )}
 
-        {hospital.directions && (
-          <div className="flex items-start gap-2 text-sm bg-white/60 rounded-md p-2">
-            <Navigation className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-            <span className="text-muted-foreground">{hospital.directions}</span>
-          </div>
-        )}
-
-        {hospital.specialties && hospital.specialties.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {hospital.specialties.map((specialty, idx) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
-                {specialty}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {hospital.mapUrl && (
-          <a
-            href={hospital.mapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+      <div className="flex flex-wrap gap-3">
+        {hospital.phone && (
+          <a 
+            href={`tel:${hospital.phone}`} 
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Open in Google Maps
+            <Phone className="h-3.5 w-3.5" />
+            {hospital.phone}
+          </a>
+        )}
+        {hospital.emergency && (
+          <a 
+            href={`tel:${hospital.emergency}`} 
+            className="inline-flex items-center gap-1.5 text-sm text-destructive font-medium hover:underline"
+          >
+            <Phone className="h-3.5 w-3.5" />
+            Emergency: {hospital.emergency}
           </a>
         )}
       </div>
+
+      {hospital.directions && (
+        <div className="flex items-start gap-2 text-sm bg-background/60 rounded-md p-2">
+          <Navigation className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <span className="text-muted-foreground">{hospital.directions}</span>
+        </div>
+      )}
+
+      {hospital.specialties && hospital.specialties.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {hospital.specialties.map((specialty, idx) => (
+            <Badge key={idx} variant="secondary" className="text-xs">
+              {specialty}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {hospital.mapUrl && (
+        <a
+          href={hospital.mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Open in Google Maps
+        </a>
+      )}
     </div>
   </div>
 );
@@ -747,7 +757,11 @@ const DoctorReferralForm = () => {
 
                   {/* Show hospital details when selected */}
                   {selectedHospital && (
-                    <HospitalDetailsCard hospital={selectedHospital} />
+                    <HospitalDetailsCard 
+                      hospital={selectedHospital} 
+                      studentName={foundStudent?.full_name}
+                      studentRollNumber={foundStudent?.roll_number}
+                    />
                   )}
 
                   {selectedHospitalName === "other" && (
