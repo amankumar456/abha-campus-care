@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import StudentRegistration from "./pages/StudentRegistration";
 import DoctorRegistration from "./pages/DoctorRegistration";
+import MentorRegistration from "./pages/MentorRegistration";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import MedicalTeam from "./pages/MedicalTeam";
 import Appointments from "./pages/Appointments";
@@ -66,6 +67,9 @@ const App = () => (
           } />
           <Route path="/admin" element={
             <ProtectedRoute><AdminPanel /></ProtectedRoute>
+          } />
+          <Route path="/mentor/register" element={
+            <ProtectedRoute><MentorRegistration /></ProtectedRoute>
           } />
           <Route path="/mentor/dashboard" element={
             <ProtectedRoute><MentorDashboard /></ProtectedRoute>

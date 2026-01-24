@@ -122,7 +122,10 @@ export default function StudentRegistration() {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      let studentId: string;
+
       if (existingStudent) {
+        studentId = existingStudent.id;
         // Update existing profile
         const { error: updateError } = await supabase
           .from('students')
@@ -145,7 +148,7 @@ export default function StudentRegistration() {
         if (updateError) throw updateError;
       } else {
         // Insert new profile
-        const { error: insertError } = await supabase
+        const { data: newStudent, error: insertError } = await supabase
           .from('students')
           .insert({
             user_id: user.id,
@@ -160,11 +163,14 @@ export default function StudentRegistration() {
             mentor_name: data.mentorName,
             mentor_contact: data.mentorContact,
             mentor_email: data.mentorEmail,
-          });
+          })
+          .select('id')
+          .single();
 
         if (insertError) throw insertError;
+        studentId = newStudent.id;
 
-        // Add student role if not exists (ignore error if already exists)
+        // Add student role if not exists
         try {
           await supabase.from('user_roles').insert({
             user_id: user.id,
@@ -173,6 +179,52 @@ export default function StudentRegistration() {
         } catch {
           // Role may already exist, ignore
         }
+      }
+
+      // Now save medical info to student_profiles
+      const medicalData = {
+        student_id: studentId,
+        blood_group: data.bloodGroup || null,
+        has_previous_health_issues: data.hasPreviousHealthIssues === "yes",
+        previous_health_details: data.previousHealthDetails || null,
+        current_medications: data.currentMedications || null,
+        known_allergies: data.knownAllergies || null,
+        covid_vaccination_status: data.covidVaccinationStatus || null,
+        has_disability: data.hasDisability === "yes",
+        disability_details: data.disabilityDetails || null,
+        emergency_contact: data.emergencyContact || null,
+        emergency_relationship: data.emergencyRelationship || null,
+        father_name: data.fatherName || null,
+        father_contact: data.fatherContact || null,
+        mother_name: data.motherName || null,
+        mother_contact: data.motherContact || null,
+        accuracy_confirmation: data.accuracyConfirmation || false,
+        code_of_conduct: data.codeOfConduct || false,
+        photo_video_consent: data.photoVideoConsent || false,
+        medical_authorization: data.medicalAuthorization || false,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Check if student_profile exists
+      const { data: existingProfile } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('student_id', studentId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        const { error: profileUpdateError } = await supabase
+          .from('student_profiles')
+          .update(medicalData)
+          .eq('student_id', studentId);
+        
+        if (profileUpdateError) throw profileUpdateError;
+      } else {
+        const { error: profileInsertError } = await supabase
+          .from('student_profiles')
+          .insert(medicalData);
+        
+        if (profileInsertError) throw profileInsertError;
       }
       
       toast({
