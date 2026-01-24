@@ -41,8 +41,8 @@ interface Student {
   branch: string | null;
   batch: string;
   year_of_study: string | null;
-  email: string | null;
-  phone: string | null;
+  email?: string | null;
+  phone?: string | null;
 }
 
 interface MedicalLeaveDialogProps {
