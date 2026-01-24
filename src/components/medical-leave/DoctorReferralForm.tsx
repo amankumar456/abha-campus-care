@@ -14,70 +14,371 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Building2, Calendar, CheckCircle2, Loader2, Mail, Search, Send, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Search, Send, Stethoscope, User } from "lucide-react";
 import { z } from "zod";
 
-// Empanelled hospitals list
-const EMPANELLED_HOSPITALS = {
+// Hospital contact information type
+interface HospitalInfo {
+  name: string;
+  location: string;
+  entitlement?: string;
+  phone?: string;
+  emergency?: string;
+  address?: string;
+  directions?: string;
+  mapUrl?: string;
+  specialties?: string[];
+}
+
+// Empanelled hospitals list with contact details
+const EMPANELLED_HOSPITALS: Record<string, HospitalInfo[]> = {
   superSpecialityWarangal: [
-    { name: "Rohini Super Specialty Hospital", location: "Hanamkonda" },
-    { name: "Samraksha Super Specialty Hospital", location: "Warangal" },
+    { 
+      name: "Rohini Super Specialty Hospital", 
+      location: "Hanamkonda",
+      phone: "0870-2461111",
+      emergency: "0870-2461122",
+      address: "6-3-249, Rohini Circle, Hanamkonda, Warangal - 506001",
+      directions: "Near Hanamkonda Bus Stand, opposite Rohini Circle. 8 km from NIT Warangal main gate.",
+      mapUrl: "https://maps.google.com/?q=Rohini+Super+Specialty+Hospital+Hanamkonda",
+      specialties: ["Cardiology", "Neurology", "Nephrology", "Oncology"]
+    },
+    { 
+      name: "Samraksha Super Specialty Hospital", 
+      location: "Warangal",
+      phone: "0870-2577777",
+      emergency: "0870-2577700",
+      address: "Warangal Main Road, Near MGM Hospital, Warangal - 506002",
+      directions: "On Warangal Main Road, near MGM Government Hospital. 10 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Samraksha+Super+Specialty+Hospital+Warangal",
+      specialties: ["Cardiac Surgery", "Orthopedics", "Gastroenterology", "Urology"]
+    },
   ],
   generalWarangal: [
-    { name: "Jaya Hospital", location: "Hanamkonda" },
-    { name: "Guardian Multi-Speciality Hospital", location: "Warangal" },
-    { name: "Max Care Hospitals", location: "Warangal" },
-    { name: "Pramoda Hospital", location: "Hanamkonda" },
-    { name: "Sharat Laser Eye Hospital", location: "Hanamkonda" },
-    { name: "Sri Laxmi Narasimha Hospital", location: "Hanamkonda" },
+    { 
+      name: "Jaya Hospital", 
+      location: "Hanamkonda",
+      phone: "0870-2542899",
+      emergency: "0870-2542800",
+      address: "JPN Road, Hanamkonda, Warangal - 506001",
+      directions: "On JPN Road, near Thousand Pillar Temple. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Jaya+Hospital+Hanamkonda",
+      specialties: ["General Medicine", "Surgery", "Pediatrics", "Gynecology"]
+    },
+    { 
+      name: "Guardian Multi-Speciality Hospital", 
+      location: "Warangal",
+      phone: "0870-2576666",
+      emergency: "0870-2576600",
+      address: "SVN Road, Warangal Fort, Warangal - 506002",
+      directions: "Near Warangal Fort, on SVN Road. 9 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Guardian+Multi+Speciality+Hospital+Warangal",
+      specialties: ["Multi-Specialty", "Critical Care", "Dialysis"]
+    },
+    { 
+      name: "Max Care Hospitals", 
+      location: "Warangal",
+      phone: "0870-2555555",
+      address: "Nakkalagutta, Hanamkonda, Warangal - 506001",
+      directions: "At Nakkalagutta Junction, Hanamkonda. 6 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Max+Care+Hospitals+Warangal"
+    },
+    { 
+      name: "Pramoda Hospital", 
+      location: "Hanamkonda",
+      phone: "0870-2500222",
+      address: "Kothawada Road, Hanamkonda, Warangal - 506001",
+      directions: "On Kothawada Road, near RTC Bus Stand. 8 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Pramoda+Hospital+Hanamkonda"
+    },
+    { 
+      name: "Sharat Laser Eye Hospital", 
+      location: "Hanamkonda",
+      phone: "0870-2574433",
+      address: "Subedari, Hanamkonda, Warangal - 506001",
+      directions: "At Subedari, near Subedari Circle. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sharat+Eye+Hospital+Hanamkonda",
+      specialties: ["Ophthalmology", "LASIK", "Cataract Surgery"]
+    },
+    { 
+      name: "Sri Laxmi Narasimha Hospital", 
+      location: "Hanamkonda",
+      phone: "0870-2543322",
+      address: "Mulugu Road, Hanamkonda, Warangal - 506001",
+      directions: "On Mulugu Road, near Balasamudram. 6 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sri+Laxmi+Narasimha+Hospital+Hanamkonda"
+    },
   ],
   superSpecialityHyderabad: [
-    { name: "Basavatarakam Indo American Cancer Hospital", location: "Hyderabad" },
-    { name: "Krishna Institute of Medical Sciences Ltd. (KIMS)", location: "Hyderabad" },
-    { name: "Sunshine Hospitals", location: "Hyderabad" },
-    { name: "CARE Super Speciality Hospitals", location: "Hyderabad" },
+    { 
+      name: "Basavatarakam Indo American Cancer Hospital", 
+      location: "Hyderabad",
+      phone: "040-23551235",
+      emergency: "040-23551236",
+      address: "Road No. 10, Banjara Hills, Hyderabad - 500034",
+      directions: "In Banjara Hills, Road No. 10. Approx. 150 km from NIT Warangal (2.5 hrs by road).",
+      mapUrl: "https://maps.google.com/?q=Basavatarakam+Indo+American+Cancer+Hospital+Hyderabad",
+      specialties: ["Oncology", "Cancer Treatment", "Radiation Therapy", "Chemotherapy"]
+    },
+    { 
+      name: "Krishna Institute of Medical Sciences Ltd. (KIMS)", 
+      location: "Hyderabad",
+      phone: "040-44885000",
+      emergency: "040-44885100",
+      address: "1-8-31/1, Minister Road, Secunderabad - 500003",
+      directions: "At Minister Road, Secunderabad. 145 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=KIMS+Hospitals+Secunderabad",
+      specialties: ["Cardiac Sciences", "Neuro Sciences", "Liver Transplant", "Orthopedics"]
+    },
+    { 
+      name: "Sunshine Hospitals", 
+      location: "Hyderabad",
+      phone: "040-44556677",
+      emergency: "040-44556600",
+      address: "PG Road, Secunderabad - 500003",
+      directions: "On PG Road, Secunderabad. 145 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sunshine+Hospitals+Hyderabad",
+      specialties: ["Orthopedics", "Joint Replacement", "Spine Surgery", "Sports Medicine"]
+    },
+    { 
+      name: "CARE Super Speciality Hospitals", 
+      location: "Hyderabad",
+      phone: "040-30418888",
+      emergency: "040-30418800",
+      address: "Road No. 1, Banjara Hills, Hyderabad - 500034",
+      directions: "In Banjara Hills, Road No. 1. Approx. 150 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=CARE+Hospitals+Banjara+Hills",
+      specialties: ["Cardiac Sciences", "Neuro Sciences", "Oncology", "Gastroenterology"]
+    },
   ],
   empanelledStudents: [
-    { name: "M/s. Medicover Hospitals", location: "Hyderabad & Warangal", entitlement: "Employees & Students" },
-    { name: "M/s. Vijaya Diagnostic Centre Ltd.", location: "Hyderabad & Warangal", entitlement: "Employees & Students" },
-    { name: "M/s. Rohini Medicare Pvt. Ltd.", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Ajara Hospitals", location: "Warangal", entitlement: "Employees & Students" },
-    { name: "M/s. Laxmi Narasimha Hospital", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Samraksha Super Specialty Hospital", location: "Warangal", entitlement: "Employees & Students" },
-    { name: "M/s. Dr. Sharat Maxivision Eye Hospitals", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Ekashilaa Hospitals", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Jaya Hospitals", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. S Vision Hospital", location: "Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Dr. Vasavi's Hospital", location: "Naimnagar, Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Pebbles Kids Hospital", location: "Main Road, Balasamudram, Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Sri Chakra Super Speciality Hospital", location: "Balasamudram, Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. Sri Valli Good Life Hospital", location: "Balasamudram, Hanamkonda", entitlement: "Employees & Students" },
-    { name: "M/s. K&H Dental Hospitals", location: "Hanamkonda & Warangal", entitlement: "Employees & Students" },
+    { 
+      name: "M/s. Medicover Hospitals", 
+      location: "Hyderabad & Warangal", 
+      entitlement: "Employees & Students",
+      phone: "0870-6662288",
+      emergency: "1800-599-1818",
+      address: "Nakkalagutta, Hanamkonda, Warangal & Hi-Tech City, Hyderabad",
+      directions: "Warangal branch at Nakkalagutta. 6 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Medicover+Hospitals+Warangal",
+      specialties: ["Multi-Specialty", "Emergency Care", "Diagnostics"]
+    },
+    { 
+      name: "M/s. Vijaya Diagnostic Centre Ltd.", 
+      location: "Hyderabad & Warangal", 
+      entitlement: "Employees & Students",
+      phone: "0870-2440000",
+      address: "Hanamkonda, Warangal & Multiple locations in Hyderabad",
+      directions: "Multiple centers in Warangal city. Nearest at Hanamkonda center.",
+      mapUrl: "https://maps.google.com/?q=Vijaya+Diagnostic+Centre+Warangal",
+      specialties: ["Diagnostics", "Lab Tests", "Radiology", "Health Checkups"]
+    },
+    { 
+      name: "M/s. Rohini Medicare Pvt. Ltd.", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2461111",
+      emergency: "0870-2461100",
+      address: "Rohini Circle, Hanamkonda, Warangal - 506001",
+      directions: "At Rohini Circle, Hanamkonda. 8 km from NIT Warangal main gate.",
+      mapUrl: "https://maps.google.com/?q=Rohini+Medicare+Hanamkonda"
+    },
+    { 
+      name: "M/s. Ajara Hospitals", 
+      location: "Warangal", 
+      entitlement: "Employees & Students",
+      phone: "0870-2500123",
+      address: "Main Road, Warangal - 506002",
+      directions: "On Warangal Main Road. 10 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Ajara+Hospitals+Warangal"
+    },
+    { 
+      name: "M/s. Laxmi Narasimha Hospital", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2543322",
+      address: "Mulugu Road, Hanamkonda, Warangal - 506001",
+      directions: "On Mulugu Road, near Balasamudram. 6 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Laxmi+Narasimha+Hospital+Hanamkonda"
+    },
+    { 
+      name: "M/s. Samraksha Super Specialty Hospital", 
+      location: "Warangal", 
+      entitlement: "Employees & Students",
+      phone: "0870-2577777",
+      emergency: "0870-2577700",
+      address: "Warangal Main Road, Near MGM Hospital, Warangal - 506002",
+      directions: "On Warangal Main Road. 10 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Samraksha+Hospital+Warangal"
+    },
+    { 
+      name: "M/s. Dr. Sharat Maxivision Eye Hospitals", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2574433",
+      address: "Subedari, Hanamkonda, Warangal - 506001",
+      directions: "At Subedari Circle. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sharat+Maxivision+Hanamkonda",
+      specialties: ["Ophthalmology", "LASIK", "Retina Care"]
+    },
+    { 
+      name: "M/s. Ekashilaa Hospitals", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2571234",
+      address: "JPN Road, Hanamkonda, Warangal - 506001",
+      directions: "On JPN Road, Hanamkonda. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Ekashilaa+Hospitals+Hanamkonda"
+    },
+    { 
+      name: "M/s. Jaya Hospitals", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2542899",
+      emergency: "0870-2542800",
+      address: "JPN Road, Hanamkonda, Warangal - 506001",
+      directions: "On JPN Road, near Thousand Pillar Temple. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Jaya+Hospitals+Hanamkonda"
+    },
+    { 
+      name: "M/s. S Vision Hospital", 
+      location: "Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2575000",
+      address: "Hanamkonda, Warangal - 506001",
+      directions: "In Hanamkonda city. 7 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=S+Vision+Hospital+Hanamkonda",
+      specialties: ["Ophthalmology", "Eye Care"]
+    },
+    { 
+      name: "M/s. Dr. Vasavi's Hospital", 
+      location: "Naimnagar, Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2546789",
+      address: "Naimnagar, Hanamkonda, Warangal - 506001",
+      directions: "At Naimnagar, Hanamkonda. 8 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Dr+Vasavis+Hospital+Hanamkonda"
+    },
+    { 
+      name: "M/s. Pebbles Kids Hospital", 
+      location: "Main Road, Balasamudram, Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2549876",
+      address: "Main Road, Balasamudram, Hanamkonda - 506001",
+      directions: "At Balasamudram, Main Road. 5 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Pebbles+Kids+Hospital+Hanamkonda",
+      specialties: ["Pediatrics", "Neonatal Care", "Child Healthcare"]
+    },
+    { 
+      name: "M/s. Sri Chakra Super Speciality Hospital", 
+      location: "Balasamudram, Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2548765",
+      address: "Opp. Hayagreevachary Ground, Balasamudram, Hanamkonda - 506001",
+      directions: "Opposite Hayagreevachary Ground, Balasamudram. 5 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sri+Chakra+Hospital+Hanamkonda"
+    },
+    { 
+      name: "M/s. Sri Valli Good Life Hospital", 
+      location: "Balasamudram, Hanamkonda", 
+      entitlement: "Employees & Students",
+      phone: "0870-2547654",
+      address: "Beside New Bus Stand Road, Balasamudram, Hanamkonda - 506001",
+      directions: "Near New Bus Stand, Balasamudram. 5 km from NIT Warangal.",
+      mapUrl: "https://maps.google.com/?q=Sri+Valli+Hospital+Hanamkonda"
+    },
+    { 
+      name: "M/s. K&H Dental Hospitals", 
+      location: "Hanamkonda & Warangal", 
+      entitlement: "Employees & Students",
+      phone: "0870-2574321",
+      address: "Near Hanuman Temple Road, Hanamkonda & JPN Road, Warangal",
+      directions: "Two branches: Hanamkonda (7 km) and Warangal (10 km) from NIT.",
+      mapUrl: "https://maps.google.com/?q=KH+Dental+Hospitals+Hanamkonda",
+      specialties: ["Dental Care", "Orthodontics", "Oral Surgery"]
+    },
   ],
 };
 
-// Get all hospitals as flat list for dropdown
-const getAllHospitals = () => {
-  const hospitals: { name: string; location: string; category: string }[] = [];
-  
-  EMPANELLED_HOSPITALS.empanelledStudents.forEach(h => {
-    hospitals.push({ ...h, category: "Empanelled for Students" });
-  });
-  
-  EMPANELLED_HOSPITALS.superSpecialityWarangal.forEach(h => {
-    hospitals.push({ ...h, category: "Super Speciality - Warangal" });
-  });
-  
-  EMPANELLED_HOSPITALS.generalWarangal.forEach(h => {
-    hospitals.push({ ...h, category: "General - Warangal" });
-  });
-  
-  EMPANELLED_HOSPITALS.superSpecialityHyderabad.forEach(h => {
-    hospitals.push({ ...h, category: "Super Speciality - Hyderabad" });
-  });
-  
-  return hospitals;
+// Get hospital details by name
+const getHospitalByName = (name: string): HospitalInfo | null => {
+  for (const category of Object.values(EMPANELLED_HOSPITALS)) {
+    const found = category.find(h => h.name === name);
+    if (found) return found;
+  }
+  return null;
 };
+
+// Hospital Details Card Component
+const HospitalDetailsCard = ({ hospital }: { hospital: HospitalInfo }) => (
+  <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex-1 space-y-3">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          <h4 className="font-semibold text-foreground">{hospital.name}</h4>
+        </div>
+        
+        {hospital.address && (
+          <div className="flex items-start gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <span className="text-muted-foreground">{hospital.address}</span>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3">
+          {hospital.phone && (
+            <a 
+              href={`tel:${hospital.phone}`} 
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              {hospital.phone}
+            </a>
+          )}
+          {hospital.emergency && (
+            <a 
+              href={`tel:${hospital.emergency}`} 
+              className="inline-flex items-center gap-1.5 text-sm text-destructive font-medium hover:underline"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              Emergency: {hospital.emergency}
+            </a>
+          )}
+        </div>
+
+        {hospital.directions && (
+          <div className="flex items-start gap-2 text-sm bg-white/60 rounded-md p-2">
+            <Navigation className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+            <span className="text-muted-foreground">{hospital.directions}</span>
+          </div>
+        )}
+
+        {hospital.specialties && hospital.specialties.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {hospital.specialties.map((specialty, idx) => (
+              <Badge key={idx} variant="secondary" className="text-xs">
+                {specialty}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {hospital.mapUrl && (
+          <a
+            href={hospital.mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open in Google Maps
+          </a>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 interface Student {
   id: string;
@@ -120,7 +421,11 @@ const DoctorReferralForm = () => {
     },
   });
 
-  const hospitals = getAllHospitals();
+  // Get selected hospital details
+  const selectedHospitalName = form.watch("referralHospital");
+  const selectedHospital = selectedHospitalName && selectedHospitalName !== "other" 
+    ? getHospitalByName(selectedHospitalName) 
+    : null;
 
   // Search for student by roll number and email
   const searchStudent = async () => {
@@ -440,7 +745,12 @@ const DoctorReferralForm = () => {
                     )}
                   />
 
-                  {form.watch("referralHospital") === "other" && (
+                  {/* Show hospital details when selected */}
+                  {selectedHospital && (
+                    <HospitalDetailsCard hospital={selectedHospital} />
+                  )}
+
+                  {selectedHospitalName === "other" && (
                     <FormItem>
                       <FormLabel>Other Hospital Name</FormLabel>
                       <FormControl>
@@ -493,11 +803,11 @@ const DoctorReferralForm = () => {
                 </div>
 
                 {/* Declaration */}
-                <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-800">
-                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                <div className="p-4 rounded-lg bg-accent/30 border border-accent">
+                  <p className="text-sm font-medium text-accent-foreground">
                     Medical Declaration
                   </p>
-                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     By submitting this referral, I confirm that the student is medically unfit 
                     to remain on campus and requires off-campus treatment at the specified hospital.
                   </p>
