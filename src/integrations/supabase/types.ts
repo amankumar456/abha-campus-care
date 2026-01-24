@@ -455,6 +455,96 @@ export type Database = {
         }
         Relationships: []
       }
+      student_profiles: {
+        Row: {
+          accuracy_confirmation: boolean | null
+          blood_group: string | null
+          code_of_conduct: boolean | null
+          covid_vaccination_status: string | null
+          created_at: string
+          current_medications: string | null
+          disability_details: string | null
+          emergency_contact: string | null
+          emergency_relationship: string | null
+          father_contact: string | null
+          father_name: string | null
+          has_disability: boolean | null
+          has_previous_health_issues: boolean | null
+          id: string
+          known_allergies: string | null
+          medical_authorization: boolean | null
+          mother_contact: string | null
+          mother_name: string | null
+          photo_video_consent: boolean | null
+          previous_health_details: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          accuracy_confirmation?: boolean | null
+          blood_group?: string | null
+          code_of_conduct?: boolean | null
+          covid_vaccination_status?: string | null
+          created_at?: string
+          current_medications?: string | null
+          disability_details?: string | null
+          emergency_contact?: string | null
+          emergency_relationship?: string | null
+          father_contact?: string | null
+          father_name?: string | null
+          has_disability?: boolean | null
+          has_previous_health_issues?: boolean | null
+          id?: string
+          known_allergies?: string | null
+          medical_authorization?: boolean | null
+          mother_contact?: string | null
+          mother_name?: string | null
+          photo_video_consent?: boolean | null
+          previous_health_details?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          accuracy_confirmation?: boolean | null
+          blood_group?: string | null
+          code_of_conduct?: boolean | null
+          covid_vaccination_status?: string | null
+          created_at?: string
+          current_medications?: string | null
+          disability_details?: string | null
+          emergency_contact?: string | null
+          emergency_relationship?: string | null
+          father_contact?: string | null
+          father_name?: string | null
+          has_disability?: boolean | null
+          has_previous_health_issues?: boolean | null
+          id?: string
+          known_allergies?: string | null
+          medical_authorization?: boolean | null
+          mother_contact?: string | null
+          mother_name?: string | null
+          photo_video_consent?: boolean | null
+          previous_health_details?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_profiles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           batch: string
