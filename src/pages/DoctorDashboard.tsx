@@ -2,22 +2,19 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useQuery } from "@tanstack/react-query";
+import { isToday, parseISO } from "date-fns";
 import {
   Users,
   Calendar,
   FileCheck,
   Bell,
-  Clock,
-  Search,
-  Filter,
-  ChevronRight,
   Stethoscope,
   Shield,
   Activity,
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Eye,
   FileText,
   LogOut,
   Settings,
@@ -26,7 +23,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -39,28 +35,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
-
-// Mock data
-const mockDoctor = {
-  name: "Dr. Priya Sharma",
-  title: "Consultant Physician",
-  department: "General OPD",
-  approvalLevel: "Level 3",
-};
-
-const mockStats = [
-  { label: "Today's Appointments", value: "12", icon: Calendar, color: "text-primary" },
-  { label: "Pending Approvals", value: "5", icon: FileCheck, color: "text-warning" },
-  { label: "Active Patients", value: "48", icon: Users, color: "text-secondary" },
-  { label: "Urgent Alerts", value: "2", icon: AlertTriangle, color: "text-destructive" },
-];
-
-const mockAppointments = [
-  { id: 1, patient: "Rahul Kumar", rollNo: "21CS1234", time: "9:00 AM", type: "General Checkup", status: "waiting" },
-  { id: 2, patient: "Sneha Reddy", rollNo: "20EC2345", time: "9:30 AM", type: "Follow-up", status: "in-progress" },
-  { id: 3, patient: "Amit Singh", rollNo: "22ME3456", time: "10:00 AM", type: "Consultation", status: "scheduled" },
-  { id: 4, patient: "Priyanka Das", rollNo: "21EE4567", time: "10:30 AM", type: "Vaccination", status: "scheduled" },
-];
+import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
 
 const mockAccessRequests = [
   { id: 1, requester: "Dr. Rajesh Verma", patient: "Rahul Kumar", type: "Medical History", time: "10 mins ago", priority: "normal" },
@@ -68,18 +43,55 @@ const mockAccessRequests = [
   { id: 3, requester: "Lab Technician", patient: "Sneha Reddy", type: "Lab Reports", time: "1 hour ago", priority: "normal" },
 ];
 
-const mockRecentPatients = [
-  { id: 1, name: "Rahul Kumar", rollNo: "21CS1234", lastVisit: "Today", condition: "Fever, Cold" },
-  { id: 2, name: "Sneha Reddy", rollNo: "20EC2345", lastVisit: "Yesterday", condition: "Follow-up" },
-  { id: 3, name: "Vikram Patel", rollNo: "19ME5678", lastVisit: "2 days ago", condition: "Injury" },
-];
-
 export default function DoctorDashboard() {
   const navigate = useNavigate();
   const { user, doctorId, loading: roleLoading } = useUserRole();
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
+
+  // Fetch real appointment stats
+  const { data: appointmentStats } = useQuery({
+    queryKey: ["doctor-appointment-stats", doctorId],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      
+      const { data: todayApts } = await supabase
+        .from("appointments")
+        .select("id, health_priority")
+        .eq("medical_officer_id", doctorId)
+        .eq("appointment_date", today)
+        .neq("status", "cancelled");
+
+      const { data: pendingApts } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("medical_officer_id", doctorId)
+        .eq("status", "pending");
+
+      const { data: allPatients } = await supabase
+        .from("appointments")
+        .select("patient_id")
+        .eq("medical_officer_id", doctorId);
+
+      const uniquePatients = new Set(allPatients?.map(a => a.patient_id) || []);
+      const highPriorityCount = todayApts?.filter(a => a.health_priority === "high").length || 0;
+
+      return {
+        todayCount: todayApts?.length || 0,
+        pendingCount: pendingApts?.length || 0,
+        totalPatients: uniquePatients.size,
+        urgentAlerts: highPriorityCount,
+      };
+    },
+    enabled: !!doctorId,
+  });
+
+  const stats = [
+    { label: "Today's Appointments", value: String(appointmentStats?.todayCount || 0), icon: Calendar, color: "text-primary" },
+    { label: "Pending Approvals", value: String(appointmentStats?.pendingCount || 0), icon: FileCheck, color: "text-amber-500" },
+    { label: "Active Patients", value: String(appointmentStats?.totalPatients || 0), icon: Users, color: "text-secondary" },
+    { label: "High Priority", value: String(appointmentStats?.urgentAlerts || 0), icon: AlertTriangle, color: "text-destructive" },
+  ];
 
   useEffect(() => {
     if (!roleLoading && !user) {
@@ -117,6 +129,11 @@ export default function DoctorDashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
@@ -138,9 +155,11 @@ export default function DoctorDashboard() {
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                  3
-                </span>
+                {(appointmentStats?.urgentAlerts || 0) > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                    {appointmentStats?.urgentAlerts}
+                  </span>
+                )}
               </Button>
 
               <DropdownMenu>
@@ -148,16 +167,16 @@ export default function DoctorDashboard() {
                   <Button variant="ghost" className="flex items-center gap-2">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback className="bg-secondary text-secondary-foreground text-sm">
-                        PS
+                        {doctorProfile?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'DR'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:block text-sm font-medium">{mockDoctor.name}</span>
+                    <span className="hidden sm:block text-sm font-medium">{doctorProfile?.name || 'Doctor'}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{mockDoctor.name}</p>
-                    <p className="text-xs text-muted-foreground">{mockDoctor.title}</p>
+                    <p className="text-sm font-medium">{doctorProfile?.name}</p>
+                    <p className="text-xs text-muted-foreground">{doctorProfile?.designation}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
@@ -169,7 +188,7 @@ export default function DoctorDashboard() {
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Log out
                   </DropdownMenuItem>
@@ -185,10 +204,10 @@ export default function DoctorDashboard() {
         {/* Welcome Section */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">
-            Good Morning, {mockDoctor.name}
+            Welcome, {doctorProfile?.name || 'Doctor'}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {mockDoctor.title} • {mockDoctor.department} • {mockDoctor.approvalLevel} Access
+            {doctorProfile?.designation || 'Medical Officer'} • {doctorProfile?.qualification || ''}
           </p>
         </div>
 
@@ -209,7 +228,7 @@ export default function DoctorDashboard() {
           <TabsContent value="dashboard">
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {mockStats.map((stat) => (
+              {stats.map((stat) => (
                 <Card key={stat.label} className="border">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -228,224 +247,114 @@ export default function DoctorDashboard() {
 
             {/* Main Dashboard Grid */}
             <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Appointments */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Search Bar */}
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search patients by name or roll number..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+              {/* Left Column - Appointments */}
+              <div className="lg:col-span-2">
+                {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="w-4 h-4" />
-              </Button>
-            </div>
 
-            {/* Today's Appointments */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    Today's Appointments
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    View All
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {mockAppointments.map((apt) => (
-                  <div
-                    key={apt.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{apt.patient}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {apt.rollNo} • {apt.type}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {apt.time}
-                        </p>
-                        <Badge
-                          variant={
-                            apt.status === "in-progress"
-                              ? "default"
-                              : apt.status === "waiting"
-                              ? "secondary"
-                              : "outline"
-                          }
-                          className="text-xs"
-                        >
-                          {apt.status === "in-progress" ? "In Progress" : apt.status === "waiting" ? "Waiting" : "Scheduled"}
-                        </Badge>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+              {/* Right Column - Profile & Quick Actions */}
+              <div className="space-y-6">
+                {/* Doctor Profile Card */}
+                {doctorProfile && (
+                  <DoctorProfileCard 
+                    profile={doctorProfile}
+                    stats={{
+                      todayAppointments: appointmentStats?.todayCount || 0,
+                      pendingApprovals: appointmentStats?.pendingCount || 0,
+                      totalPatients: appointmentStats?.totalPatients || 0
+                    }}
+                  />
+                )}
 
-            {/* Recent Patients */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-secondary" />
-                  Recent Patients
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockRecentPatients.map((patient) => (
-                    <div
-                      key={patient.id}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10">
-                          <AvatarFallback className="bg-muted text-muted-foreground">
-                            {patient.name.split(" ").map((n) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-foreground">{patient.name}</p>
-                          <p className="text-sm text-muted-foreground">{patient.rollNo}</p>
+                {/* Access Requests */}
+                <Card className="border-l-4 border-l-amber-500">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-amber-500" />
+                      Pending Access Requests
+                      <Badge variant="secondary" className="ml-auto">
+                        {mockAccessRequests.length}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {mockAccessRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className={`p-3 rounded-lg border ${
+                          request.priority === "urgent"
+                            ? "border-destructive/50 bg-destructive/5"
+                            : "bg-card"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-foreground text-sm">{request.requester}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {request.type} • {request.patient}
+                            </p>
+                          </div>
+                          {request.priority === "urgent" && (
+                            <Badge variant="destructive" className="text-xs">
+                              Urgent
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">{request.time}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="flex-1 h-8 text-xs bg-secondary hover:bg-secondary/90">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1 h-8 text-xs">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Deny
+                          </Button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">{patient.lastVisit}</p>
-                        <p className="text-sm text-foreground">{patient.condition}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    ))}
+                  </CardContent>
+                </Card>
 
-          {/* Right Column - Profile, Access Requests & Quick Actions */}
-          <div className="space-y-6">
-            {/* Doctor Profile Card */}
-            {doctorProfile && (
-              <DoctorProfileCard 
-                profile={doctorProfile}
-                stats={{
-                  todayAppointments: 12,
-                  pendingApprovals: 5,
-                  totalPatients: 48
-                }}
-              />
-            )}
-            {/* Access Requests */}
-            <Card className="border-l-4 border-l-warning">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-warning" />
-                  Pending Access Requests
-                  <Badge variant="secondary" className="ml-auto">
-                    {mockAccessRequests.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {mockAccessRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className={`p-3 rounded-lg border ${
-                      request.priority === "urgent"
-                        ? "border-destructive/50 bg-destructive/5"
-                        : "bg-card"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
+                {/* Quick Actions */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                      <Link to="/medical-leave">
+                        <FileText className="w-4 h-4 text-primary" />
+                        Issue Medical Leave
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start gap-2">
+                      <Calendar className="w-4 h-4 text-secondary" />
+                      Schedule Follow-up
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start gap-2">
+                      <FileCheck className="w-4 h-4 text-muted-foreground" />
+                      Issue Medical Certificate
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Security Reminder */}
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Shield className="w-5 h-5 text-primary mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground text-sm">{request.requester}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {request.type} • {request.patient}
+                        <p className="text-sm font-medium text-foreground">Security Reminder</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Always verify patient identity before accessing or modifying medical records.
                         </p>
                       </div>
-                      {request.priority === "urgent" && (
-                        <Badge variant="destructive" className="text-xs">
-                          Urgent
-                        </Badge>
-                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">{request.time}</p>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 h-8 text-xs bg-secondary hover:bg-secondary/90">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 h-8 text-xs">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        Deny
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <FileText className="w-4 h-4 text-primary" />
-                  Write Prescription
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Calendar className="w-4 h-4 text-secondary" />
-                  Schedule Follow-up
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <FileCheck className="w-4 h-4 text-muted-foreground" />
-                  Issue Medical Certificate
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  Refer to Specialist
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Security Notice */}
-            <Card className="bg-accent/50 border-accent">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-secondary mt-0.5" />
-                  <div>
-                    <p className="font-medium text-sm text-foreground">Security Reminder</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      All data access is logged. Ensure proper authorization before viewing patient records.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Student Search Tab */}
