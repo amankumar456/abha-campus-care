@@ -12,11 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, Home, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, Home, Printer, Stethoscope, User } from "lucide-react";
 import DoctorReferralForm from "@/components/medical-leave/DoctorReferralForm";
 import StudentLeaveForm from "@/components/medical-leave/StudentLeaveForm";
 import ReturnNotificationForm from "@/components/medical-leave/ReturnNotificationForm";
 import LeaveStatusCard from "@/components/medical-leave/LeaveStatusCard";
+import PrintableLeaveLetter from "@/components/medical-leave/PrintableLeaveLetter";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -81,6 +82,23 @@ const MedicalLeave = () => {
   const [activeTab, setActiveTab] = useState("status");
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
+  const [showLeaveLetter, setShowLeaveLetter] = useState(false);
+
+  // Fetch student profile for leave letter
+  const { data: studentProfile } = useQuery({
+    queryKey: ["student-profile-for-leave", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name, roll_number, program, branch, batch")
+        .eq("user_id", user!.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: isStudent && !!user,
+  });
 
   // Fetch student's current leave request
   const { data: studentLeaveRequest, isLoading: studentLeaveLoading } = useQuery({
@@ -172,84 +190,143 @@ const MedicalLeave = () => {
 
         {/* Student View */}
         {isStudent && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Status Card */}
-            <div className="lg:col-span-1">
-              <LeaveStatusCard
-                leaveRequest={studentLeaveRequest}
-                onFillForm={() => setShowLeaveForm(true)}
-                onSubmitReturn={() => setShowReturnForm(true)}
+          <div className="space-y-6">
+            {/* Show Leave Letter */}
+            {showLeaveLetter && studentLeaveRequest && studentProfile && (
+              <PrintableLeaveLetter
+                leaveData={{
+                  id: studentLeaveRequest.id,
+                  studentName: studentProfile.full_name,
+                  rollNumber: studentProfile.roll_number,
+                  program: studentProfile.program,
+                  branch: studentProfile.branch,
+                  batch: studentProfile.batch,
+                  referralHospital: studentLeaveRequest.referral_hospital,
+                  illnessDescription: studentLeaveRequest.illness_description,
+                  doctorName: studentLeaveRequest.medical_officers?.name,
+                  referralDate: studentLeaveRequest.referral_date,
+                  leaveStartDate: studentLeaveRequest.leave_start_date,
+                  expectedReturnDate: studentLeaveRequest.expected_return_date,
+                  restDays: studentLeaveRequest.rest_days,
+                  doctorNotes: studentLeaveRequest.doctor_notes,
+                  approvalDate: studentLeaveRequest.approval_date,
+                  status: studentLeaveRequest.status,
+                }}
+                onClose={() => setShowLeaveLetter(false)}
               />
-            </div>
+            )}
 
-            {/* Forms Column */}
-            <div className="lg:col-span-2">
-              {/* Pending Leave Form */}
-              {pendingFormRequest && !showReturnForm && (
-                <StudentLeaveForm
-                  leaveRequest={pendingFormRequest}
-                  onSuccess={() => setShowLeaveForm(false)}
-                />
-              )}
+            {/* Main Content */}
+            {!showLeaveLetter && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Status Card */}
+                <div className="lg:col-span-1 space-y-4">
+                  <LeaveStatusCard
+                    leaveRequest={studentLeaveRequest}
+                    onFillForm={() => setShowLeaveForm(true)}
+                    onSubmitReturn={() => setShowReturnForm(true)}
+                  />
+                  
+                  {/* View Leave Letter Button */}
+                  {studentLeaveRequest && ["on_leave", "return_pending", "returned"].includes(studentLeaveRequest.status) && (
+                    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                      <CardContent className="pt-4 pb-4">
+                        <Button 
+                          onClick={() => setShowLeaveLetter(true)}
+                          variant="outline"
+                          className="w-full flex items-center gap-2"
+                        >
+                          <Printer className="h-4 w-4" />
+                          View & Print Leave Letter
+                        </Button>
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          Download official leave certificate for academic departments
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
-              {/* Return Notification Form */}
-              {activeLeaveRequest && showReturnForm && (
-                <ReturnNotificationForm
-                  leaveRequest={activeLeaveRequest}
-                  onSuccess={() => setShowReturnForm(false)}
-                />
-              )}
+                {/* Forms Column */}
+                <div className="lg:col-span-2">
+                  {/* Pending Leave Form */}
+                  {pendingFormRequest && !showReturnForm && (
+                    <StudentLeaveForm
+                      leaveRequest={pendingFormRequest}
+                      onSuccess={() => setShowLeaveForm(false)}
+                    />
+                  )}
 
-              {/* No Active Leave */}
-              {!pendingFormRequest && !activeLeaveRequest && (
-                <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-                  <CardContent className="pt-12 pb-12 text-center">
-                    <Home className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                    <h3 className="text-xl font-semibold mb-2">No Active Leave Request</h3>
-                    <p className="text-muted-foreground max-w-md mx-auto">
-                      You don't have any pending medical leave requests. If you need off-campus 
-                      treatment, please visit the campus medical center for evaluation.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+                  {/* Return Notification Form */}
+                  {activeLeaveRequest && showReturnForm && (
+                    <ReturnNotificationForm
+                      leaveRequest={activeLeaveRequest}
+                      onSuccess={() => setShowReturnForm(false)}
+                    />
+                  )}
 
-              {/* On Leave Status */}
-              {activeLeaveRequest && !showReturnForm && (
-                <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
-                  <CardHeader className="border-b bg-gradient-to-r from-blue-500/5 to-blue-500/10">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-blue-500/10">
-                        <Building2 className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">Currently On Leave</CardTitle>
-                        <CardDescription>
-                          You are on off-campus medical leave
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <Alert className="mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Return Notification Required</AlertTitle>
-                      <AlertDescription>
-                        When you return to the hostel, please submit the return notification 
-                        within 2 hours of arrival.
-                      </AlertDescription>
-                    </Alert>
-                    <Button 
-                      onClick={() => setShowReturnForm(true)} 
-                      className="w-full bg-green-600 hover:bg-green-700"
-                    >
-                      <Home className="h-4 w-4 mr-2" />
-                      Submit Return Notification
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  {/* No Active Leave */}
+                  {!pendingFormRequest && !activeLeaveRequest && (
+                    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                      <CardContent className="pt-12 pb-12 text-center">
+                        <Home className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                        <h3 className="text-xl font-semibold mb-2">No Active Leave Request</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          You don't have any pending medical leave requests. If you need off-campus 
+                          treatment, please visit the campus medical center for evaluation.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* On Leave Status */}
+                  {activeLeaveRequest && !showReturnForm && (
+                    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                      <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-primary/10">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <Building2 className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl">Currently On Leave</CardTitle>
+                            <CardDescription>
+                              You are on off-campus medical leave
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-6 space-y-4">
+                        <Alert className="mb-4">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Return Notification Required</AlertTitle>
+                          <AlertDescription>
+                            When you return to the hostel, please submit the return notification 
+                            within 2 hours of arrival.
+                          </AlertDescription>
+                        </Alert>
+                        <div className="flex gap-3">
+                          <Button 
+                            onClick={() => setShowReturnForm(true)} 
+                            className="flex-1"
+                            variant="default"
+                          >
+                            <Home className="h-4 w-4 mr-2" />
+                            Submit Return Notification
+                          </Button>
+                          <Button 
+                            onClick={() => setShowLeaveLetter(true)}
+                            variant="outline"
+                          >
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print Letter
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
