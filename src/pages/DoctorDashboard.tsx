@@ -13,8 +13,6 @@ import {
   Shield,
   Activity,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   FileText,
   LogOut,
   Settings,
@@ -36,12 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
-
-const mockAccessRequests = [
-  { id: 1, requester: "Dr. Rajesh Verma", patient: "Rahul Kumar", type: "Medical History", time: "10 mins ago", priority: "normal" },
-  { id: 2, requester: "Nurse Staff", patient: "Emergency Case", type: "Emergency Access", time: "2 mins ago", priority: "urgent" },
-  { id: 3, requester: "Lab Technician", patient: "Sneha Reddy", type: "Lab Reports", time: "1 hour ago", priority: "normal" },
-];
+import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -267,54 +260,7 @@ export default function DoctorDashboard() {
                 )}
 
                 {/* Access Requests */}
-                <Card className="border-l-4 border-l-amber-500">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-amber-500" />
-                      Pending Access Requests
-                      <Badge variant="secondary" className="ml-auto">
-                        {mockAccessRequests.length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {mockAccessRequests.map((request) => (
-                      <div
-                        key={request.id}
-                        className={`p-3 rounded-lg border ${
-                          request.priority === "urgent"
-                            ? "border-destructive/50 bg-destructive/5"
-                            : "bg-card"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-medium text-foreground text-sm">{request.requester}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {request.type} • {request.patient}
-                            </p>
-                          </div>
-                          {request.priority === "urgent" && (
-                            <Badge variant="destructive" className="text-xs">
-                              Urgent
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-3">{request.time}</p>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 h-8 text-xs bg-secondary hover:bg-secondary/90">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1 h-8 text-xs">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Deny
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                <PendingAccessRequests />
 
                 {/* Quick Actions */}
                 <Card>
