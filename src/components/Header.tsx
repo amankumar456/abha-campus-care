@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import nitwLogo from "@/assets/nitw-logo.png";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const NAVIGATION_ITEMS = [
   { label: "Home", path: "/", keywords: ["home", "main", "landing"] },
@@ -180,6 +181,8 @@ const Header = () => {
               {isLoading ? (
                 <div className="w-20 h-9 bg-muted animate-pulse rounded-md" />
               ) : user ? (
+                <>
+                <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
@@ -211,6 +214,7 @@ const Header = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </>
               ) : (
                 <>
                   <Button asChild variant="outline" size="sm" className="gap-2">
