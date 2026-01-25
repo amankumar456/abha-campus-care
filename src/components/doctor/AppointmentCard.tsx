@@ -128,6 +128,21 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
 
       if (error) throw error;
 
+      // Create in-app notification for the student
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: appointment.patient_id,
+          title: "Appointment Approved",
+          message: `Your appointment on ${new Date(appointment.appointment_date).toLocaleDateString()} at ${formatTime(appointment.appointment_time)} has been approved.`,
+          type: "approved",
+          related_appointment_id: appointment.id
+        });
+
+      if (notifError) {
+        console.error("Failed to create notification:", notifError);
+      }
+
       // Send notification email
       try {
         await supabase.functions.invoke('send-appointment-notification', {
@@ -142,7 +157,7 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
     },
     onSuccess: () => {
       toast.success("Appointment approved", {
-        description: "The student has been notified via email."
+        description: "The student has been notified."
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
       // Show medical leave prompt after approval
@@ -166,6 +181,21 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
 
       if (error) throw error;
 
+      // Create in-app notification for the student
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: appointment.patient_id,
+          title: "Appointment Rejected",
+          message: `Your appointment on ${new Date(appointment.appointment_date).toLocaleDateString()} at ${formatTime(appointment.appointment_time)} has been rejected. Reason: ${reason}`,
+          type: "rejected",
+          related_appointment_id: appointment.id
+        });
+
+      if (notifError) {
+        console.error("Failed to create notification:", notifError);
+      }
+
       // Send notification email
       try {
         await supabase.functions.invoke('send-appointment-notification', {
@@ -181,7 +211,7 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
     },
     onSuccess: () => {
       toast.success("Appointment denied", {
-        description: "The student has been notified via email."
+        description: "The student has been notified."
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
       setShowDenyDialog(false);
