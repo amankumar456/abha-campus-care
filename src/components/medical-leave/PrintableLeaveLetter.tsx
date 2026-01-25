@@ -6,6 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Printer, Building2, Calendar, User, GraduationCap, FileText, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 
+interface DoctorDetails {
+  name: string;
+  designation?: string;
+  qualification?: string;
+  isSenior?: boolean;
+}
+
+interface MentorDetails {
+  name?: string;
+  department?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface AcademicDetails {
+  hodName?: string;
+  hodDepartment?: string;
+  semester?: string;
+  yearOfStudy?: string;
+}
+
 interface LeaveLetterData {
   id: string;
   studentName: string;
@@ -16,6 +37,9 @@ interface LeaveLetterData {
   referralHospital: string;
   illnessDescription?: string | null;
   doctorName?: string | null;
+  doctorDetails?: DoctorDetails | null;
+  mentorDetails?: MentorDetails | null;
+  academicDetails?: AcademicDetails | null;
   referralDate: string;
   leaveStartDate?: string | null;
   expectedReturnDate?: string | null;
@@ -132,33 +156,80 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
               margin: 20px 0;
               font-size: 14px;
             }
+            .mentor-section {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 15px;
+            }
+            .mentor-title {
+              font-weight: bold;
+              color: #0369a1;
+              font-size: 13px;
+              margin-bottom: 10px;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 5px;
+            }
             .signature-section {
-              margin-top: 50px;
-              display: flex;
-              justify-content: space-between;
+              margin-top: 40px;
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 20px;
             }
             .signature-box {
               text-align: center;
-              min-width: 200px;
+              min-width: 160px;
             }
             .signature-line {
               border-top: 1px solid #333;
-              margin-top: 50px;
-              padding-top: 5px;
+              margin-top: 40px;
+              padding-top: 8px;
             }
-            .stamp-area {
-              border: 2px dashed #ccc;
-              width: 120px;
-              height: 120px;
-              margin: 0 auto;
+            .online-signature {
+              font-family: 'Brush Script MT', 'Segoe Script', cursive;
+              font-size: 24px;
+              color: #003366;
+              height: 40px;
               display: flex;
               align-items: center;
               justify-content: center;
-              color: #999;
-              font-size: 12px;
+            }
+            .doctor-type {
+              font-size: 11px;
+              color: #666;
+              margin-top: 3px;
+            }
+            .stamp-area {
+              border: 3px double #003366;
+              width: 110px;
+              height: 110px;
+              margin: 0 auto;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            }
+            .stamp-text {
+              font-size: 9px;
+              color: #003366;
+              font-weight: bold;
+              text-align: center;
+            }
+            .stamp-title {
+              font-size: 11px;
+              color: #003366;
+              font-weight: bold;
+              margin: 3px 0;
+            }
+            .stamp-institution {
+              font-size: 8px;
+              color: #666;
             }
             .footer {
-              margin-top: 40px;
+              margin-top: 30px;
               padding-top: 15px;
               border-top: 1px solid #ddd;
               font-size: 11px;
@@ -315,6 +386,59 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
             </div>
           </div>
 
+          {/* Mentor & Academic Details */}
+          {(leaveData.mentorDetails || leaveData.academicDetails) && (
+            <div className="mb-6 p-4 rounded-lg bg-slate-50 border border-slate-200">
+              <h4 className="font-semibold text-sm uppercase text-sky-700 border-b border-slate-200 pb-2 mb-3">
+                Academic & Mentorship Details
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {leaveData.mentorDetails?.name && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Mentor Name:</span>
+                    <span>{leaveData.mentorDetails.name}</span>
+                  </div>
+                )}
+                {leaveData.mentorDetails?.department && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Department:</span>
+                    <span>{leaveData.mentorDetails.department}</span>
+                  </div>
+                )}
+                {leaveData.mentorDetails?.phone && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Mentor Contact:</span>
+                    <span>{leaveData.mentorDetails.phone}</span>
+                  </div>
+                )}
+                {leaveData.mentorDetails?.email && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Mentor Email:</span>
+                    <span>{leaveData.mentorDetails.email}</span>
+                  </div>
+                )}
+                {leaveData.academicDetails?.hodName && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">HOD:</span>
+                    <span>{leaveData.academicDetails.hodName}</span>
+                  </div>
+                )}
+                {leaveData.academicDetails?.yearOfStudy && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Year of Study:</span>
+                    <span>{leaveData.academicDetails.yearOfStudy}</span>
+                  </div>
+                )}
+                {leaveData.academicDetails?.semester && (
+                  <div className="flex">
+                    <span className="font-semibold min-w-[140px]">Semester:</span>
+                    <span>{leaveData.academicDetails.semester}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Medical Details */}
           <div className="mb-6">
             <h4 className="font-semibold text-sm uppercase text-primary border-b pb-2 mb-3 flex items-center gap-2">
@@ -328,8 +452,20 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
               </div>
               <div className="flex">
                 <span className="font-semibold min-w-[140px]">Referring Doctor:</span>
-                <span>{leaveData.doctorName || "Campus Medical Officer"}</span>
+                <span>{leaveData.doctorDetails?.name || leaveData.doctorName || "Campus Medical Officer"}</span>
               </div>
+              {leaveData.doctorDetails?.designation && (
+                <div className="flex">
+                  <span className="font-semibold min-w-[140px]">Designation:</span>
+                  <span>{leaveData.doctorDetails.designation}</span>
+                </div>
+              )}
+              {leaveData.doctorDetails?.qualification && (
+                <div className="flex">
+                  <span className="font-semibold min-w-[140px]">Qualification:</span>
+                  <span>{leaveData.doctorDetails.qualification}</span>
+                </div>
+              )}
               {leaveData.illnessDescription && (
                 <div className="flex col-span-2">
                   <span className="font-semibold min-w-[140px]">Condition:</span>
@@ -402,23 +538,49 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
           </div>
 
           {/* Signature Section */}
-          <div className="flex justify-between mt-12 pt-6">
-            <div className="text-center min-w-[180px]">
-              <div className="border-2 border-dashed border-muted-foreground/30 w-24 h-24 mx-auto flex items-center justify-center text-xs text-muted-foreground">
-                Official Seal
+          <div className="grid grid-cols-3 gap-6 mt-12 pt-6">
+            {/* CMO Official Seal */}
+            <div className="text-center">
+              <div className="border-3 border-double border-primary w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full bg-gradient-to-br from-slate-50 to-slate-100">
+                <span className="text-[9px] font-bold text-primary text-center leading-tight">CHIEF MEDICAL OFFICER</span>
+                <span className="text-[11px] font-bold text-primary my-1">SEAL</span>
+                <span className="text-[8px] text-muted-foreground">NIT Warangal</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Official Seal</p>
+            </div>
+            
+            {/* Doctor Signature */}
+            <div className="text-center">
+              <div className="h-10 flex items-center justify-center">
+                <span className="font-['Brush_Script_MT','Segoe_Script',cursive] text-2xl text-primary italic">
+                  {leaveData.doctorDetails?.name || leaveData.doctorName || "Medical Officer"}
+                </span>
+              </div>
+              <div className="border-t border-foreground mt-2 pt-2">
+                <p className="font-semibold text-sm">{leaveData.doctorDetails?.name || leaveData.doctorName || "Medical Officer"}</p>
+                <p className="text-xs text-muted-foreground">{leaveData.doctorDetails?.designation || "Medical Officer"}</p>
+                {leaveData.doctorDetails?.qualification && (
+                  <p className="text-xs text-muted-foreground">{leaveData.doctorDetails.qualification}</p>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {leaveData.doctorDetails?.isSenior ? "Senior Medical Officer" : "Medical Officer"}
+                </p>
               </div>
             </div>
-            <div className="text-center min-w-[200px]">
-              <div className="border-t border-foreground mt-16 pt-2">
-                <p className="font-semibold">{leaveData.doctorName || "Medical Officer"}</p>
-                <p className="text-sm text-muted-foreground">Health Centre, NIT Warangal</p>
+
+            {/* For Office Use */}
+            <div className="text-center">
+              <div className="border-t border-foreground mt-12 pt-2">
+                <p className="font-semibold text-sm">Dean (Student Welfare)</p>
+                <p className="text-xs text-muted-foreground">NIT Warangal</p>
+                <p className="text-[10px] text-muted-foreground mt-1">(For leaves &gt; 7 days)</p>
               </div>
             </div>
           </div>
 
           {/* Footer */}
           <div className="mt-10 pt-4 border-t text-xs text-muted-foreground text-center">
-            <p>This is a computer-generated document. For verification, contact Health Centre.</p>
+            <p>This is a digitally generated document with electronic signature. For verification, contact Health Centre.</p>
             <p className="mt-1">
               Generated on: {currentDate} | Document ID: {leaveData.id.slice(0, 8).toUpperCase()}
             </p>

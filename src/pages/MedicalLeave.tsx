@@ -54,9 +54,17 @@ interface LeaveRequest {
     full_name: string;
     roll_number: string;
     program: string;
+    mentor_name?: string | null;
+    mentor_email?: string | null;
+    mentor_contact?: string | null;
+    year_of_study?: string | null;
+    branch?: string | null;
   } | null;
   medical_officers?: {
     name: string;
+    designation?: string;
+    qualification?: string;
+    is_senior?: boolean;
   } | null;
 }
 
@@ -92,7 +100,7 @@ const MedicalLeave = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, full_name, roll_number, program, branch, batch")
+        .select("id, full_name, roll_number, program, branch, batch, year_of_study, mentor_name, mentor_email, mentor_contact")
         .eq("user_id", user!.id)
         .single();
       
@@ -120,7 +128,7 @@ const MedicalLeave = () => {
         .from("medical_leave_requests")
         .select(`
           *,
-          medical_officers!referring_doctor_id(name)
+          medical_officers!referring_doctor_id(name, designation, qualification, is_senior)
         `)
         .eq("student_id", studentData.id)
         .order("created_at", { ascending: false })
@@ -141,8 +149,8 @@ const MedicalLeave = () => {
         .from("medical_leave_requests")
         .select(`
           *,
-          students(full_name, roll_number, program),
-          medical_officers!referring_doctor_id(name)
+          students(full_name, roll_number, program, mentor_name, mentor_email, mentor_contact, year_of_study, branch),
+          medical_officers!referring_doctor_id(name, designation, qualification, is_senior)
         `)
         .order("created_at", { ascending: false });
 
@@ -218,6 +226,22 @@ const MedicalLeave = () => {
                   referralHospital: studentLeaveRequest.referral_hospital,
                   illnessDescription: studentLeaveRequest.illness_description,
                   doctorName: studentLeaveRequest.medical_officers?.name,
+                  doctorDetails: studentLeaveRequest.medical_officers ? {
+                    name: studentLeaveRequest.medical_officers.name,
+                    designation: studentLeaveRequest.medical_officers.designation,
+                    qualification: studentLeaveRequest.medical_officers.qualification,
+                    isSenior: studentLeaveRequest.medical_officers.is_senior,
+                  } : null,
+                  mentorDetails: studentProfile.mentor_name ? {
+                    name: studentProfile.mentor_name,
+                    email: studentProfile.mentor_email,
+                    phone: studentProfile.mentor_contact,
+                    department: studentProfile.branch || undefined,
+                  } : null,
+                  academicDetails: {
+                    yearOfStudy: studentProfile.year_of_study || undefined,
+                    hodDepartment: studentProfile.branch || undefined,
+                  },
                   referralDate: studentLeaveRequest.referral_date,
                   leaveStartDate: studentLeaveRequest.leave_start_date,
                   expectedReturnDate: studentLeaveRequest.expected_return_date,
