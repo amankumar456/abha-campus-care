@@ -34,10 +34,11 @@ import {
   CheckCircle,
   AlertCircle,
   Search,
-  CalendarPlus,
   RefreshCw
 } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import RescheduleDialog from "@/components/appointments/RescheduleDialog";
+import AddToCalendarDropdown from "@/components/appointments/AddToCalendarDropdown";
 
 interface Appointment {
   id: string;
@@ -102,6 +103,7 @@ export default function MyAppointments() {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date");
+  const [rescheduleAppointment, setRescheduleAppointment] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -305,10 +307,16 @@ export default function MyAppointments() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-            <Button variant="outline" size="sm">
-              <RefreshCw className="w-4 h-4 mr-1" />
-              Reschedule
-            </Button>
+            {canCancel && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setRescheduleAppointment(appointment)}
+              >
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Reschedule
+              </Button>
+            )}
             {canCancel && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -338,10 +346,12 @@ export default function MyAppointments() {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button variant="ghost" size="sm">
-              <CalendarPlus className="w-4 h-4 mr-1" />
-              Add to Calendar
-            </Button>
+            <AddToCalendarDropdown
+              appointmentDate={appointment.appointment_date}
+              appointmentTime={appointment.appointment_time}
+              doctorName={doctorName || "Doctor"}
+              reason={appointment.reason}
+            />
           </div>
         </CardContent>
       </Card>
@@ -497,6 +507,22 @@ export default function MyAppointments() {
           )}
         </div>
       </main>
+      
+      {/* Reschedule Dialog */}
+      {rescheduleAppointment && (
+        <RescheduleDialog
+          open={!!rescheduleAppointment}
+          onOpenChange={(open) => !open && setRescheduleAppointment(null)}
+          appointmentId={rescheduleAppointment.id}
+          currentDate={rescheduleAppointment.appointment_date}
+          currentTime={rescheduleAppointment.appointment_time}
+          doctorName={
+            rescheduleAppointment.medical_officers?.name ||
+            rescheduleAppointment.visiting_doctors?.name ||
+            "Doctor"
+          }
+        />
+      )}
       
       <Footer />
     </BackgroundWrapper>
