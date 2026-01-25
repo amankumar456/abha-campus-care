@@ -15,7 +15,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Loader2, Mail, MapPin, Navigation, Phone, Search, Send, Stethoscope, User, Clock, FileText, AlertTriangle } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, GraduationCap, Loader2, Mail, MapPin, Navigation, Phone, Search, Send, Stethoscope, User, Clock, FileText, AlertTriangle, Users } from "lucide-react";
 import { z } from "zod";
 import PrintableHospitalCard from "./PrintableHospitalCard";
 import PrintableReferralLetter from "./PrintableReferralLetter";
@@ -440,6 +440,19 @@ const referralFormSchema = z.object({
   leaveDays: z.coerce.number().min(1, "At least 1 day required").max(90, "Maximum 90 days"),
   healthPriority: z.enum(["low", "medium", "high"]),
   doctorNotes: z.string().optional(),
+  // Academic Coordination fields
+  mentorEmail: z.string().email("Valid mentor email required").regex(
+    /@nitw\.ac\.in$/,
+    "Must be a valid NIT Warangal faculty email"
+  ).optional().or(z.literal("")),
+  hodEmail: z.string().email("Valid HOD email required").regex(
+    /@nitw\.ac\.in$/,
+    "Must be a valid NIT Warangal faculty email"
+  ).optional().or(z.literal("")),
+  deanEmail: z.string().email("Valid Dean email required").regex(
+    /@nitw\.ac\.in$/,
+    "Must be a valid NIT Warangal faculty email"
+  ).optional().or(z.literal("")),
 });
 
 type ReferralFormData = z.infer<typeof referralFormSchema>;
@@ -462,6 +475,9 @@ const DoctorReferralForm = () => {
       leaveDays: 3,
       healthPriority: "medium",
       doctorNotes: "",
+      mentorEmail: "",
+      hodEmail: "",
+      deanEmail: "deansg@nitw.ac.in", // Default Dean of Student Welfare email
     },
   });
 
@@ -932,12 +948,104 @@ const DoctorReferralForm = () => {
                             />
                           </FormControl>
                           <FormDescription>
-                            These notes will appear on the referral letter
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                          These notes will appear on the referral letter
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  </div>
+
+                  {/* Academic Coordination Section */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      Academic Coordination
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Official email IDs for academic notifications and leave approval coordination
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="mentorEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              Mentor Email
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email"
+                                placeholder="mentor@nitw.ac.in" 
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Faculty mentor's official email
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="hodEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4" />
+                              HOD Email
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email"
+                                placeholder="hod_dept@nitw.ac.in" 
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Head of Department's email
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="deanEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <GraduationCap className="h-4 w-4" />
+                              Dean (Student Welfare) Email
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email"
+                                placeholder="deansg@nitw.ac.in" 
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Dean of Student Welfare's email
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <Alert className="bg-primary/5 border-primary/20">
+                      <Mail className="h-4 w-4" />
+                      <AlertDescription className="text-sm">
+                        These email addresses will be used to notify academic authorities about the student's medical leave for coordination and approval purposes.
+                      </AlertDescription>
+                    </Alert>
                   </div>
 
                   {/* Show hospital details with referral letter button when form is filled */}
