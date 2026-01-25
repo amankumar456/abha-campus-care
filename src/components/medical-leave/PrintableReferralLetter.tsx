@@ -12,6 +12,27 @@ interface HospitalInfo {
   specialties?: string[];
 }
 
+interface DoctorDetails {
+  name: string;
+  designation?: string;
+  qualification?: string;
+  isSenior?: boolean;
+}
+
+interface MentorDetails {
+  name?: string;
+  department?: string;
+  phone?: string;
+  email?: string;
+}
+
+interface AcademicDetails {
+  hodName?: string;
+  hodDepartment?: string;
+  semester?: string;
+  yearOfStudy?: string;
+}
+
 interface ReferralLetterData {
   studentName: string;
   rollNumber: string;
@@ -23,6 +44,9 @@ interface ReferralLetterData {
   healthPriority: string;
   doctorNotes?: string;
   doctorName?: string;
+  doctorDetails?: DoctorDetails | null;
+  mentorDetails?: MentorDetails | null;
+  academicDetails?: AcademicDetails | null;
 }
 
 interface PrintableReferralLetterProps {
@@ -192,33 +216,76 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               margin-bottom: 5px;
             }
             .signature-section {
-              margin-top: 40px;
-              display: flex;
-              justify-content: space-between;
+              margin-top: 35px;
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 15px;
             }
             .signature-box {
               text-align: center;
-              min-width: 180px;
+              min-width: 140px;
             }
             .signature-line {
               border-top: 1px solid #333;
-              margin-top: 50px;
-              padding-top: 5px;
-              font-size: 12px;
+              margin-top: 35px;
+              padding-top: 6px;
+              font-size: 11px;
             }
-            .stamp-area {
-              border: 2px dashed #ccc;
-              width: 100px;
-              height: 100px;
+            .online-signature {
+              font-family: 'Brush Script MT', 'Segoe Script', cursive;
+              font-size: 20px;
+              color: #003366;
+              height: 35px;
               display: flex;
               align-items: center;
               justify-content: center;
-              color: #999;
+            }
+            .doctor-type {
               font-size: 10px;
+              color: #666;
+              margin-top: 2px;
+            }
+            .stamp-area {
+              border: 3px double #003366;
+              width: 90px;
+              height: 90px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
               margin: 0 auto;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            }
+            .stamp-text {
+              font-size: 8px;
+              color: #003366;
+              font-weight: bold;
+              text-align: center;
+            }
+            .stamp-title {
+              font-size: 10px;
+              color: #003366;
+              font-weight: bold;
+              margin: 2px 0;
+            }
+            .mentor-section {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 6px;
+              padding: 12px;
+              margin: 15px 0;
+            }
+            .mentor-title {
+              font-weight: bold;
+              color: #0369a1;
+              font-size: 12px;
+              margin-bottom: 8px;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 4px;
             }
             .footer {
-              margin-top: 30px;
+              margin-top: 25px;
               padding-top: 10px;
               border-top: 1px solid #ddd;
               font-size: 10px;
@@ -273,6 +340,44 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
             </div>
           </div>
 
+          ${(data.mentorDetails || data.academicDetails) ? `
+          <div class="mentor-section">
+            <div class="mentor-title">Academic & Mentorship Details</div>
+            <div class="info-grid">
+              ${data.mentorDetails?.name ? `
+              <div class="info-item">
+                <span class="info-label">Mentor Name:</span>
+                <span>${data.mentorDetails.name}</span>
+              </div>
+              ` : ''}
+              ${data.mentorDetails?.department ? `
+              <div class="info-item">
+                <span class="info-label">Department:</span>
+                <span>${data.mentorDetails.department}</span>
+              </div>
+              ` : ''}
+              ${data.mentorDetails?.phone ? `
+              <div class="info-item">
+                <span class="info-label">Mentor Contact:</span>
+                <span>${data.mentorDetails.phone}</span>
+              </div>
+              ` : ''}
+              ${data.academicDetails?.hodName ? `
+              <div class="info-item">
+                <span class="info-label">HOD:</span>
+                <span>${data.academicDetails.hodName}</span>
+              </div>
+              ` : ''}
+              ${data.academicDetails?.yearOfStudy ? `
+              <div class="info-item">
+                <span class="info-label">Year of Study:</span>
+                <span>${data.academicDetails.yearOfStudy}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+          ` : ''}
+
           <div class="section">
             <div class="section-title">Medical Details</div>
             <div class="info-grid">
@@ -288,6 +393,12 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
                 <span class="info-label">Expected Return:</span>
                 <span>${expectedReturnDate}</span>
               </div>
+              ${data.doctorDetails?.designation ? `
+              <div class="info-item">
+                <span class="info-label">Referring Doctor:</span>
+                <span>${data.doctorDetails.name || data.doctorName || "Medical Officer"} (${data.doctorDetails.designation})</span>
+              </div>
+              ` : ''}
             </div>
           </div>
 
@@ -334,19 +445,39 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
           </div>
 
           <div class="signature-section">
+            <!-- CMO Seal -->
             <div class="signature-box">
-              <div class="stamp-area">Official Seal</div>
+              <div class="stamp-area">
+                <span class="stamp-text">CHIEF MEDICAL</span>
+                <span class="stamp-title">OFFICER</span>
+                <span class="stamp-text">NIT WARANGAL</span>
+              </div>
+              <p style="font-size: 9px; color: #666; margin-top: 5px;">Official Seal</p>
             </div>
+            
+            <!-- Doctor Signature -->
+            <div class="signature-box">
+              <div class="online-signature">${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</div>
+              <div class="signature-line">
+                <strong>${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</strong><br/>
+                ${data.doctorDetails?.designation || "Medical Officer"}<br/>
+                ${data.doctorDetails?.qualification ? `<span style="font-size: 10px;">${data.doctorDetails.qualification}</span><br/>` : ''}
+                <span class="doctor-type">${data.doctorDetails?.isSenior ? "Senior Medical Officer" : "Medical Officer"}</span>
+              </div>
+            </div>
+            
+            <!-- Dean Signature -->
             <div class="signature-box">
               <div class="signature-line">
-                <strong>${data.doctorName || "Medical Officer"}</strong><br/>
-                Health Centre, NIT Warangal
+                <strong>Dean (Student Welfare)</strong><br/>
+                NIT Warangal<br/>
+                <span style="font-size: 9px; color: #666;">(For leaves > 7 days)</span>
               </div>
             </div>
           </div>
 
           <div class="footer">
-            <p>This is an official medical referral document from NIT Warangal Health Centre.</p>
+            <p>This is a digitally generated medical referral document with electronic signature from NIT Warangal Health Centre.</p>
             <p>For verification, contact: health.centre@nitw.ac.in | 0870-2462099</p>
             <p>Generated: ${currentDate}</p>
           </div>
