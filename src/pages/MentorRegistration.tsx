@@ -16,6 +16,7 @@ import { RegistrationProgress } from "@/components/registration/RegistrationProg
 
 const DEPARTMENTS = [
   "Biotechnology",
+  "BSc-BEd",
   "Chemical Engineering",
   "Chemistry",
   "Civil Engineering",
