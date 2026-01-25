@@ -27,6 +27,49 @@ const AppointmentDashboard = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Fetch student profile with emergency contacts
+  const { data: studentProfile } = useQuery({
+    queryKey: ['student-profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      // First get the student record
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, full_name, roll_number, mentor_name, mentor_contact')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (studentError || !student) return null;
+      
+      // Then get the student profile with emergency contacts
+      const { data: profile, error: profileError } = await supabase
+        .from('student_profiles')
+        .select('emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact')
+        .eq('student_id', student.id)
+        .maybeSingle();
+      
+      const isProfileComplete = !!(profile?.emergency_contact);
+      
+      return {
+        fullName: student.full_name,
+        rollNumber: student.roll_number,
+        mentorName: student.mentor_name,
+        mentorContact: student.mentor_contact,
+        isProfileComplete,
+        emergencyContacts: profile ? {
+          emergencyContact: profile.emergency_contact || undefined,
+          emergencyRelationship: profile.emergency_relationship || undefined,
+          fatherName: profile.father_name || undefined,
+          fatherContact: profile.father_contact || undefined,
+          motherName: profile.mother_name || undefined,
+          motherContact: profile.mother_contact || undefined,
+        } : undefined
+      };
+    },
+    enabled: !!user
+  });
+
   const { data: appointments } = useQuery({
     queryKey: ['upcoming-appointments', user?.id],
     queryFn: async () => {
@@ -114,10 +157,10 @@ const AppointmentDashboard = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-[#1A202C] mb-3">
+            <h2 className="text-3xl font-bold text-foreground mb-3">
               Appointment Dashboard
             </h2>
-            <p className="text-[#4A5568] max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Sign in to manage your appointments, view health records, and book new consultations
             </p>
           </div>
@@ -146,21 +189,26 @@ const AppointmentDashboard = () => {
     <section className="py-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-[#1A202C] mb-3">
+          <h2 className="text-3xl font-bold text-foreground mb-3">
             Appointment Dashboard
           </h2>
-          <p className="text-[#4A5568] max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Manage your health appointments and records in one place
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <HealthProfileCard
-            userName={user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'}
+            userName={studentProfile?.fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'}
+            rollNumber={studentProfile?.rollNumber}
+            mentorName={studentProfile?.mentorName || 'Not Assigned'}
+            mentorContact={studentProfile?.mentorContact}
             totalVisits={healthStats?.totalVisits || 0}
             thisMonthVisits={healthStats?.thisMonthVisits || 0}
             pendingFollowups={healthStats?.pendingFollowups || 0}
             lastVisitDate={healthStats?.lastVisitDate || 'No visits yet'}
+            isProfileComplete={studentProfile?.isProfileComplete || false}
+            emergencyContacts={studentProfile?.emergencyContacts}
           />
           
           <UpcomingAppointmentsCard
