@@ -33,7 +33,19 @@ interface HospitalInfo {
   specialties?: string[];
 }
 
-// Empanelled hospitals list with contact details
+// Student emergency contacts type
+interface StudentEmergencyContacts {
+  emergencyContact?: string;
+  emergencyRelationship?: string;
+  fatherName?: string;
+  fatherContact?: string;
+  motherName?: string;
+  motherContact?: string;
+  mentorName?: string;
+  mentorContact?: string;
+  personalPhone?: string;
+}
+
 const EMPANELLED_HOSPITALS: Record<string, HospitalInfo[]> = {
   superSpecialityWarangal: [
     { 
@@ -313,10 +325,13 @@ const getHospitalByName = (name: string): HospitalInfo | null => {
 };
 
 // Hospital Details Card Component
-const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, showReferralLetter, referralData }: { 
+const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, studentProgram, studentBranch, emergencyContacts, showReferralLetter, referralData }: { 
   hospital: HospitalInfo; 
   studentName?: string;
   studentRollNumber?: string;
+  studentProgram?: string;
+  studentBranch?: string | null;
+  emergencyContacts?: StudentEmergencyContacts;
   showReferralLetter?: boolean;
   referralData?: {
     program?: string;
@@ -339,6 +354,9 @@ const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, showRef
             hospital={hospital} 
             studentName={studentName}
             studentRollNumber={studentRollNumber}
+            studentProgram={studentProgram}
+            studentBranch={studentBranch || undefined}
+            emergencyContacts={emergencyContacts}
           />
           {showReferralLetter && referralData && studentName && studentRollNumber && (
             <PrintableReferralLetter
@@ -418,6 +436,7 @@ const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, showRef
   </div>
 );
 
+
 interface Student {
   id: string;
   full_name: string;
@@ -425,6 +444,10 @@ interface Student {
   program: string;
   branch: string | null;
   email?: string | null;
+  phone?: string | null;
+  mentor_name?: string | null;
+  mentor_contact?: string | null;
+  emergencyContacts?: StudentEmergencyContacts;
 }
 
 // Custom schema for this form
@@ -516,10 +539,10 @@ const DoctorReferralForm = () => {
         return;
       }
 
-      // Verify email matches (check students table for email)
+      // Verify email matches and get additional student info
       const { data: studentWithEmail } = await supabase
         .from("students")
-        .select("email")
+        .select("email, phone, mentor_name, mentor_contact")
         .eq("id", data.id)
         .maybeSingle();
 
@@ -528,7 +551,33 @@ const DoctorReferralForm = () => {
         return;
       }
 
-      setFoundStudent({ ...data, email });
+      // Fetch emergency contacts from student_profiles
+      const { data: profileData } = await supabase
+        .from("student_profiles")
+        .select("emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact")
+        .eq("student_id", data.id)
+        .maybeSingle();
+
+      const emergencyContacts: StudentEmergencyContacts = {
+        emergencyContact: profileData?.emergency_contact || undefined,
+        emergencyRelationship: profileData?.emergency_relationship || undefined,
+        fatherName: profileData?.father_name || undefined,
+        fatherContact: profileData?.father_contact || undefined,
+        motherName: profileData?.mother_name || undefined,
+        motherContact: profileData?.mother_contact || undefined,
+        mentorName: studentWithEmail?.mentor_name || undefined,
+        mentorContact: studentWithEmail?.mentor_contact || undefined,
+        personalPhone: studentWithEmail?.phone || undefined,
+      };
+
+      setFoundStudent({ 
+        ...data, 
+        email,
+        phone: studentWithEmail?.phone,
+        mentor_name: studentWithEmail?.mentor_name,
+        mentor_contact: studentWithEmail?.mentor_contact,
+        emergencyContacts,
+      });
       toast.success("Student found", {
         description: `${data.full_name} - ${data.roll_number}`,
       });
@@ -1054,6 +1103,9 @@ const DoctorReferralForm = () => {
                       hospital={selectedHospital} 
                       studentName={foundStudent?.full_name}
                       studentRollNumber={foundStudent?.roll_number}
+                      studentProgram={foundStudent?.program}
+                      studentBranch={foundStudent?.branch}
+                      emergencyContacts={foundStudent?.emergencyContacts}
                       showReferralLetter={!!form.watch("illnessDescription") && form.watch("leaveDays") > 0}
                       referralData={{
                         program: foundStudent?.program,

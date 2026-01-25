@@ -1,4 +1,3 @@
-import { Building2, MapPin, Phone, Navigation, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 
@@ -14,18 +13,36 @@ interface HospitalInfo {
   specialties?: string[];
 }
 
+interface StudentEmergencyContacts {
+  emergencyContact?: string;
+  emergencyRelationship?: string;
+  fatherName?: string;
+  fatherContact?: string;
+  motherName?: string;
+  motherContact?: string;
+  mentorName?: string;
+  mentorContact?: string;
+  personalPhone?: string;
+}
+
 interface PrintableHospitalCardProps {
   hospital: HospitalInfo;
   studentName?: string;
   studentRollNumber?: string;
+  studentProgram?: string;
+  studentBranch?: string;
   referralDate?: string;
+  emergencyContacts?: StudentEmergencyContacts;
 }
 
 const PrintableHospitalCard = ({ 
   hospital, 
   studentName, 
   studentRollNumber,
-  referralDate 
+  studentProgram,
+  studentBranch,
+  referralDate,
+  emergencyContacts
 }: PrintableHospitalCardProps) => {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -58,7 +75,7 @@ const PrintableHospitalCard = ({
             color: #1a1a1a;
           }
           .card {
-            max-width: 400px;
+            max-width: 450px;
             margin: 0 auto;
             border: 2px solid #1a365d;
             border-radius: 12px;
@@ -112,17 +129,6 @@ const PrintableHospitalCard = ({
             margin-bottom: 0;
             padding-bottom: 0;
           }
-          .info-row .icon {
-            width: 20px;
-            height: 20px;
-            min-width: 20px;
-            background: #edf2f7;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-          }
           .info-row .label {
             font-size: 10px;
             color: #718096;
@@ -159,18 +165,76 @@ const PrintableHospitalCard = ({
           }
           .student-info h4 {
             font-size: 10px;
-            color: #718096;
+            color: #276749;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 700;
           }
           .student-info p {
             font-size: 12px;
             color: #1a1a1a;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           .student-info p strong {
             color: #1a365d;
+          }
+          .emergency-contacts {
+            background: #fff5f5;
+            border-top: 2px solid #c53030;
+            padding: 12px 16px;
+          }
+          .emergency-contacts h4 {
+            font-size: 10px;
+            color: #c53030;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+          }
+          .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+          }
+          .contact-item {
+            background: white;
+            border: 1px solid #feb2b2;
+            border-radius: 6px;
+            padding: 8px;
+          }
+          .contact-item .contact-label {
+            font-size: 9px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+          }
+          .contact-item .contact-name {
+            font-size: 11px;
+            color: #1a365d;
+            font-weight: 600;
+            margin-bottom: 1px;
+          }
+          .contact-item .contact-phone {
+            font-size: 12px;
+            color: #c53030;
+            font-weight: 700;
+          }
+          .primary-contact {
+            grid-column: span 2;
+            background: #c53030;
+            border-color: #c53030;
+          }
+          .primary-contact .contact-label {
+            color: #fed7d7;
+          }
+          .primary-contact .contact-name {
+            color: white;
+          }
+          .primary-contact .contact-phone {
+            color: white;
+            font-size: 16px;
           }
           .footer {
             background: #1a365d;
@@ -178,20 +242,6 @@ const PrintableHospitalCard = ({
             padding: 10px 16px;
             text-align: center;
             font-size: 10px;
-          }
-          .qr-placeholder {
-            width: 60px;
-            height: 60px;
-            background: #edf2f7;
-            border: 1px dashed #a0aec0;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            color: #718096;
-            float: right;
-            margin-left: 12px;
           }
           .specialties {
             display: flex;
@@ -269,7 +319,7 @@ const PrintableHospitalCard = ({
             
             ${hospital.emergency ? `
               <div class="emergency">
-                <div class="label">🚨 EMERGENCY HELPLINE</div>
+                <div class="label">🚨 HOSPITAL EMERGENCY HELPLINE</div>
                 <div class="value">${hospital.emergency}</div>
               </div>
             ` : ''}
@@ -277,10 +327,13 @@ const PrintableHospitalCard = ({
           
           ${studentName || studentRollNumber ? `
             <div class="student-info">
-              <h4>Student Details</h4>
+              <h4>👤 Student Details</h4>
               ${studentName ? `<p><strong>Name:</strong> ${studentName}</p>` : ''}
               ${studentRollNumber ? `<p><strong>Roll No:</strong> ${studentRollNumber}</p>` : ''}
-              <p><strong>Date:</strong> ${currentDate}</p>
+              ${studentProgram ? `<p><strong>Program:</strong> ${studentProgram}</p>` : ''}
+              ${studentBranch ? `<p><strong>Branch:</strong> ${studentBranch}</p>` : ''}
+              ${emergencyContacts?.personalPhone ? `<p><strong>Student Phone:</strong> ${emergencyContacts.personalPhone}</p>` : ''}
+              <p><strong>Referral Date:</strong> ${currentDate}</p>
             </div>
           ` : `
             <div class="student-info">
@@ -288,6 +341,44 @@ const PrintableHospitalCard = ({
               <p>${currentDate}</p>
             </div>
           `}
+          
+          ${emergencyContacts ? `
+            <div class="emergency-contacts">
+              <h4>🆘 Emergency Contacts</h4>
+              <div class="contact-grid">
+                ${emergencyContacts.emergencyContact ? `
+                  <div class="contact-item primary-contact">
+                    <div class="contact-label">Primary Emergency Contact${emergencyContacts.emergencyRelationship ? ` (${emergencyContacts.emergencyRelationship})` : ''}</div>
+                    <div class="contact-phone">📞 ${emergencyContacts.emergencyContact}</div>
+                  </div>
+                ` : ''}
+                
+                ${emergencyContacts.fatherName || emergencyContacts.fatherContact ? `
+                  <div class="contact-item">
+                    <div class="contact-label">Father</div>
+                    ${emergencyContacts.fatherName ? `<div class="contact-name">${emergencyContacts.fatherName}</div>` : ''}
+                    ${emergencyContacts.fatherContact ? `<div class="contact-phone">📞 ${emergencyContacts.fatherContact}</div>` : ''}
+                  </div>
+                ` : ''}
+                
+                ${emergencyContacts.motherName || emergencyContacts.motherContact ? `
+                  <div class="contact-item">
+                    <div class="contact-label">Mother</div>
+                    ${emergencyContacts.motherName ? `<div class="contact-name">${emergencyContacts.motherName}</div>` : ''}
+                    ${emergencyContacts.motherContact ? `<div class="contact-phone">📞 ${emergencyContacts.motherContact}</div>` : ''}
+                  </div>
+                ` : ''}
+                
+                ${emergencyContacts.mentorName || emergencyContacts.mentorContact ? `
+                  <div class="contact-item">
+                    <div class="contact-label">Faculty Mentor</div>
+                    ${emergencyContacts.mentorName ? `<div class="contact-name">${emergencyContacts.mentorName}</div>` : ''}
+                    ${emergencyContacts.mentorContact ? `<div class="contact-phone">📞 ${emergencyContacts.mentorContact}</div>` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
           
           <div class="footer">
             This card is issued by NIT Warangal Health Centre for off-campus medical treatment.
