@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const DEPARTMENTS = [
   "Biotechnology",
+  "BSc-BEd",
   "Chemical Engineering",
   "Chemistry",
   "Civil Engineering",

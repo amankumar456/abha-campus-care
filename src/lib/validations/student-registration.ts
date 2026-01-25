@@ -114,6 +114,7 @@ export type FullRegistration = z.infer<typeof fullRegistrationSchema>;
 // Constants for form options
 export const DEPARTMENTS = [
   "Biotechnology",
+  "BSc-BEd",
   "Chemical Engineering",
   "Chemistry",
   "Civil Engineering",
