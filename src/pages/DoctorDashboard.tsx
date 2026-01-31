@@ -37,6 +37,8 @@ import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
 import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
+import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
+import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -280,14 +282,25 @@ export default function DoctorDashboard() {
                         Issue Medical Leave
                       </Link>
                     </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                      <Calendar className="w-4 h-4 text-secondary" />
-                      Schedule Follow-up
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                      <FileCheck className="w-4 h-4 text-muted-foreground" />
-                      Issue Medical Certificate
-                    </Button>
+                    <ScheduleFollowupDialog
+                      doctorId={doctorId}
+                      trigger={
+                        <Button variant="outline" className="w-full justify-start gap-2">
+                          <Calendar className="w-4 h-4 text-secondary" />
+                          Schedule Follow-up
+                        </Button>
+                      }
+                    />
+                    <IssueCertificateDialog
+                      doctorId={doctorId}
+                      doctorProfile={doctorProfile}
+                      trigger={
+                        <Button variant="outline" className="w-full justify-start gap-2">
+                          <FileCheck className="w-4 h-4 text-muted-foreground" />
+                          Issue Medical Certificate
+                        </Button>
+                      }
+                    />
                   </CardContent>
                 </Card>
 
