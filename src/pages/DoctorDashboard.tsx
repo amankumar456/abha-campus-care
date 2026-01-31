@@ -39,6 +39,7 @@ import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
 import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
+import PendingFollowupsList from "@/components/doctor/PendingFollowupsList";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -267,10 +268,11 @@ export default function DoctorDashboard() {
                   />
                 )}
 
+                {/* Pending Follow-ups */}
+                <PendingFollowupsList doctorId={doctorId} />
+
                 {/* Access Requests */}
                 <PendingAccessRequests />
-
-                {/* Quick Actions */}
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Quick Actions</CardTitle>
