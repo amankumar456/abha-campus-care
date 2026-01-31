@@ -249,10 +249,18 @@ export default function Auth() {
             user_id: data.user.id,
             role: userType
           });
-          console.log(`Auto-assigned ${userType} role`);
+          toast({
+            title: "Role Assigned",
+            description: `You have been assigned the ${userType.charAt(0).toUpperCase() + userType.slice(1)} role.`,
+          });
         } catch (err) {
           console.log('Role may already exist:', err);
         }
+      } else {
+        toast({
+          title: "Welcome Back",
+          description: `Signed in as ${userType.charAt(0).toUpperCase() + userType.slice(1)}.`,
+        });
       }
 
       // Update user metadata with user_type
@@ -309,7 +317,10 @@ export default function Auth() {
           user_id: data.user.id,
           role: roleToAssign
         });
-        console.log(`Auto-assigned ${roleToAssign} role on signup`);
+        toast({
+          title: "Account Created",
+          description: `You have been registered as a ${roleToAssign.charAt(0).toUpperCase() + roleToAssign.slice(1)}.`,
+        });
       } catch (roleError) {
         console.log('Role assignment error (may already exist):', roleError);
       }
