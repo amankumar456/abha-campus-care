@@ -454,7 +454,13 @@ const HealthDashboard = () => {
 
             <Card 
               className="hover:shadow-md transition-shadow cursor-pointer" 
-              onClick={() => navigate('/#health-services')}
+              onClick={() => {
+                navigate('/');
+                setTimeout(() => {
+                  const element = document.getElementById('health-services');
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+              }}
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Health Records</CardTitle>
