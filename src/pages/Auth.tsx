@@ -216,14 +216,13 @@ export default function Auth() {
 
     setIsLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       toast({
         title: "Sign In Failed",
         description: error.message === "Invalid login credentials" 
@@ -231,7 +230,38 @@ export default function Auth() {
           : error.message,
         variant: "destructive",
       });
+      return;
     }
+
+    // Auto-assign role based on selected user type if not already assigned
+    if (data.user && userType) {
+      const { data: existingRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id);
+
+      const hasRole = existingRoles?.some(r => r.role === userType);
+      
+      if (!hasRole) {
+        // Assign the role based on the selected user type
+        try {
+          await supabase.from('user_roles').insert({
+            user_id: data.user.id,
+            role: userType
+          });
+          console.log(`Auto-assigned ${userType} role`);
+        } catch (err) {
+          console.log('Role may already exist:', err);
+        }
+      }
+
+      // Update user metadata with user_type
+      await supabase.auth.updateUser({
+        data: { user_type: userType }
+      });
+    }
+
+    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -271,6 +301,19 @@ export default function Auth() {
     }
     
     if (data.user) {
+      // Auto-assign role based on user type selection
+      const roleToAssign = userType as "student" | "doctor" | "mentor";
+      
+      try {
+        await supabase.from('user_roles').insert({
+          user_id: data.user.id,
+          role: roleToAssign
+        });
+        console.log(`Auto-assigned ${roleToAssign} role on signup`);
+      } catch (roleError) {
+        console.log('Role assignment error (may already exist):', roleError);
+      }
+
       // For students, create the student profile with all details
       if (userType === "student") {
         const { error: studentError } = await supabase
@@ -294,12 +337,6 @@ export default function Auth() {
           console.error('Error creating student profile:', studentError);
           // Don't fail registration, but log the error
         }
-        
-        // Also add student role
-        await supabase.from('user_roles').insert({
-          user_id: data.user.id,
-          role: 'student'
-        });
       }
 
       // Send registration confirmation email
