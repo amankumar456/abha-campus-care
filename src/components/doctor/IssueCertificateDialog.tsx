@@ -298,33 +298,35 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
           <div className="space-y-6 mt-4">
             {/* Certificate Preview */}
             <div ref={printRef} className="border rounded-lg p-8 bg-white">
-              {/* Official Header with Emblem */}
-              <div className="text-center border-b-2 border-primary pb-6 mb-6">
-                {/* Emblem */}
-                <div className="flex justify-center mb-3">
+              {/* Official Header with Emblem on Left */}
+              <div className="border-b-2 border-primary pb-6 mb-6">
+                <div className="flex items-start gap-4">
+                  {/* Emblem on Left */}
                   <img 
                     src="/nitw-emblem.png" 
                     alt="NIT Warangal Official Emblem" 
-                    className="w-16 h-20 object-contain"
+                    className="w-20 h-24 object-contain flex-shrink-0"
                   />
-                </div>
-                
-                {/* Institution Name */}
-                <h1 className="text-xl font-bold text-primary tracking-wide">
-                  NATIONAL INSTITUTE OF TECHNOLOGY
-                </h1>
-                <p className="text-lg font-semibold text-primary mt-1">WARANGAL</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  (An Institution of National Importance under Ministry of Education, Govt. of India)
-                </p>
-                <p className="text-xs text-muted-foreground">Warangal, Telangana - 506004</p>
-                
-                {/* Health Centre */}
-                <div className="mt-4 pt-3 border-t border-muted">
-                  <p className="text-base font-semibold text-secondary">HEALTH CENTRE</p>
-                  <p className="text-xs text-muted-foreground">
-                    Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in
-                  </p>
+                  
+                  {/* Institution Details */}
+                  <div className="flex-1 text-center">
+                    <h1 className="text-xl font-bold text-primary tracking-wide">
+                      NATIONAL INSTITUTE OF TECHNOLOGY
+                    </h1>
+                    <p className="text-lg font-semibold text-primary mt-1">WARANGAL</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      (An Institution of National Importance under Ministry of Education, Govt. of India)
+                    </p>
+                    <p className="text-xs text-muted-foreground">Warangal, Telangana - 506004</p>
+                    
+                    {/* Health Centre */}
+                    <div className="mt-3 pt-2 border-t border-muted">
+                      <p className="text-base font-semibold text-secondary">HEALTH CENTRE</p>
+                      <p className="text-xs text-muted-foreground">
+                        Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
