@@ -217,13 +217,12 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
             }
             .signature-section {
               margin-top: 35px;
-              display: grid;
-              grid-template-columns: 1fr 1fr 1fr 1fr;
-              gap: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
             }
             .signature-box {
               text-align: center;
-              min-width: 100px;
             }
             .signature-line {
               border-top: 1px solid #333;
@@ -245,40 +244,16 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               color: #666;
               margin-top: 2px;
             }
-            .stamp-area {
-              border: 3px double #003366;
-              width: 90px;
-              height: 90px;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              margin: 0 auto;
-              border-radius: 50%;
-              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            }
-            .stamp-text {
-              font-size: 8px;
-              color: #003366;
-              font-weight: bold;
-              text-align: center;
-            }
-            .stamp-title {
-              font-size: 10px;
-              color: #003366;
-              font-weight: bold;
-              margin: 2px 0;
-            }
             .emblem-area {
               text-align: center;
             }
             .emblem-area img {
               width: 80px;
-              height: 90px;
+              height: 95px;
               object-fit: contain;
             }
             .emblem-label {
-              font-size: 8px;
+              font-size: 9px;
               color: #666;
               margin-top: 3px;
             }
@@ -458,16 +433,6 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
           </div>
 
           <div class="signature-section">
-            <!-- CMO Seal -->
-            <div class="signature-box">
-              <div class="stamp-area">
-                <span class="stamp-text">CHIEF MEDICAL</span>
-                <span class="stamp-title">OFFICER</span>
-                <span class="stamp-text">NIT WARANGAL</span>
-              </div>
-              <p style="font-size: 9px; color: #666; margin-top: 5px;">Official Seal</p>
-            </div>
-            
             <!-- NIT Warangal Official Emblem -->
             <div class="signature-box">
               <div class="emblem-area">
@@ -477,22 +442,13 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
             </div>
             
             <!-- Doctor Signature -->
-            <div class="signature-box">
+            <div class="signature-box" style="text-align: right;">
               <div class="online-signature">\${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</div>
               <div class="signature-line">
                 <strong>\${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</strong><br/>
-                \${data.doctorDetails?.designation || "Medical Officer"}<br/>
-                \${data.doctorDetails?.qualification ? \`<span style="font-size: 10px;">\${data.doctorDetails.qualification}</span><br/>\` : ''}
-                <span class="doctor-type">\${data.doctorDetails?.isSenior ? "Senior Medical Officer" : "Medical Officer"}</span>
-              </div>
-            </div>
-            
-            <!-- Dean Signature -->
-            <div class="signature-box">
-              <div class="signature-line">
-                <strong>Dean (Student Welfare)</strong><br/>
-                NIT Warangal<br/>
-                <span style="font-size: 9px; color: #666;">(For leaves > 7 days)</span>
+                \${data.doctorDetails?.designation || "Chief Medical Officer"}<br/>
+                \${data.doctorDetails?.qualification ? \`<span style="font-size: 10px;">\${data.doctorDetails.qualification}</span><br/>\` : '<span style="font-size: 10px;">MBBS, MD (General Medicine)</span><br/>'}
+                <span class="doctor-type">Health Centre, NIT Warangal</span>
               </div>
             </div>
           </div>

@@ -359,15 +359,6 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
 
               {/* Signature Section */}
               <div className="mt-12 flex items-end justify-between">
-                {/* Health Centre Stamp */}
-                <div className="text-center">
-                  <div className="w-24 h-24 border-2 border-primary rounded-full flex items-center justify-center text-center mx-auto">
-                    <div className="text-[8px] text-primary font-semibold leading-tight">
-                      HEALTH<br />CENTRE<br />NIT<br />WARANGAL
-                    </div>
-                  </div>
-                </div>
-
                 {/* NIT Warangal Official Emblem */}
                 <div className="text-center">
                   <img 
@@ -375,16 +366,17 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
                     alt="NIT Warangal Official Emblem" 
                     className="w-20 h-24 object-contain mx-auto"
                   />
-                  <p className="text-[8px] text-muted-foreground mt-1">Official Emblem</p>
+                  <p className="text-[9px] text-muted-foreground mt-1">Official Emblem</p>
                 </div>
 
+                {/* Doctor Signature */}
                 <div className="text-right">
                   <p className="font-script text-2xl text-primary mb-2" style={{ fontFamily: "'Brush Script MT', cursive" }}>
                     {doctorProfile?.name || "Dr. Medical Officer"}
                   </p>
                   <p className="font-semibold">{doctorProfile?.name || "Medical Officer"}</p>
-                  <p className="text-sm text-muted-foreground">{doctorProfile?.designation || "Medical Officer"}</p>
-                  <p className="text-sm text-muted-foreground">{doctorProfile?.qualification || "MBBS"}</p>
+                  <p className="text-sm text-muted-foreground">{doctorProfile?.designation || "Chief Medical Officer"}</p>
+                  <p className="text-sm text-muted-foreground">{doctorProfile?.qualification || "MBBS, MD (General Medicine)"}</p>
                   <p className="text-sm text-muted-foreground">Health Centre, NIT Warangal</p>
                 </div>
               </div>
