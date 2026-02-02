@@ -359,12 +359,23 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
 
               {/* Signature Section */}
               <div className="mt-12 flex items-end justify-between">
+                {/* Health Centre Stamp */}
                 <div className="text-center">
                   <div className="w-24 h-24 border-2 border-primary rounded-full flex items-center justify-center text-center mx-auto">
                     <div className="text-[8px] text-primary font-semibold leading-tight">
                       HEALTH<br />CENTRE<br />NIT<br />WARANGAL
                     </div>
                   </div>
+                </div>
+
+                {/* NIT Warangal Official Emblem */}
+                <div className="text-center">
+                  <img 
+                    src="/nitw-emblem.png" 
+                    alt="NIT Warangal Official Emblem" 
+                    className="w-20 h-24 object-contain mx-auto"
+                  />
+                  <p className="text-[8px] text-muted-foreground mt-1">Official Emblem</p>
                 </div>
 
                 <div className="text-right">
