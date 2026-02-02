@@ -218,12 +218,12 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
             .signature-section {
               margin-top: 35px;
               display: grid;
-              grid-template-columns: 1fr 1fr 1fr;
-              gap: 15px;
+              grid-template-columns: 1fr 1fr 1fr 1fr;
+              gap: 10px;
             }
             .signature-box {
               text-align: center;
-              min-width: 140px;
+              min-width: 100px;
             }
             .signature-line {
               border-top: 1px solid #333;
@@ -268,6 +268,19 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               color: #003366;
               font-weight: bold;
               margin: 2px 0;
+            }
+            .emblem-area {
+              text-align: center;
+            }
+            .emblem-area img {
+              width: 80px;
+              height: 90px;
+              object-fit: contain;
+            }
+            .emblem-label {
+              font-size: 8px;
+              color: #666;
+              margin-top: 3px;
             }
             .mentor-section {
               background: #f8fafc;
@@ -455,14 +468,22 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               <p style="font-size: 9px; color: #666; margin-top: 5px;">Official Seal</p>
             </div>
             
+            <!-- NIT Warangal Official Emblem -->
+            <div class="signature-box">
+              <div class="emblem-area">
+                <img src="/nitw-emblem.png" alt="NIT Warangal Official Emblem" />
+                <p class="emblem-label">Official Emblem</p>
+              </div>
+            </div>
+            
             <!-- Doctor Signature -->
             <div class="signature-box">
-              <div class="online-signature">${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</div>
+              <div class="online-signature">\${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</div>
               <div class="signature-line">
-                <strong>${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</strong><br/>
-                ${data.doctorDetails?.designation || "Medical Officer"}<br/>
-                ${data.doctorDetails?.qualification ? `<span style="font-size: 10px;">${data.doctorDetails.qualification}</span><br/>` : ''}
-                <span class="doctor-type">${data.doctorDetails?.isSenior ? "Senior Medical Officer" : "Medical Officer"}</span>
+                <strong>\${data.doctorDetails?.name || data.doctorName || "Medical Officer"}</strong><br/>
+                \${data.doctorDetails?.designation || "Medical Officer"}<br/>
+                \${data.doctorDetails?.qualification ? \`<span style="font-size: 10px;">\${data.doctorDetails.qualification}</span><br/>\` : ''}
+                <span class="doctor-type">\${data.doctorDetails?.isSenior ? "Senior Medical Officer" : "Medical Officer"}</span>
               </div>
             </div>
             
