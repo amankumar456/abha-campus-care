@@ -298,17 +298,34 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
           <div className="space-y-6 mt-4">
             {/* Certificate Preview */}
             <div ref={printRef} className="border rounded-lg p-8 bg-white">
-              {/* Header */}
+              {/* Official Header with Emblem */}
               <div className="text-center border-b-2 border-primary pb-6 mb-6">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <Stethoscope className="w-8 h-8 text-primary" />
-                  <div>
-                    <h1 className="text-xl font-bold text-primary">NATIONAL INSTITUTE OF TECHNOLOGY</h1>
-                    <p className="text-sm text-muted-foreground">WARANGAL, TELANGANA - 506004</p>
-                  </div>
+                {/* Emblem */}
+                <div className="flex justify-center mb-3">
+                  <img 
+                    src="/nitw-emblem.png" 
+                    alt="NIT Warangal Official Emblem" 
+                    className="w-16 h-20 object-contain"
+                  />
                 </div>
-                <p className="text-lg font-semibold text-secondary mt-4">HEALTH CENTRE</p>
-                <p className="text-sm text-muted-foreground">Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in</p>
+                
+                {/* Institution Name */}
+                <h1 className="text-xl font-bold text-primary tracking-wide">
+                  NATIONAL INSTITUTE OF TECHNOLOGY
+                </h1>
+                <p className="text-lg font-semibold text-primary mt-1">WARANGAL</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  (An Institution of National Importance under Ministry of Education, Govt. of India)
+                </p>
+                <p className="text-xs text-muted-foreground">Warangal, Telangana - 506004</p>
+                
+                {/* Health Centre */}
+                <div className="mt-4 pt-3 border-t border-muted">
+                  <p className="text-base font-semibold text-secondary">HEALTH CENTRE</p>
+                  <p className="text-xs text-muted-foreground">
+                    Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in
+                  </p>
+                </div>
               </div>
 
               {/* Certificate Title */}
