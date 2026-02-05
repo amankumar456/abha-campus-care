@@ -248,14 +248,15 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               text-align: center;
             }
             .emblem-area img {
-              width: 80px;
-              height: 95px;
+              width: 90px;
+              height: 100px;
               object-fit: contain;
             }
             .emblem-label {
-              font-size: 9px;
-              color: #666;
-              margin-top: 3px;
+              font-size: 10px;
+              color: #003366;
+              margin-top: 5px;
+              font-weight: 500;
             }
             .mentor-section {
               background: #f8fafc;
