@@ -86,17 +86,48 @@ const PrintableHospitalCard = ({
             background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
             color: white;
             padding: 16px;
+          }
+          .header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .header-emblem {
+            width: 50px;
+            height: 60px;
+            object-fit: contain;
+            flex-shrink: 0;
+            background: white;
+            padding: 4px;
+            border-radius: 4px;
+          }
+          .header-text {
+            flex: 1;
             text-align: center;
           }
           .header h1 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
           }
           .header h2 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+          }
+          .header .subtitle {
+            font-size: 8px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+          }
+          .header .health-centre {
             font-size: 11px;
             font-weight: 400;
-            opacity: 0.9;
+            opacity: 0.95;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 4px;
+            margin-top: 4px;
           }
           .hospital-name {
             background: #edf2f7;
@@ -269,8 +300,15 @@ const PrintableHospitalCard = ({
       <body>
         <div class="card">
           <div class="header">
-            <h1>NIT WARANGAL HEALTH CENTRE</h1>
-            <h2>Hospital Referral Card</h2>
+            <div class="header-content">
+              <img src="/nitw-emblem.png" alt="NIT Warangal" class="header-emblem" />
+              <div class="header-text">
+                <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+                <h2>WARANGAL</h2>
+                <p class="subtitle">(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+                <p class="health-centre">Health Centre - Hospital Referral Card</p>
+              </div>
+            </div>
           </div>
           
           <div class="hospital-name">
