@@ -88,26 +88,61 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               margin: 0 auto;
             }
             .header {
-              text-align: center;
               margin-bottom: 25px;
               border-bottom: 3px double #003366;
               padding-bottom: 20px;
             }
+            .header-content {
+              display: flex;
+              align-items: flex-start;
+              gap: 16px;
+            }
+            .header-emblem {
+              width: 80px;
+              height: 90px;
+              object-fit: contain;
+              flex-shrink: 0;
+            }
+            .header-text {
+              flex: 1;
+              text-align: center;
+            }
             .header h1 {
-              font-size: 22px;
+              font-size: 20px;
               color: #003366;
-              margin-bottom: 5px;
+              margin-bottom: 2px;
               letter-spacing: 1px;
+              font-weight: bold;
             }
             .header h2 {
-              font-size: 16px;
-              color: #0066cc;
-              font-weight: normal;
+              font-size: 17px;
+              color: #003366;
+              font-weight: bold;
+              margin-bottom: 4px;
             }
-            .header p {
-              font-size: 11px;
+            .header .subtitle {
+              font-size: 10px;
               color: #666;
-              margin-top: 5px;
+              margin-bottom: 2px;
+            }
+            .header .address {
+              font-size: 10px;
+              color: #666;
+            }
+            .header .health-centre {
+              margin-top: 8px;
+              padding-top: 8px;
+              border-top: 1px solid #ddd;
+            }
+            .header .health-centre-title {
+              font-size: 14px;
+              color: #0066cc;
+              font-weight: bold;
+            }
+            .header .health-centre-contact {
+              font-size: 10px;
+              color: #666;
+              margin-top: 2px;
             }
             .title {
               text-align: center;
@@ -288,9 +323,19 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
         </head>
         <body>
           <div class="header">
-            <h1>NATIONAL INSTITUTE OF TECHNOLOGY WARANGAL</h1>
-            <h2>Health Centre - Medical Referral</h2>
-            <p>Warangal, Telangana - 506004 | Phone: 0870-2462099 | health.centre@nitw.ac.in</p>
+            <div class="header-content">
+              <img src="/nitw-emblem.png" alt="NIT Warangal Official Emblem" class="header-emblem" />
+              <div class="header-text">
+                <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+                <h2>WARANGAL</h2>
+                <p class="subtitle">(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+                <p class="address">Warangal, Telangana - 506004</p>
+                <div class="health-centre">
+                  <p class="health-centre-title">HEALTH CENTRE</p>
+                  <p class="health-centre-contact">Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="title">
