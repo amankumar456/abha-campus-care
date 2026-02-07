@@ -82,25 +82,55 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
               color: #1a1a1a;
             }
             .header {
-              text-align: center;
               margin-bottom: 30px;
-              border-bottom: 2px solid #0066cc;
+              border-bottom: 2px solid #1e3a5f;
               padding-bottom: 20px;
             }
+            .header-content {
+              display: flex;
+              align-items: flex-start;
+              gap: 16px;
+            }
+            .header-emblem {
+              width: 70px;
+              height: 85px;
+              object-fit: contain;
+              flex-shrink: 0;
+            }
+            .header-text {
+              flex: 1;
+              text-align: center;
+            }
             .header h1 {
-              font-size: 24px;
-              color: #003366;
-              margin-bottom: 5px;
+              font-size: 20px;
+              color: #1e3a5f;
+              font-weight: 700;
+              margin-bottom: 4px;
+              letter-spacing: 1px;
             }
             .header h2 {
-              font-size: 18px;
-              color: #0066cc;
-              font-weight: normal;
+              font-size: 16px;
+              color: #1e3a5f;
+              font-weight: 600;
+              margin-bottom: 4px;
             }
-            .header p {
-              font-size: 12px;
+            .header .subtitle {
+              font-size: 11px;
               color: #666;
-              margin-top: 5px;
+              margin-bottom: 8px;
+            }
+            .header .health-centre {
+              font-size: 14px;
+              font-weight: 600;
+              color: #0066cc;
+              border-top: 1px solid #ddd;
+              padding-top: 8px;
+              margin-top: 8px;
+            }
+            .header .contact-info {
+              font-size: 11px;
+              color: #666;
+              margin-top: 4px;
             }
             .title {
               text-align: center;
@@ -329,14 +359,30 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
           style={{ minHeight: "842px" }} // A4 aspect
         >
           {/* Header */}
-          <div className="header text-center mb-6 pb-4 border-b-2 border-primary">
-            <h1 className="text-2xl font-bold text-primary mb-1">
-              NATIONAL INSTITUTE OF TECHNOLOGY WARANGAL
-            </h1>
-            <h2 className="text-lg text-primary/80">Health Centre</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Warangal, Telangana - 506004 | health.centre@nitw.ac.in
-            </p>
+          <div className="header mb-6 pb-4 border-b-2 border-primary">
+            <div className="flex items-start gap-4">
+              <img 
+                src="/nitw-emblem.png" 
+                alt="NIT Warangal Official Emblem" 
+                className="w-16 h-20 object-contain flex-shrink-0"
+              />
+              <div className="flex-1 text-center">
+                <h1 className="text-xl font-bold text-primary tracking-wide">
+                  NATIONAL INSTITUTE OF TECHNOLOGY
+                </h1>
+                <p className="text-lg font-semibold text-primary mt-1">WARANGAL</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  (An Institution of National Importance under Ministry of Education, Govt. of India)
+                </p>
+                <p className="text-xs text-muted-foreground">Warangal, Telangana - 506004</p>
+                <div className="mt-2 pt-2 border-t border-muted">
+                  <p className="text-sm font-semibold text-secondary">HEALTH CENTRE</p>
+                  <p className="text-xs text-muted-foreground">
+                    Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Title */}
