@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Download, Printer, Building2, Calendar, User, GraduationCap, FileText, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
+import { getFooterStyles, getFooterHtml } from "@/lib/print/generateVerificationQR";
+import { generateQRDataUrl } from "@/hooks/useQRCode";
 
 interface DoctorDetails {
   name: string;
@@ -57,9 +59,14 @@ interface PrintableLeaveLetterProps {
 const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps) => {
   const printRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const printContent = printRef.current;
     if (!printContent) return;
+
+    const documentId = `ML-${leaveData.id.slice(0, 8).toUpperCase()}`;
+    const verificationUrl = `${window.location.origin}/verify?doc=medical-leave&id=${documentId}`;
+    const qrDataUrl = await generateQRDataUrl(verificationUrl, 80);
+    const currentDate = format(new Date(), "PPP");
 
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
@@ -258,14 +265,7 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
               font-size: 8px;
               color: #666;
             }
-            .footer {
-              margin-top: 30px;
-              padding-top: 15px;
-              border-top: 1px solid #ddd;
-              font-size: 11px;
-              color: #666;
-              text-align: center;
-            }
+            ${getFooterStyles()}
             .status-badge {
               display: inline-block;
               padding: 4px 12px;
@@ -290,6 +290,7 @@ const PrintableLeaveLetter = ({ leaveData, onClose }: PrintableLeaveLetterProps)
         </head>
         <body>
           ${printContent.innerHTML}
+          ${getFooterHtml(documentId, 'Medical Leave Certificate', qrDataUrl, currentDate)}
         </body>
       </html>
     `);
