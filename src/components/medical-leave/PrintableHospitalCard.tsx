@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-
+import { getCompactFooterStyles, getCompactFooterHtml } from "@/lib/print/generateVerificationQR";
+import { generateQRDataUrl } from "@/hooks/useQRCode";
+import { format } from "date-fns";
 interface HospitalInfo {
   name: string;
   location: string;
@@ -44,18 +46,18 @@ const PrintableHospitalCard = ({
   referralDate,
   emergencyContacts
 }: PrintableHospitalCardProps) => {
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    const documentId = `HC-${Date.now().toString(36).toUpperCase()}`;
+    const verificationUrl = `${window.location.origin}/verify?doc=hospital-card&id=${documentId}`;
+    const qrDataUrl = await generateQRDataUrl(verificationUrl, 60);
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Please allow popups to print the hospital card');
       return;
     }
 
-    const currentDate = referralDate || new Date().toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
+    const currentDate = referralDate || format(new Date(), 'PPP');
 
     const printContent = `
       <!DOCTYPE html>
@@ -287,6 +289,7 @@ const PrintableHospitalCard = ({
             font-size: 10px;
             color: #4a5568;
           }
+          ${getCompactFooterStyles()}
           @media print {
             body {
               padding: 0;
@@ -418,10 +421,7 @@ const PrintableHospitalCard = ({
             </div>
           ` : ''}
           
-          <div class="footer">
-            This card is issued by NIT Warangal Health Centre for off-campus medical treatment.
-            <br/>For verification, contact: 0870-2462099
-          </div>
+          ${getCompactFooterHtml(documentId, qrDataUrl)}
         </div>
         
         <script>

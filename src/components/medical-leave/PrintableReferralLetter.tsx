@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Printer, FileText } from "lucide-react";
 import { format } from "date-fns";
-
+import { getFooterStyles, getFooterHtml, getVerificationUrl } from "@/lib/print/generateVerificationQR";
+import { generateQRDataUrl } from "@/hooks/useQRCode";
 interface HospitalInfo {
   name: string;
   location: string;
@@ -54,7 +55,11 @@ interface PrintableReferralLetterProps {
 }
 
 const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    const documentId = `REF-${Date.now().toString(36).toUpperCase()}`;
+    const verificationUrl = getVerificationUrl(documentId, 'referral');
+    const qrDataUrl = await generateQRDataUrl(verificationUrl, 80);
+    
     const printWindow = window.open('', '', 'width=800,height=600');
     if (!printWindow) return;
 
@@ -308,14 +313,7 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
               border-bottom: 1px solid #e2e8f0;
               padding-bottom: 4px;
             }
-            .footer {
-              margin-top: 25px;
-              padding-top: 10px;
-              border-top: 1px solid #ddd;
-              font-size: 10px;
-              color: #666;
-              text-align: center;
-            }
+            ${getFooterStyles()}
             @media print {
               body { padding: 20px; }
             }
@@ -499,11 +497,7 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
             </div>
           </div>
 
-          <div class="footer">
-            <p>This is a digitally generated medical referral document with electronic signature from NIT Warangal Health Centre.</p>
-            <p>For verification, contact: health.centre@nitw.ac.in | 0870-2462099</p>
-            <p>Generated: ${currentDate}</p>
-          </div>
+          ${getFooterHtml(documentId, 'Medical Referral Letter', qrDataUrl, currentDate)}
         </body>
       </html>
     `);

@@ -27,6 +27,8 @@ import { Separator } from "@/components/ui/separator";
 import { FileCheck, User, Search, Printer, Download, Check, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { getFooterStyles, getFooterHtml } from "@/lib/print/generateVerificationQR";
+import { generateQRDataUrl } from "@/hooks/useQRCode";
 
 interface IssueCertificateDialogProps {
   trigger: React.ReactNode;
@@ -113,8 +115,13 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
     setIsGenerating(false);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (printRef.current) {
+      const documentId = certificateNumber;
+      const verificationUrl = `${window.location.origin}/verify?doc=certificate&id=${documentId}`;
+      const qrDataUrl = await generateQRDataUrl(verificationUrl, 80);
+      const currentDate = format(new Date(), "PPP");
+
       const printWindow = window.open("", "_blank");
       if (printWindow) {
         printWindow.document.write(`
@@ -132,10 +139,12 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
                 .signature { margin-top: 60px; text-align: right; }
                 .stamp { border: 2px solid #1e3a5f; border-radius: 50%; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; color: #1e3a5f; margin-right: 30px; }
                 .certificate-number { font-size: 12px; color: #888; margin-top: 10px; }
+                ${getFooterStyles()}
               </style>
             </head>
             <body>
               ${printRef.current.innerHTML}
+              ${getFooterHtml(documentId, 'Medical Certificate', qrDataUrl, currentDate)}
             </body>
           </html>
         `);
