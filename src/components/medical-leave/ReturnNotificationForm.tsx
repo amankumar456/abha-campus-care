@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,18 +11,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Building2, Calendar, CheckCircle2, Home, Send } from "lucide-react";
+import { Building2, Calendar, CheckCircle2, Home } from "lucide-react";
 import { returnNotificationSchema, ReturnNotificationFormData } from "@/lib/validations/medical-leave";
 import { format } from "date-fns";
+import { 
+  notifyDoctorOfFormSubmission, 
+  notifyMentorOfStudentLeave,
+  getDoctorUserId,
+  getMentorUserId
+} from "@/lib/notifications/medical-leave-notifications";
 
 interface LeaveRequest {
   id: string;
+  student_id: string;
   referral_hospital: string;
   illness_description: string | null;
   leave_start_date: string | null;
   expected_return_date: string | null;
   accompanist_name: string | null;
   accompanist_relationship: string | null;
+  referring_doctor_id: string | null;
 }
 
 interface ReturnNotificationFormProps {
@@ -44,6 +52,19 @@ const ReturnNotificationForm = ({ leaveRequest, onSuccess }: ReturnNotificationF
     },
   });
 
+  // Fetch student data for notifications
+  const { data: studentData } = useQuery({
+    queryKey: ["student-for-return-notification", leaveRequest.student_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("students")
+        .select("full_name, roll_number, mentor_id")
+        .eq("id", leaveRequest.student_id)
+        .single();
+      return data;
+    },
+  });
+
   const submitMutation = useMutation({
     mutationFn: async (data: ReturnNotificationFormData) => {
       const { error } = await supabase
@@ -58,6 +79,32 @@ const ReturnNotificationForm = ({ leaveRequest, onSuccess }: ReturnNotificationF
         .eq("id", leaveRequest.id);
 
       if (error) throw error;
+
+      // Notify doctor about return
+      if (leaveRequest.referring_doctor_id && studentData) {
+        const doctorUserId = await getDoctorUserId(leaveRequest.referring_doctor_id);
+        if (doctorUserId) {
+          await notifyDoctorOfFormSubmission(doctorUserId, {
+            studentName: studentData.full_name,
+            rollNumber: studentData.roll_number,
+            status: "returned",
+            hospital: leaveRequest.referral_hospital,
+          });
+        }
+      }
+
+      // Notify mentor about student's return
+      if (studentData?.mentor_id) {
+        const mentorUserId = await getMentorUserId(studentData.mentor_id);
+        if (mentorUserId) {
+          await notifyMentorOfStudentLeave(mentorUserId, {
+            studentName: studentData.full_name,
+            rollNumber: studentData.roll_number,
+            hospital: leaveRequest.referral_hospital,
+            status: "returned",
+          });
+        }
+      }
     },
     onSuccess: () => {
       toast.success("Return notification submitted", {

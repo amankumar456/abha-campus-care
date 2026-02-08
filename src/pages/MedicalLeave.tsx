@@ -19,6 +19,7 @@ import ReturnNotificationForm from "@/components/medical-leave/ReturnNotificatio
 import LeaveStatusCard from "@/components/medical-leave/LeaveStatusCard";
 import PrintableLeaveLetter from "@/components/medical-leave/PrintableLeaveLetter";
 import LeaveStatusTimeline from "@/components/medical-leave/LeaveStatusTimeline";
+import ReferralDetailsCard from "@/components/medical-leave/ReferralDetailsCard";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -47,6 +48,7 @@ interface LeaveRequest {
   academic_leave_approved: boolean | null;
   approved_by_doctor_id: string | null;
   approval_date: string | null;
+  health_priority: string | null;
   status: MedicalLeaveStatus;
   created_at: string;
   updated_at: string;
@@ -295,13 +297,19 @@ const MedicalLeave = () => {
                 </div>
 
                 {/* Forms Column */}
-                <div className="lg:col-span-2">
-                  {/* Pending Leave Form */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Referral Details Card - Show when form pending */}
                   {pendingFormRequest && !showReturnForm && (
-                    <StudentLeaveForm
-                      leaveRequest={pendingFormRequest}
-                      onSuccess={() => setShowLeaveForm(false)}
-                    />
+                    <>
+                      <ReferralDetailsCard 
+                        leaveRequest={pendingFormRequest} 
+                        studentProfile={studentProfile}
+                      />
+                      <StudentLeaveForm
+                        leaveRequest={pendingFormRequest}
+                        onSuccess={() => setShowLeaveForm(false)}
+                      />
+                    </>
                   )}
 
                   {/* Return Notification Form */}
