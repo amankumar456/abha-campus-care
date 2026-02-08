@@ -19,6 +19,7 @@ import { AlertCircle, Building2, Calendar, CheckCircle2, ExternalLink, Graduatio
 import { z } from "zod";
 import PrintableHospitalCard from "./PrintableHospitalCard";
 import PrintableReferralLetter from "./PrintableReferralLetter";
+import { notifyStudentOfReferral, getStudentUserId } from "@/lib/notifications/medical-leave-notifications";
 
 // Hospital contact information type
 interface HospitalInfo {
@@ -597,7 +598,14 @@ const DoctorReferralForm = () => {
       const leaveStartDate = new Date();
       const expectedReturnDate = new Date(Date.now() + data.leaveDays * 24 * 60 * 60 * 1000);
 
-      const { error } = await supabase.from("medical_leave_requests").insert({
+      // Get doctor name for notification
+      const { data: doctorData } = await supabase
+        .from("medical_officers")
+        .select("name")
+        .eq("id", doctorId)
+        .single();
+
+      const { data: insertedData, error } = await supabase.from("medical_leave_requests").insert({
         student_id: foundStudent.id,
         referring_doctor_id: doctorId,
         referral_hospital: data.referralHospital,
@@ -609,13 +617,26 @@ const DoctorReferralForm = () => {
         expected_return_date: expectedReturnDate.toISOString().split('T')[0],
         rest_days: data.leaveDays,
         status: "student_form_pending",
-      });
+      }).select("id").single();
 
       if (error) throw error;
+
+      // Send notification to student
+      const studentUserId = await getStudentUserId(foundStudent.id);
+      if (studentUserId) {
+        await notifyStudentOfReferral(studentUserId, {
+          hospital: data.referralHospital,
+          doctorName: doctorData?.name || "Campus Doctor",
+          expectedDuration: data.expectedDuration,
+          leaveRequestId: insertedData?.id,
+        });
+      }
+
+      return { studentName: foundStudent.full_name };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Referral submitted successfully", {
-        description: "The student has been notified to complete the leave form.",
+        description: `${data?.studentName || "The student"} has been notified to complete the leave form.`,
       });
       form.reset();
       setFoundStudent(null);

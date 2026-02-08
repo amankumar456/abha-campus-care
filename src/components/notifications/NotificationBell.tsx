@@ -115,6 +115,21 @@ const NotificationBell = () => {
         return 'border-l-red-500 bg-red-50';
       case 'rescheduled':
         return 'border-l-yellow-500 bg-yellow-50';
+      // Medical Leave notifications
+      case 'medical_leave_referral':
+        return 'border-l-purple-500 bg-purple-50';
+      case 'medical_leave_on_leave':
+        return 'border-l-blue-500 bg-blue-50';
+      case 'medical_leave_returned':
+        return 'border-l-green-500 bg-green-50';
+      case 'mentee_leave_on_leave':
+        return 'border-l-orange-500 bg-orange-50';
+      case 'mentee_leave_returned':
+        return 'border-l-teal-500 bg-teal-50';
+      case 'referral_on_leave':
+        return 'border-l-indigo-500 bg-indigo-50';
+      case 'referral_returned':
+        return 'border-l-emerald-500 bg-emerald-50';
       default:
         return 'border-l-blue-500 bg-blue-50';
     }
