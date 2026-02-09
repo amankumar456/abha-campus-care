@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Bell, FileText, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -27,6 +28,7 @@ const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -175,36 +177,55 @@ const NotificationBell = () => {
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    "p-4 border-l-4 cursor-pointer transition-colors hover:bg-muted/50",
-                    getTypeStyles(notification.type),
-                    !notification.read && "font-medium"
-                  )}
-                  onClick={() => {
-                    if (!notification.read) {
-                      markAsReadMutation.mutate(notification.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </p>
+                {notifications.map((notification) => {
+                  const isMedicalLeave = notification.type.startsWith('medical_leave_') || 
+                    notification.type.startsWith('mentee_leave_') || 
+                    notification.type.startsWith('referral_');
+                  
+                  return (
+                    <div
+                      key={notification.id}
+                      className={cn(
+                        "p-4 border-l-4 cursor-pointer transition-colors hover:bg-muted/50",
+                        getTypeStyles(notification.type),
+                        !notification.read && "font-medium"
+                      )}
+                      onClick={() => {
+                        if (!notification.read) {
+                          markAsReadMutation.mutate(notification.id);
+                        }
+                        if (isMedicalLeave) {
+                          setOpen(false);
+                          navigate("/medical-leave");
+                        }
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            {isMedicalLeave && <Stethoscope className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
+                            <p className="text-sm font-medium truncate">{notification.title}</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          {isMedicalLeave && (
+                            <p className="text-xs text-primary mt-1.5 flex items-center gap-1 font-medium">
+                              <ArrowRight className="h-3 w-3" />
+                              Open Medical Leave
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                        )}
+                      </div>
                     </div>
-                    {!notification.read && (
-                      <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                    )}
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           )}
         </ScrollArea>

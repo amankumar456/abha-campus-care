@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Building2, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, FileText, Home, Printer, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, FileText, Home, Printer, ShieldCheck, Stethoscope, User } from "lucide-react";
 import DoctorReferralForm from "@/components/medical-leave/DoctorReferralForm";
 import StudentLeaveForm from "@/components/medical-leave/StudentLeaveForm";
 import ReturnNotificationForm from "@/components/medical-leave/ReturnNotificationForm";
@@ -20,6 +20,7 @@ import LeaveStatusCard from "@/components/medical-leave/LeaveStatusCard";
 import PrintableLeaveLetter from "@/components/medical-leave/PrintableLeaveLetter";
 import LeaveStatusTimeline from "@/components/medical-leave/LeaveStatusTimeline";
 import ReferralDetailsCard from "@/components/medical-leave/ReferralDetailsCard";
+import DoctorClearanceCard from "@/components/medical-leave/DoctorClearanceCard";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -50,6 +51,10 @@ interface LeaveRequest {
   approval_date: string | null;
   health_priority: string | null;
   status: MedicalLeaveStatus;
+  health_centre_visited: boolean | null;
+  doctor_clearance: boolean | null;
+  doctor_clearance_date: string | null;
+  cleared_by_doctor_id: string | null;
   created_at: string;
   updated_at: string;
   students?: {
@@ -182,6 +187,7 @@ const MedicalLeave = () => {
   const pendingFormRequest = studentLeaveRequest?.status === "student_form_pending" ? studentLeaveRequest : null;
   const activeLeaveRequest = studentLeaveRequest && ["on_leave", "return_pending"].includes(studentLeaveRequest.status) 
     ? studentLeaveRequest : null;
+  const returnedLeaveRequest = studentLeaveRequest?.status === "returned" ? studentLeaveRequest : null;
 
   const toggleRowExpanded = (id: string) => {
     setExpandedRows((prev) => {
@@ -320,8 +326,8 @@ const MedicalLeave = () => {
                     />
                   )}
 
-                  {/* No Active Leave */}
-                  {!pendingFormRequest && !activeLeaveRequest && (
+                   {/* No Active Leave */}
+                  {!pendingFormRequest && !activeLeaveRequest && !returnedLeaveRequest && (
                     <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
                       <CardContent className="pt-12 pb-12 text-center">
                         <Home className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
@@ -330,6 +336,53 @@ const MedicalLeave = () => {
                           You don't have any pending medical leave requests. If you need off-campus 
                           treatment, please visit the campus medical center for evaluation.
                         </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Returned - Health Centre Visit & Doctor Clearance */}
+                  {returnedLeaveRequest && !returnedLeaveRequest.doctor_clearance && (
+                    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                      <CardHeader className="border-b bg-gradient-to-r from-green-500/5 to-green-500/10">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-green-500/10">
+                            <ShieldCheck className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-xl">Post-Treatment Follow-up</CardTitle>
+                            <CardDescription>
+                              Complete your return process
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-6 space-y-4">
+                        {!returnedLeaveRequest.health_centre_visited ? (
+                          <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
+                            <Stethoscope className="h-4 w-4" />
+                            <AlertTitle>Health Centre Visit Required</AlertTitle>
+                            <AlertDescription>
+                              You must visit the campus health centre for a post-treatment checkup. 
+                              The doctor will examine you and issue fitness clearance for resuming classes.
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <Alert className="bg-green-50 border-green-200">
+                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            <AlertTitle className="text-green-800">Health Centre Visit Completed</AlertTitle>
+                            <AlertDescription className="text-green-700">
+                              Awaiting doctor's fitness clearance to resume classes.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+
+                        <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                          <p><strong>Hospital:</strong> {returnedLeaveRequest.referral_hospital}</p>
+                          <p><strong>Treatment:</strong> {returnedLeaveRequest.illness_description || "Medical treatment"}</p>
+                          {returnedLeaveRequest.actual_return_date && (
+                            <p><strong>Returned:</strong> {format(new Date(returnedLeaveRequest.actual_return_date), "PPp")}</p>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -468,8 +521,24 @@ const MedicalLeave = () => {
                               </TableRow>
                               {expandedRows.has(request.id) && (
                                 <TableRow key={`${request.id}-timeline`}>
-                                  <TableCell colSpan={5} className="bg-muted/30 p-4">
+                                  <TableCell colSpan={5} className="bg-muted/30 p-4 space-y-4">
                                     <LeaveStatusTimeline leaveRequest={request} />
+                                    {request.status === "returned" && !request.doctor_clearance && (
+                                      <DoctorClearanceCard
+                                        leaveRequest={{
+                                          ...request,
+                                          health_centre_visited: (request as any).health_centre_visited ?? false,
+                                          doctor_clearance: (request as any).doctor_clearance ?? false,
+                                        }}
+                                        doctorId={request.referring_doctor_id || ""}
+                                      />
+                                    )}
+                                    {(request as any).doctor_clearance && (
+                                      <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
+                                        <ShieldCheck className="h-4 w-4" />
+                                        <span className="text-sm font-medium">Student cleared for classes</span>
+                                      </div>
+                                    )}
                                   </TableCell>
                                 </TableRow>
                               )}

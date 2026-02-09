@@ -457,11 +457,15 @@ export type Database = {
           appointment_id: string | null
           approval_date: string | null
           approved_by_doctor_id: string | null
+          cleared_by_doctor_id: string | null
           created_at: string
+          doctor_clearance: boolean | null
+          doctor_clearance_date: string | null
           doctor_notes: string | null
           expected_duration: string
           expected_return_date: string | null
           follow_up_notes: string | null
+          health_centre_visited: boolean | null
           health_priority: string | null
           hospital_discharge_date: string | null
           id: string
@@ -487,11 +491,15 @@ export type Database = {
           appointment_id?: string | null
           approval_date?: string | null
           approved_by_doctor_id?: string | null
+          cleared_by_doctor_id?: string | null
           created_at?: string
+          doctor_clearance?: boolean | null
+          doctor_clearance_date?: string | null
           doctor_notes?: string | null
           expected_duration: string
           expected_return_date?: string | null
           follow_up_notes?: string | null
+          health_centre_visited?: boolean | null
           health_priority?: string | null
           hospital_discharge_date?: string | null
           id?: string
@@ -517,11 +525,15 @@ export type Database = {
           appointment_id?: string | null
           approval_date?: string | null
           approved_by_doctor_id?: string | null
+          cleared_by_doctor_id?: string | null
           created_at?: string
+          doctor_clearance?: boolean | null
+          doctor_clearance_date?: string | null
           doctor_notes?: string | null
           expected_duration?: string
           expected_return_date?: string | null
           follow_up_notes?: string | null
+          health_centre_visited?: boolean | null
           health_priority?: string | null
           hospital_discharge_date?: string | null
           id?: string
@@ -548,6 +560,13 @@ export type Database = {
           {
             foreignKeyName: "medical_leave_requests_approved_by_doctor_id_fkey"
             columns: ["approved_by_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_leave_requests_cleared_by_doctor_id_fkey"
+            columns: ["cleared_by_doctor_id"]
             isOneToOne: false
             referencedRelation: "medical_officers"
             referencedColumns: ["id"]

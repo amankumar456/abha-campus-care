@@ -40,8 +40,8 @@ export const notifyStudentOfReferral = async (
 ) => {
   await createNotification({
     userId: studentUserId,
-    title: "Medical Leave Referral Issued",
-    message: `Dr. ${referralData.doctorName} has referred you to ${referralData.hospital} for treatment. Please complete the departure form before leaving campus. Expected duration: ${referralData.expectedDuration}.`,
+    title: "📋 Medical Leave Referral Issued",
+    message: `Dr. ${referralData.doctorName} has referred you to ${referralData.hospital} for treatment (Duration: ${referralData.expectedDuration}). ⚠️ REQUIRED: Complete the departure form before leaving campus. Your referral letter and hospital card are available in Medical Leave section. Tap to open.`,
     type: "medical_leave_referral",
     relatedId: referralData.leaveRequestId,
   });
@@ -57,16 +57,16 @@ export const notifyStudentOfStatusUpdate = async (
 ) => {
   const statusMessages: Record<string, { title: string; message: string }> = {
     on_leave: {
-      title: "Leave Form Submitted Successfully",
-      message: `Your departure has been recorded. ${details}`,
+      title: "✅ Leave Form Submitted Successfully",
+      message: `Your departure has been recorded. Your printed referral letter and hospital card are available in the Medical Leave section. ${details}`,
     },
     return_pending: {
-      title: "Return Expected Soon",
-      message: `Please submit your return notification within 2 hours of arriving back on campus. ${details}`,
+      title: "⏰ Return Expected Soon",
+      message: `Please submit your return notification within 2 hours of arriving back on campus. After returning, you must visit the health centre for a fitness checkup. ${details}`,
     },
     returned: {
-      title: "Welcome Back!",
-      message: `Your return has been recorded. Leave cycle is now complete. ${details}`,
+      title: "🏠 Welcome Back!",
+      message: `Your return has been recorded. ${details}`,
     },
   };
 
