@@ -272,6 +272,16 @@ const ReturnNotificationForm = ({ leaveRequest, onSuccess }: ReturnNotificationF
               )}
             />
 
+            {/* Health Centre Visit Reminder */}
+            <Alert className="bg-blue-50 border-blue-200">
+              <CheckCircle2 className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800">Post-Return Health Checkup</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                After submitting this form, you <strong>must visit the campus health centre</strong> for a post-treatment 
+                checkup. The doctor will verify your fitness and issue clearance for resuming classes.
+              </AlertDescription>
+            </Alert>
+
             <Button
               type="submit"
               className="w-full bg-green-600 hover:bg-green-700"

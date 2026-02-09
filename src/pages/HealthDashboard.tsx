@@ -16,6 +16,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import StudentProfileCard from '@/components/profile/StudentProfileCard';
 import HealthRecordsSection from '@/components/health/HealthRecordsSection';
+import StudentMedicalLeaveSection from '@/components/medical-leave/StudentMedicalLeaveSection';
 
 interface DashboardStats {
   totalStudents: number;
@@ -585,6 +586,9 @@ const HealthDashboard = () => {
               </Card>
             </div>
           </div>
+
+          {/* Medical Leave Section */}
+          {user && <StudentMedicalLeaveSection userId={user.id} />}
 
           {/* Quick Actions */}
           <Card>
