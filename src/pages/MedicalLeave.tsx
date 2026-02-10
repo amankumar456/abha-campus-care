@@ -121,7 +121,6 @@ const MedicalLeave = () => {
   const { data: studentLeaveRequest, isLoading: studentLeaveLoading } = useQuery({
     queryKey: ["student-leave-status", user?.id],
     queryFn: async () => {
-      // First get the student's ID
       const { data: studentData } = await supabase
         .from("students")
         .select("id")
@@ -130,7 +129,6 @@ const MedicalLeave = () => {
 
       if (!studentData) return null;
 
-      // Get the most recent active leave request
       const { data, error } = await supabase
         .from("medical_leave_requests")
         .select(`
@@ -144,6 +142,35 @@ const MedicalLeave = () => {
 
       if (error) throw error;
       return data as LeaveRequest | null;
+    },
+    enabled: isStudent && !!user,
+  });
+
+  // Fetch past leave history for student
+  const { data: pastLeaveRequests, isLoading: pastLeaveLoading } = useQuery({
+    queryKey: ["student-past-leaves", user?.id],
+    queryFn: async () => {
+      const { data: studentData } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", user!.id)
+        .single();
+
+      if (!studentData) return [];
+
+      const { data, error } = await supabase
+        .from("medical_leave_requests")
+        .select(`
+          id, status, referral_hospital, illness_description, expected_duration,
+          leave_start_date, expected_return_date, actual_return_date, referral_date,
+          doctor_clearance, health_centre_visited,
+          medical_officers!referring_doctor_id(name)
+        `)
+        .eq("student_id", studentData.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     },
     enabled: isStudent && !!user,
   });
@@ -447,52 +474,80 @@ const MedicalLeave = () => {
                   <CardDescription>Your previous medical leave records</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="h-[350px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Hospital</TableHead>
-                          <TableHead>Reason</TableHead>
-                          <TableHead>Leave Period</TableHead>
-                          <TableHead>Duration</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {[
-                          { hospital: "KIMS Hospital, Warangal", reason: "Dengue Fever", start: "2025-08-10", end: "2025-08-17", duration: "7 days", status: "returned", cleared: true },
-                          { hospital: "MGM Hospital, Warangal", reason: "Appendicitis Surgery", start: "2025-05-03", end: "2025-05-15", duration: "12 days", status: "returned", cleared: true },
-                          { hospital: "NIT Warangal Health Centre", reason: "Severe Viral Infection", start: "2025-02-20", end: "2025-02-24", duration: "4 days", status: "returned", cleared: true },
-                          { hospital: "Apollo Hospital, Hyderabad", reason: "Knee Ligament Injury", start: "2024-11-12", end: "2024-11-26", duration: "14 days", status: "returned", cleared: true },
-                          { hospital: "NIT Warangal Health Centre", reason: "Food Poisoning", start: "2024-09-05", end: "2024-09-07", duration: "2 days", status: "returned", cleared: true },
-                        ].map((item, i) => (
-                          <TableRow key={i}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{item.hospital}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{item.reason}</TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p>{format(new Date(item.start), "PP")}</p>
-                                <p className="text-muted-foreground">to {format(new Date(item.end), "PP")}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{item.duration}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1.5">
-                                <Badge variant="outline" className="bg-green-100 text-green-800">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Cleared
-                                </Badge>
-                              </div>
-                            </TableCell>
+                  {pastLeaveLoading ? (
+                    <div className="space-y-3">
+                      {[...Array(3)].map((_, i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : !pastLeaveRequests || pastLeaveRequests.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                      <p>No medical leave records found</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[350px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Hospital</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Leave Period</TableHead>
+                            <TableHead>Duration</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </ScrollArea>
+                        </TableHeader>
+                        <TableBody>
+                          {pastLeaveRequests.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{item.referral_hospital}</p>
+                                  {(item as any).medical_officers?.name && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Dr. {(item as any).medical_officers.name}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>{item.illness_description || "Medical treatment"}</TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {item.leave_start_date ? (
+                                    <>
+                                      <p>{format(new Date(item.leave_start_date), "PP")}</p>
+                                      <p className="text-muted-foreground">
+                                        to {item.actual_return_date 
+                                          ? format(new Date(item.actual_return_date), "PP")
+                                          : item.expected_return_date
+                                          ? format(new Date(item.expected_return_date), "PP")
+                                          : "TBD"}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p className="text-muted-foreground">
+                                      Referred {item.referral_date ? format(new Date(item.referral_date), "PP") : "—"}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>{item.expected_duration}</TableCell>
+                              <TableCell>
+                                {item.doctor_clearance ? (
+                                  <Badge variant="outline" className="bg-green-100 text-green-800">
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    Cleared
+                                  </Badge>
+                                ) : (
+                                  getStatusBadge(item.status)
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  )}
                 </CardContent>
               </Card>
             )}
