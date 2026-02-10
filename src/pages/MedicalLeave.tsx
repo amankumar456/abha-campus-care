@@ -435,6 +435,67 @@ const MedicalLeave = () => {
                 </div>
               </div>
             )}
+
+            {/* Past Medical Leave History */}
+            {!showLeaveLetter && (
+              <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    Past Medical Leave History
+                  </CardTitle>
+                  <CardDescription>Your previous medical leave records</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[350px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hospital</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Leave Period</TableHead>
+                          <TableHead>Duration</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {[
+                          { hospital: "KIMS Hospital, Warangal", reason: "Dengue Fever", start: "2025-08-10", end: "2025-08-17", duration: "7 days", status: "returned", cleared: true },
+                          { hospital: "MGM Hospital, Warangal", reason: "Appendicitis Surgery", start: "2025-05-03", end: "2025-05-15", duration: "12 days", status: "returned", cleared: true },
+                          { hospital: "NIT Warangal Health Centre", reason: "Severe Viral Infection", start: "2025-02-20", end: "2025-02-24", duration: "4 days", status: "returned", cleared: true },
+                          { hospital: "Apollo Hospital, Hyderabad", reason: "Knee Ligament Injury", start: "2024-11-12", end: "2024-11-26", duration: "14 days", status: "returned", cleared: true },
+                          { hospital: "NIT Warangal Health Centre", reason: "Food Poisoning", start: "2024-09-05", end: "2024-09-07", duration: "2 days", status: "returned", cleared: true },
+                        ].map((item, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{item.hospital}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>{item.reason}</TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                <p>{format(new Date(item.start), "PP")}</p>
+                                <p className="text-muted-foreground">to {format(new Date(item.end), "PP")}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>{item.duration}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant="outline" className="bg-green-100 text-green-800">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  Cleared
+                                </Badge>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
