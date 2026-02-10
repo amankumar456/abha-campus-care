@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Building2, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, FileText, Home, Printer, ShieldCheck, Stethoscope, User } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, Eye, FileText, Home, Printer, ShieldCheck, Stethoscope, User } from "lucide-react";
 import DoctorReferralForm from "@/components/medical-leave/DoctorReferralForm";
 import StudentLeaveForm from "@/components/medical-leave/StudentLeaveForm";
 import ReturnNotificationForm from "@/components/medical-leave/ReturnNotificationForm";
@@ -21,6 +21,7 @@ import PrintableLeaveLetter from "@/components/medical-leave/PrintableLeaveLette
 import LeaveStatusTimeline from "@/components/medical-leave/LeaveStatusTimeline";
 import ReferralDetailsCard from "@/components/medical-leave/ReferralDetailsCard";
 import DoctorClearanceCard from "@/components/medical-leave/DoctorClearanceCard";
+import PastLeaveDetailDialog from "@/components/medical-leave/PastLeaveDetailDialog";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -100,6 +101,7 @@ const MedicalLeave = () => {
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showLeaveLetter, setShowLeaveLetter] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [selectedPastLeave, setSelectedPastLeave] = useState<any>(null);
 
   // Fetch student profile for leave letter
   const { data: studentProfile } = useQuery({
@@ -161,10 +163,8 @@ const MedicalLeave = () => {
       const { data, error } = await supabase
         .from("medical_leave_requests")
         .select(`
-          id, status, referral_hospital, illness_description, expected_duration,
-          leave_start_date, expected_return_date, actual_return_date, referral_date,
-          doctor_clearance, health_centre_visited,
-          medical_officers!referring_doctor_id(name)
+          *,
+          medical_officers!referring_doctor_id(name, designation, qualification)
         `)
         .eq("student_id", studentData.id)
         .order("created_at", { ascending: false });
@@ -499,7 +499,7 @@ const MedicalLeave = () => {
                         </TableHeader>
                         <TableBody>
                           {pastLeaveRequests.map((item) => (
-                            <TableRow key={item.id}>
+                            <TableRow key={item.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedPastLeave(item)}>
                               <TableCell>
                                 <div>
                                   <p className="font-medium">{item.referral_hospital}</p>
@@ -551,6 +551,13 @@ const MedicalLeave = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Past Leave Detail Dialog */}
+            <PastLeaveDetailDialog
+              open={!!selectedPastLeave}
+              onOpenChange={(open) => !open && setSelectedPastLeave(null)}
+              leaveRequest={selectedPastLeave}
+            />
           </div>
         )}
 
