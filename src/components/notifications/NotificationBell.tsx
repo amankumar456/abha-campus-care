@@ -194,7 +194,7 @@ const NotificationBell = () => {
                         if (!notification.read) {
                           markAsReadMutation.mutate(notification.id);
                         }
-                        if (isMedicalLeave) {
+                        if (isMedicalLeave || notification.type === 'approved') {
                           setOpen(false);
                           navigate("/medical-leave");
                         }
