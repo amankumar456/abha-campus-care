@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ const MedicalLeaveDialog = ({
   healthPriority = "medium",
 }: MedicalLeaveDialogProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [referralHospital, setReferralHospital] = useState("");
   const [restDays, setRestDays] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
@@ -111,6 +113,8 @@ const MedicalLeaveDialog = ({
       setRestDays("");
       setDoctorNotes("");
       setSelectedPriority("medium");
+      // Redirect to Medical Leave Management section
+      navigate("/medical-leave");
     },
     onError: (error: any) => {
       toast.error("Failed to create leave request", {
