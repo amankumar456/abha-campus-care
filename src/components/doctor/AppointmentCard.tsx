@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import MedicalLeaveDialog from "./MedicalLeaveDialog";
+import PrescriptionDialog from "./PrescriptionDialog";
 
 interface Student {
   id: string;
@@ -95,6 +96,7 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDenyDialog, setShowDenyDialog] = useState(false);
   const [showMedicalLeavePrompt, setShowMedicalLeavePrompt] = useState(false);
+  const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [denialReason, setDenialReason] = useState("");
   const queryClient = useQueryClient();
 
@@ -355,30 +357,21 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
               {/* Confirmed appointments: Show Issue Leave and Complete */}
               {appointment.status === "confirmed" && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowLeaveDialog(true)}
-                  >
-                    <AlertTriangle className="w-4 h-4 mr-1" />
-                    Issue Leave
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      supabase
-                        .from("appointments")
-                        .update({ status: "completed" })
-                        .eq("id", appointment.id)
-                        .then(() => {
-                          toast.success("Appointment marked as completed");
-                          queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
-                        });
-                    }}
-                  >
-                    Complete
-                  </Button>
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setShowLeaveDialog(true)}
+                   >
+                     <AlertTriangle className="w-4 h-4 mr-1" />
+                     Issue Leave
+                   </Button>
+                   <Button
+                     variant="secondary"
+                     size="sm"
+                     onClick={() => setShowPrescriptionDialog(true)}
+                   >
+                     Complete
+                   </Button>
                 </>
               )}
             </div>
@@ -465,6 +458,17 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
           healthPriority={appointment.health_priority || "medium"}
         />
       )}
+
+      {/* Prescription Dialog */}
+      <PrescriptionDialog
+        open={showPrescriptionDialog}
+        onOpenChange={setShowPrescriptionDialog}
+        appointmentId={appointment.id}
+        patientId={appointment.patient_id}
+        doctorId={doctorId}
+        studentName={student?.full_name || "Student"}
+        onCompleted={() => {}}
+      />
     </>
   );
 };
