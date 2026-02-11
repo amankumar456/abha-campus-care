@@ -21,6 +21,7 @@ import MentorsTab from '@/components/admin/MentorsTab';
 import StudentMentorAssignment from '@/components/admin/StudentMentorAssignment';
 import SecurityDashboard from '@/components/admin/SecurityDashboard';
 import AdminProfileCard from '@/components/profile/AdminProfileCard';
+import MedicalLeaveStudentsOverview from '@/components/medical-leave/MedicalLeaveStudentsOverview';
 
 interface UserWithRoles {
   id: string;
@@ -414,6 +415,9 @@ const AdminPanel = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Medical Leave Students Overview */}
+        <MedicalLeaveStudentsOverview />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

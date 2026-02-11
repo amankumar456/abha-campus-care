@@ -40,6 +40,7 @@ import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
 import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PendingFollowupsList from "@/components/doctor/PendingFollowupsList";
+import MedicalLeaveStudentsOverview from "@/components/medical-leave/MedicalLeaveStudentsOverview";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -228,6 +229,11 @@ export default function DoctorDashboard() {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
+            {/* Medical Leave Students Overview */}
+            <div className="mb-8">
+              <MedicalLeaveStudentsOverview doctorId={doctorId} />
+            </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {stats.map((stat) => (
