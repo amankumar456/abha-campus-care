@@ -19,6 +19,8 @@ import {
   User,
   UserSearch,
   ClipboardList,
+  LayoutDashboard,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,11 +43,13 @@ import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PendingFollowupsList from "@/components/doctor/PendingFollowupsList";
 import MedicalLeaveStudentsOverview from "@/components/medical-leave/MedicalLeaveStudentsOverview";
+import DoctorHealthOverview from "@/components/doctor/DoctorHealthOverview";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
   const { user, doctorId, loading: roleLoading } = useUserRole();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [dashboardSubTab, setDashboardSubTab] = useState("my-dashboard");
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
 
   // Fetch real appointment stats
@@ -229,105 +233,139 @@ export default function DoctorDashboard() {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
-            {/* Medical Leave Students Overview */}
-            <div className="mb-8">
-              <MedicalLeaveStudentsOverview doctorId={doctorId} />
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              {stats.map((stat) => (
-                <Card key={stat.label} className="border">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                        <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      </div>
-                      <div className={`w-12 h-12 rounded-xl bg-muted flex items-center justify-center ${stat.color}`}>
-                        <stat.icon className="w-6 h-6" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Main Dashboard Grid */}
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Left Column - Appointments */}
-              <div className="lg:col-span-2">
-                {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
-              </div>
-
-              {/* Right Column - Profile & Quick Actions */}
-              <div className="space-y-6">
-                {/* Doctor Profile Card */}
-                {doctorProfile && (
-                  <DoctorProfileCard 
-                    profile={doctorProfile}
-                    stats={{
-                      todayAppointments: appointmentStats?.todayCount || 0,
-                      pendingApprovals: appointmentStats?.pendingCount || 0,
-                      totalPatients: appointmentStats?.totalPatients || 0
-                    }}
-                  />
-                )}
-
-                {/* Pending Follow-ups */}
-                <PendingFollowupsList doctorId={doctorId} />
-
-                {/* Access Requests */}
-                <PendingAccessRequests />
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Quick Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                      <Link to="/medical-leave">
-                        <FileText className="w-4 h-4 text-primary" />
-                        Issue Medical Leave
-                      </Link>
-                    </Button>
-                    <ScheduleFollowupDialog
-                      doctorId={doctorId}
-                      trigger={
-                        <Button variant="outline" className="w-full justify-start gap-2">
-                          <Calendar className="w-4 h-4 text-secondary" />
-                          Schedule Follow-up
-                        </Button>
-                      }
-                    />
-                    <IssueCertificateDialog
-                      doctorId={doctorId}
-                      doctorProfile={doctorProfile}
-                      trigger={
-                        <Button variant="outline" className="w-full justify-start gap-2">
-                          <FileCheck className="w-4 h-4 text-muted-foreground" />
-                          Issue Medical Certificate
-                        </Button>
-                      }
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Security Reminder */}
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 text-primary mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Security Reminder</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Always verify patient identity before accessing or modifying medical records.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Sub-tabs: My Dashboard & Health Dashboard */}
+            <div className="mb-6">
+              <div className="flex gap-2 border-b">
+                <button
+                  onClick={() => setDashboardSubTab("my-dashboard")}
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                    dashboardSubTab === "my-dashboard"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  My Dashboard
+                </button>
+                <button
+                  onClick={() => setDashboardSubTab("health-dashboard")}
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                    dashboardSubTab === "health-dashboard"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <HeartPulse className="w-4 h-4" />
+                  Health Dashboard
+                </button>
               </div>
             </div>
+
+            {dashboardSubTab === "my-dashboard" ? (
+              <>
+                {/* Medical Leave Students Overview */}
+                <div className="mb-8">
+                  <MedicalLeaveStudentsOverview doctorId={doctorId} />
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  {stats.map((stat) => (
+                    <Card key={stat.label} className="border">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                            <p className="text-sm text-muted-foreground">{stat.label}</p>
+                          </div>
+                          <div className={`w-12 h-12 rounded-xl bg-muted flex items-center justify-center ${stat.color}`}>
+                            <stat.icon className="w-6 h-6" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Main Dashboard Grid */}
+                <div className="grid lg:grid-cols-3 gap-6">
+                  {/* Left Column - Appointments */}
+                  <div className="lg:col-span-2">
+                    {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
+                  </div>
+
+                  {/* Right Column - Profile & Quick Actions */}
+                  <div className="space-y-6">
+                    {/* Doctor Profile Card */}
+                    {doctorProfile && (
+                      <DoctorProfileCard 
+                        profile={doctorProfile}
+                        stats={{
+                          todayAppointments: appointmentStats?.todayCount || 0,
+                          pendingApprovals: appointmentStats?.pendingCount || 0,
+                          totalPatients: appointmentStats?.totalPatients || 0
+                        }}
+                      />
+                    )}
+
+                    {/* Pending Follow-ups */}
+                    <PendingFollowupsList doctorId={doctorId} />
+
+                    {/* Access Requests */}
+                    <PendingAccessRequests />
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Quick Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                          <Link to="/medical-leave">
+                            <FileText className="w-4 h-4 text-primary" />
+                            Issue Medical Leave
+                          </Link>
+                        </Button>
+                        <ScheduleFollowupDialog
+                          doctorId={doctorId}
+                          trigger={
+                            <Button variant="outline" className="w-full justify-start gap-2">
+                              <Calendar className="w-4 h-4 text-secondary" />
+                              Schedule Follow-up
+                            </Button>
+                          }
+                        />
+                        <IssueCertificateDialog
+                          doctorId={doctorId}
+                          doctorProfile={doctorProfile}
+                          trigger={
+                            <Button variant="outline" className="w-full justify-start gap-2">
+                              <FileCheck className="w-4 h-4 text-muted-foreground" />
+                              Issue Medical Certificate
+                            </Button>
+                          }
+                        />
+                      </CardContent>
+                    </Card>
+
+                    {/* Security Reminder */}
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <Shield className="w-5 h-5 text-primary mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Security Reminder</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Always verify patient identity before accessing or modifying medical records.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <DoctorHealthOverview />
+            )}
           </TabsContent>
 
           {/* Medical Leave Tab */}
