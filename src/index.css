@@ -224,3 +224,67 @@
     scroll-behavior: smooth;
   }
 }
+
+/* WYSIWYG Print Styles — ensures printed output matches preview */
+@media print {
+  /* Reset page margins */
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Hide non-printable elements */
+  .print\\:hidden,
+  button,
+  nav,
+  .no-print,
+  [data-radix-popper-content-wrapper],
+  .sonner-toaster {
+    display: none !important;
+  }
+
+  /* Preserve backgrounds and colors */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure table borders print */
+  table {
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+  }
+
+  /* Prevent page breaks inside cards/sections */
+  .card, [class*="Card"], section, article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Preserve badge and label colors */
+  .badge, [class*="Badge"] {
+    border: 1px solid currentColor !important;
+  }
+
+  /* Preserve images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure signatures render */
+  .online-signature, [style*="Brush Script"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
