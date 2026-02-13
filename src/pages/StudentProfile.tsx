@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp, Pill, FileText, Droplets, AlertCircle, Heart, Building2, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import VisitPatternAnalysis from '@/components/health/VisitPatternAnalysis';
 
@@ -16,13 +17,32 @@ interface Student {
   roll_number: string;
   full_name: string;
   program: string;
+  branch: string | null;
   batch: string;
   email: string | null;
   phone: string | null;
+  year_of_study: string | null;
+  mentor_name: string | null;
+  mentor_email: string | null;
   mentors: {
     name: string;
     department: string;
   } | null;
+}
+
+interface StudentProfileData {
+  blood_group: string | null;
+  known_allergies: string | null;
+  current_medications: string | null;
+  has_previous_health_issues: boolean | null;
+  previous_health_details: string | null;
+  emergency_contact: string | null;
+  emergency_relationship: string | null;
+  father_name: string | null;
+  father_contact: string | null;
+  mother_name: string | null;
+  mother_contact: string | null;
+  covid_vaccination_status: string | null;
 }
 
 interface HealthVisit {
@@ -41,12 +61,44 @@ interface HealthVisit {
   } | null;
 }
 
+interface PrescriptionItem {
+  id: string;
+  medicine_name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string | null;
+  meal_timing: string | null;
+}
+
+interface Prescription {
+  id: string;
+  created_at: string;
+  diagnosis: string | null;
+  notes: string | null;
+  doctor_id: string | null;
+  appointment_id: string;
+  medical_officers: { name: string; designation: string } | null;
+  prescription_items: PrescriptionItem[];
+}
+
+const MEAL_LABELS: Record<string, string> = {
+  before_meal: 'Before Meal',
+  after_meal: 'After Meal',
+  with_meal: 'With Meal',
+  empty_stomach: 'Empty Stomach',
+  any_time: 'Any Time',
+  bedtime: 'At Bedtime',
+};
+
 const StudentProfile = () => {
   const { rollNumber } = useParams<{ rollNumber: string }>();
   const navigate = useNavigate();
   const { user, isDoctor, isMentor, loading: roleLoading } = useUserRole();
   const [student, setStudent] = useState<Student | null>(null);
+  const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [visits, setVisits] = useState<HealthVisit[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -64,21 +116,12 @@ const StudentProfile = () => {
 
   const fetchStudentData = async () => {
     try {
-      // Fetch student info
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select(`
-          id,
-          roll_number,
-          full_name,
-          program,
-          batch,
-          email,
-          phone,
-          mentors (
-            name,
-            department
-          )
+          id, roll_number, full_name, program, branch, batch, email, phone, year_of_study,
+          mentor_name, mentor_email,
+          mentors ( name, department )
         `)
         .eq('roll_number', rollNumber)
         .single();
@@ -91,28 +134,36 @@ const StudentProfile = () => {
 
       setStudent(studentData as Student);
 
-      // Fetch health visits
-      const { data: visitsData } = await supabase
-        .from('health_visits')
-        .select(`
-          id,
-          visit_date,
-          reason_category,
-          reason_subcategory,
-          reason_notes,
-          diagnosis,
-          prescription,
-          follow_up_required,
-          follow_up_date,
-          medical_officers (
-            name,
-            designation
-          )
-        `)
-        .eq('student_id', studentData.id)
-        .order('visit_date', { ascending: false });
+      // Fetch all data in parallel
+      const [visitsRes, profileRes, prescriptionsRes] = await Promise.all([
+        supabase
+          .from('health_visits')
+          .select(`
+            id, visit_date, reason_category, reason_subcategory, reason_notes,
+            diagnosis, prescription, follow_up_required, follow_up_date,
+            medical_officers ( name, designation )
+          `)
+          .eq('student_id', studentData.id)
+          .order('visit_date', { ascending: false }),
+        supabase
+          .from('student_profiles')
+          .select('*')
+          .eq('student_id', studentData.id)
+          .maybeSingle(),
+        supabase
+          .from('prescriptions')
+          .select(`
+            id, created_at, diagnosis, notes, doctor_id, appointment_id,
+            medical_officers:doctor_id ( name, designation ),
+            prescription_items ( id, medicine_name, dosage, frequency, duration, instructions, meal_timing )
+          `)
+          .eq('student_id', studentData.id)
+          .order('created_at', { ascending: false }),
+      ]);
 
-      setVisits(visitsData as HealthVisit[] || []);
+      setVisits((visitsRes.data as HealthVisit[]) || []);
+      setProfile(profileRes.data as StudentProfileData | null);
+      setPrescriptions((prescriptionsRes.data as unknown as Prescription[]) || []);
     } catch (error) {
       console.error('Error fetching student data:', error);
       setNotFound(true);
@@ -135,6 +186,70 @@ const StudentProfile = () => {
     }
   };
 
+  const handlePrintPrescription = (prescription: Prescription) => {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const items = prescription.prescription_items || [];
+    const doctorName = (prescription.medical_officers as any)?.name || 'Health Centre Doctor';
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Prescription - ${student?.full_name}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Times New Roman', serif; padding: 40px; color: #1a1a1a; line-height: 1.6; }
+          .header { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 24px; }
+          .header h1 { font-size: 20px; color: #1e3a5f; letter-spacing: 1px; }
+          .header h2 { font-size: 16px; color: #1e3a5f; }
+          .header p { font-size: 11px; color: #666; }
+          .header .hc { font-size: 14px; font-weight: 600; color: #0066cc; margin-top: 8px; }
+          .title { text-align: center; margin: 20px 0; font-size: 18px; text-decoration: underline; color: #003366; font-weight: bold; }
+          .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+          .info-label { font-weight: bold; min-width: 120px; }
+          .section-title { font-weight: bold; color: #003366; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 16px 0 8px; font-size: 14px; text-transform: uppercase; }
+          table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+          th { background: #f0f4f8; text-align: left; padding: 8px; border: 1px solid #ddd; font-size: 12px; }
+          td { padding: 8px; border: 1px solid #ddd; }
+          .notes { margin-top: 16px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; }
+          .signature { margin-top: 50px; text-align: right; }
+          .signature .name { font-family: 'Brush Script MT', cursive; font-size: 24px; color: #003366; }
+          .signature .title-text { font-size: 12px; color: #666; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+          <h2>WARANGAL</h2>
+          <p>(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+          <div class="hc">HEALTH CENTRE — PRESCRIPTION</div>
+        </div>
+        <div class="info-row"><span><span class="info-label">Patient:</span> ${student?.full_name}</span><span><span class="info-label">Date:</span> ${format(new Date(prescription.created_at), 'PPP')}</span></div>
+        <div class="info-row"><span><span class="info-label">Roll No:</span> ${student?.roll_number}</span><span><span class="info-label">Program:</span> ${student?.program}${student?.branch ? ' - ' + student.branch : ''}</span></div>
+        ${prescription.diagnosis ? `<div class="section-title">Diagnosis</div><p style="font-size:13px;">${prescription.diagnosis}</p>` : ''}
+        <div class="section-title">Prescribed Medicines</div>
+        <table>
+          <thead><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Timing</th><th>Instructions</th></tr></thead>
+          <tbody>${items.map((item, i) => `<tr><td>${i + 1}</td><td>${item.medicine_name}</td><td>${item.dosage}</td><td>${item.frequency}</td><td>${item.duration}</td><td>${MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '-'}</td><td>${item.instructions || '-'}</td></tr>`).join('')}</tbody>
+        </table>
+        ${prescription.notes ? `<div class="notes"><strong>Doctor Notes:</strong> ${prescription.notes}</div>` : ''}
+        <div class="signature">
+          <div class="name">${doctorName}</div>
+          <div class="title-text">Medical Officer, Health Centre</div>
+          <div class="title-text">NIT Warangal</div>
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -153,14 +268,12 @@ const StudentProfile = () => {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Student Not Found</CardTitle>
-            <CardDescription>
-              No student found with roll number: {rollNumber}
-            </CardDescription>
+            <CardDescription>No student found with roll number: {rollNumber}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/health-dashboard')}>
+            <Button onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Go Back
             </Button>
           </CardContent>
         </Card>
@@ -174,9 +287,7 @@ const StudentProfile = () => {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Access Restricted</CardTitle>
-            <CardDescription>
-              You don't have permission to view student health records.
-            </CardDescription>
+            <CardDescription>You don't have permission to view student health records.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -185,11 +296,11 @@ const StudentProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto p-8 space-y-8">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Back Button */}
-        <Button variant="ghost" onClick={() => navigate('/health-dashboard')}>
+        <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          Back
         </Button>
 
         {/* Student Info Card */}
@@ -216,14 +327,14 @@ const StudentProfile = () => {
                 <GraduationCap className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Program</p>
-                  <p className="font-medium">{student?.program}</p>
+                  <p className="font-medium">{student?.program}{student?.branch ? ` - ${student.branch}` : ''}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Batch</p>
-                  <p className="font-medium">{student?.batch}</p>
+                  <p className="font-medium">{student?.batch}{student?.year_of_study ? ` (Year ${student.year_of_study})` : ''}</p>
                 </div>
               </div>
               {student?.email && (
@@ -231,7 +342,7 @@ const StudentProfile = () => {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium text-sm">{student.email}</p>
+                    <p className="font-medium text-sm truncate max-w-[200px]">{student.email}</p>
                   </div>
                 </div>
               )}
@@ -254,16 +365,86 @@ const StudentProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Tabs for Visit History and Analysis */}
+        {/* Medical Profile Card - only for doctors */}
+        {isDoctor && profile && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Heart className="h-5 w-5 text-destructive" />
+                Medical Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {profile.blood_group && (
+                  <div className="p-3 rounded-lg bg-destructive/5 border text-center">
+                    <Droplets className="h-5 w-5 text-destructive mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Blood Group</p>
+                    <p className="font-bold text-lg">{profile.blood_group}</p>
+                  </div>
+                )}
+                {profile.covid_vaccination_status && (
+                  <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/10 border text-center">
+                    <p className="text-xs text-muted-foreground">COVID Vaccination</p>
+                    <p className="font-medium">{profile.covid_vaccination_status}</p>
+                  </div>
+                )}
+                {profile.emergency_contact && (
+                  <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border text-center">
+                    <AlertCircle className="h-5 w-5 text-amber-600 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Emergency Contact</p>
+                    <p className="font-medium text-sm">{profile.emergency_contact}</p>
+                    {profile.emergency_relationship && (
+                      <p className="text-xs text-muted-foreground">({profile.emergency_relationship})</p>
+                    )}
+                  </div>
+                )}
+                <div className="p-3 rounded-lg bg-muted/50 border text-center">
+                  <p className="text-xs text-muted-foreground">Health Issues</p>
+                  <p className="font-medium">{profile.has_previous_health_issues ? 'Yes' : 'None Reported'}</p>
+                </div>
+              </div>
+              {(profile.known_allergies || profile.current_medications || profile.previous_health_details) && (
+                <div className="mt-4 space-y-3">
+                  <Separator />
+                  {profile.known_allergies && (
+                    <div>
+                      <p className="text-sm font-medium text-destructive">Known Allergies</p>
+                      <p className="text-sm">{profile.known_allergies}</p>
+                    </div>
+                  )}
+                  {profile.current_medications && (
+                    <div>
+                      <p className="text-sm font-medium text-primary">Current Medications</p>
+                      <p className="text-sm">{profile.current_medications}</p>
+                    </div>
+                  )}
+                  {profile.previous_health_details && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Previous Health Details</p>
+                      <p className="text-sm">{profile.previous_health_details}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabs for Visit History, Prescriptions, and Analysis */}
         <Tabs defaultValue="history" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="history" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Visit History
             </TabsTrigger>
+            <TabsTrigger value="prescriptions" className="flex items-center gap-2">
+              <Pill className="h-4 w-4" />
+              Prescriptions
+            </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Visit Pattern Analysis
+              Pattern Analysis
             </TabsTrigger>
           </TabsList>
 
@@ -309,8 +490,6 @@ const StudentProfile = () => {
                             )}
                           </div>
                         </div>
-
-                        {/* Only show detailed info for doctors */}
                         {isDoctor && (
                           <>
                             {visit.reason_notes && (
@@ -332,6 +511,92 @@ const StudentProfile = () => {
                               </div>
                             )}
                           </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prescriptions" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Pill className="h-5 w-5 text-primary" />
+                  Past Prescriptions
+                </CardTitle>
+                <CardDescription>
+                  {prescriptions.length} prescription{prescriptions.length !== 1 ? 's' : ''} on record
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {prescriptions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No prescriptions found</p>
+                ) : (
+                  <div className="space-y-5">
+                    {prescriptions.map((rx) => (
+                      <div key={rx.id} className="border rounded-lg overflow-hidden">
+                        <div className="p-4 bg-muted/30 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {format(new Date(rx.created_at), 'MMMM d, yyyy')}
+                            </p>
+                            {(rx.medical_officers as any)?.name && (
+                              <p className="text-sm text-muted-foreground">
+                                Dr. {(rx.medical_officers as any).name} — {(rx.medical_officers as any).designation}
+                              </p>
+                            )}
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => handlePrintPrescription(rx)}>
+                            <Printer className="h-4 w-4 mr-1" />
+                            Print
+                          </Button>
+                        </div>
+                        {rx.diagnosis && (
+                          <div className="px-4 py-2 border-b bg-primary/5">
+                            <p className="text-xs font-medium text-muted-foreground">Diagnosis</p>
+                            <p className="text-sm font-medium">{rx.diagnosis}</p>
+                          </div>
+                        )}
+                        {rx.prescription_items && rx.prescription_items.length > 0 && (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b bg-muted/20">
+                                  <th className="text-left p-3 font-medium text-muted-foreground">#</th>
+                                  <th className="text-left p-3 font-medium text-muted-foreground">Medicine</th>
+                                  <th className="text-left p-3 font-medium text-muted-foreground">Dosage</th>
+                                  <th className="text-left p-3 font-medium text-muted-foreground">Frequency</th>
+                                  <th className="text-left p-3 font-medium text-muted-foreground">Duration</th>
+                                  <th className="text-left p-3 font-medium text-muted-foreground">Timing</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rx.prescription_items.map((item, idx) => (
+                                  <tr key={item.id} className="border-b last:border-0">
+                                    <td className="p-3 text-muted-foreground">{idx + 1}</td>
+                                    <td className="p-3 font-medium">{item.medicine_name}</td>
+                                    <td className="p-3">{item.dosage}</td>
+                                    <td className="p-3">{item.frequency}</td>
+                                    <td className="p-3">{item.duration}</td>
+                                    <td className="p-3">
+                                      <Badge variant="outline" className="text-xs">
+                                        {MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '-'}
+                                      </Badge>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {rx.notes && (
+                          <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/10 border-t">
+                            <p className="text-xs font-medium text-muted-foreground">Doctor Notes</p>
+                            <p className="text-sm">{rx.notes}</p>
+                          </div>
                         )}
                       </div>
                     ))}

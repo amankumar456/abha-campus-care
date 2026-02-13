@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import MedicalLeaveDialog from "./MedicalLeaveDialog";
 import PrescriptionDialog from "./PrescriptionDialog";
 
@@ -99,6 +100,7 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
   const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [denialReason, setDenialReason] = useState("");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const updatePriorityMutation = useMutation({
     mutationFn: async (priority: string) => {
@@ -256,7 +258,10 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
                 <User className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-foreground">
+                <p 
+                  className="font-semibold text-foreground cursor-pointer hover:text-primary hover:underline transition-colors"
+                  onClick={() => student?.roll_number && navigate(`/student-profile/${student.roll_number}`)}
+                >
                   {student?.full_name || "Unknown Student"}
                 </p>
                 <p className="text-sm text-muted-foreground">
