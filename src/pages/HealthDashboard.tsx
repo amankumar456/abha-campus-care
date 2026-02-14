@@ -40,146 +40,53 @@ interface RecentVisit {
   };
 }
 
-// Dummy upcoming appointment slots
-const DUMMY_SLOTS = [
-  { time: '09:00 AM', doctor: 'Dr. Rajesh Kumar', available: 3 },
-  { time: '10:00 AM', doctor: 'Dr. Priya Sharma', available: 2 },
-  { time: '11:00 AM', doctor: 'Dr. Suresh Menon (Ortho)', available: 5 },
-  { time: '02:00 PM', doctor: 'Dr. Anil Reddy', available: 4 },
-  { time: '03:00 PM', doctor: 'Dr. Lakshmi Devi (Derma)', available: 1 },
-];
+interface StudentAppointment {
+  id: string;
+  appointment_date: string;
+  appointment_time: string;
+  reason: string | null;
+  status: string;
+  doctor_name: string | null;
+}
 
-// Dummy student appointments
-const DUMMY_STUDENT_APPOINTMENTS = [
-  { id: '1', date: '2026-01-20', time: '10:00 AM', doctor: 'Dr. Rajesh Kumar', type: 'General Checkup', status: 'confirmed' },
-  { id: '2', date: '2026-01-25', time: '02:30 PM', doctor: 'Dr. Priya Sharma', type: 'Follow-up', status: 'pending' },
-];
+interface StudentVisit {
+  id: string;
+  visit_date: string;
+  reason_category: string;
+  reason_notes: string | null;
+  diagnosis: string | null;
+  prescription: string | null;
+  doctor_name: string | null;
+}
 
-// Dummy student visits
-const DUMMY_STUDENT_VISITS = [
-  { id: '1', date: '2026-01-05', reason: 'Fever & Cold', doctor: 'Dr. Rajesh Kumar', prescription: 'Paracetamol, Rest' },
-  { id: '2', date: '2025-12-15', reason: 'Routine Checkup', doctor: 'Dr. Priya Sharma', prescription: 'Vitamin supplements' },
-  { id: '3', date: '2025-11-20', reason: 'Sports Injury', doctor: 'Dr. Suresh Menon', prescription: 'Physiotherapy' },
-];
+interface MentorVisit {
+  id: string;
+  visit_date: string;
+  reason_category: string;
+  reason_notes: string | null;
+  diagnosis: string | null;
+  prescription: string | null;
+  follow_up_required: boolean;
+  follow_up_date: string | null;
+  student_name: string;
+  student_roll: string;
+  student_email: string | null;
+  student_phone: string | null;
+}
 
-// Dummy mentor portal - recent visits with detailed info
-const DUMMY_MENTOR_RECENT_VISITS = [
-  { 
-    id: '1', 
-    visit_date: '2026-01-18T10:30:00', 
-    reason_category: 'medical_illness',
-    reason_notes: 'High fever (102°F) with cold symptoms for 3 days',
-    diagnosis: 'Viral infection',
-    prescription: 'Paracetamol 500mg, Cetirizine, Rest for 3 days',
-    follow_up_required: true,
-    follow_up_date: '2026-01-25',
-    students: { roll_number: '22EI1001', full_name: 'Priya Sharma', email: 'priya.22ei1001@student.nitw.ac.in', phone: '+91 9876543001' }
-  },
-  { 
-    id: '2', 
-    visit_date: '2026-01-19T09:00:00', 
-    reason_category: 'mental_wellness',
-    reason_notes: 'Academic stress and anxiety, difficulty sleeping',
-    diagnosis: 'Mild anxiety disorder',
-    prescription: 'Counseling session scheduled, relaxation techniques advised',
-    follow_up_required: true,
-    follow_up_date: '2026-01-26',
-    students: { roll_number: '22EI1002', full_name: 'Arjun Kumar', email: 'arjun.22ei1002@student.nitw.ac.in', phone: '+91 9876543002' }
-  },
-  { 
-    id: '3', 
-    visit_date: '2026-01-15T11:30:00', 
-    reason_category: 'injury',
-    reason_notes: 'Ankle sprain during basketball practice',
-    diagnosis: 'Grade 1 ankle sprain',
-    prescription: 'Ice pack, compression bandage, avoid sports for 2 weeks',
-    follow_up_required: false,
-    follow_up_date: null,
-    students: { roll_number: '22EI1003', full_name: 'Ananya Reddy', email: 'ananya.22ei1003@student.nitw.ac.in', phone: '+91 9876543003' }
-  },
-  { 
-    id: '4', 
-    visit_date: '2026-01-20T15:00:00', 
-    reason_category: 'vaccination',
-    reason_notes: 'COVID-19 booster dose administered',
-    diagnosis: 'Vaccination completed',
-    prescription: 'Monitor for side effects, paracetamol if fever occurs',
-    follow_up_required: false,
-    follow_up_date: null,
-    students: { roll_number: '23EI1001', full_name: 'Vikash Singh', email: 'vikash.23ei1001@student.nitw.ac.in', phone: '+91 9876543004' }
-  },
-  { 
-    id: '5', 
-    visit_date: '2026-01-17T16:30:00', 
-    reason_category: 'mental_wellness',
-    reason_notes: 'Feeling overwhelmed with project deadlines',
-    diagnosis: 'Situational stress',
-    prescription: 'Time management counseling, breathing exercises',
-    follow_up_required: true,
-    follow_up_date: '2026-01-24',
-    students: { roll_number: '23EI1002', full_name: 'Meera Patel', email: 'meera.23ei1002@student.nitw.ac.in', phone: '+91 9876543005' }
-  }
-];
-
-// Dummy mentor portal - students needing attention with detailed health patterns
-const DUMMY_STUDENTS_NEEDING_ATTENTION = [
-  { 
-    student_id: '1', 
-    roll_number: '22EI1002', 
-    full_name: 'Arjun Kumar',
-    email: 'arjun.22ei1002@student.nitw.ac.in',
-    phone: '+91 9876543002',
-    batch: '2022',
-    branch: 'Electronics & Instrumentation',
-    visit_count: 5, 
-    primary_concern: 'Mental Wellness',
-    last_visit: '2026-01-19',
-    risk_level: 'high',
-    notes: 'Multiple stress-related visits, recommend regular counseling'
-  },
-  { 
-    student_id: '2', 
-    roll_number: '23EI1002', 
-    full_name: 'Meera Patel',
-    email: 'meera.23ei1002@student.nitw.ac.in',
-    phone: '+91 9876543005',
-    batch: '2023',
-    branch: 'Electronics & Instrumentation',
-    visit_count: 4, 
-    primary_concern: 'Mental Wellness',
-    last_visit: '2026-01-17',
-    risk_level: 'medium',
-    notes: 'Academic pressure related stress, follow-up scheduled'
-  },
-  { 
-    student_id: '3', 
-    roll_number: '22EI1001', 
-    full_name: 'Priya Sharma',
-    email: 'priya.22ei1001@student.nitw.ac.in',
-    phone: '+91 9876543001',
-    batch: '2022',
-    branch: 'Electronics & Instrumentation',
-    visit_count: 3, 
-    primary_concern: 'Recurring Illness',
-    last_visit: '2026-01-18',
-    risk_level: 'medium',
-    notes: 'Frequent fever episodes, immunity check recommended'
-  },
-  { 
-    student_id: '4', 
-    roll_number: '22EI1003', 
-    full_name: 'Ananya Reddy',
-    email: 'ananya.22ei1003@student.nitw.ac.in',
-    phone: '+91 9876543003',
-    batch: '2022',
-    branch: 'Electronics & Instrumentation',
-    visit_count: 3, 
-    primary_concern: 'Sports Injuries',
-    last_visit: '2026-01-15',
-    risk_level: 'low',
-    notes: 'Active in sports, proper warm-up guidance needed'
-  }
-];
+interface AttentionStudent {
+  student_id: string;
+  roll_number: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  batch: string;
+  branch: string | null;
+  visit_count: number;
+  primary_concern: string;
+  last_visit: string;
+  risk_level: 'high' | 'medium' | 'low';
+}
 
 const HealthDashboard = () => {
   const navigate = useNavigate();
@@ -191,6 +98,14 @@ const HealthDashboard = () => {
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [studentHealthStats, setStudentHealthStats] = useState<any>(null);
 
+  // Real data states for student view
+  const [studentAppointments, setStudentAppointments] = useState<StudentAppointment[]>([]);
+  const [studentVisits, setStudentVisits] = useState<StudentVisit[]>([]);
+
+  // Real data states for mentor view
+  const [mentorRecentVisits, setMentorRecentVisits] = useState<MentorVisit[]>([]);
+  const [studentsNeedingAttention, setStudentsNeedingAttention] = useState<AttentionStudent[]>([]);
+
   useEffect(() => {
     if (!roleLoading && !user) {
       navigate('/auth');
@@ -201,16 +116,228 @@ const HealthDashboard = () => {
     if (!roleLoading && user) {
       if (isDoctor || isMentor) {
         fetchDashboardData();
+        if (isMentor) {
+          fetchMentorData();
+        }
       } else {
-        // Student view - fetch student profile
         fetchStudentProfile();
+        fetchStudentAppointments();
+        fetchStudentVisits();
       }
     }
   }, [roleLoading, user, isDoctor, isMentor, mentorId]);
 
+  const fetchStudentAppointments = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          appointment_date,
+          appointment_time,
+          reason,
+          status,
+          medical_officer_id,
+          visiting_doctor_id
+        `)
+        .eq('patient_id', user.id)
+        .in('status', ['pending', 'confirmed'])
+        .gte('appointment_date', new Date().toISOString().split('T')[0])
+        .order('appointment_date', { ascending: true })
+        .limit(5);
+
+      if (data) {
+        // Fetch doctor names
+        const moIds = data.filter(a => a.medical_officer_id).map(a => a.medical_officer_id!);
+        const vdIds = data.filter(a => a.visiting_doctor_id).map(a => a.visiting_doctor_id!);
+        
+        let moMap: Record<string, string> = {};
+        let vdMap: Record<string, string> = {};
+
+        if (moIds.length > 0) {
+          const { data: mos } = await supabase.from('medical_officers').select('id, name').in('id', moIds);
+          mos?.forEach(mo => { moMap[mo.id] = mo.name; });
+        }
+        if (vdIds.length > 0) {
+          const { data: vds } = await supabase.from('visiting_doctors').select('id, name').in('id', vdIds);
+          vds?.forEach(vd => { vdMap[vd.id] = vd.name; });
+        }
+
+        setStudentAppointments(data.map(a => ({
+          id: a.id,
+          appointment_date: a.appointment_date,
+          appointment_time: a.appointment_time,
+          reason: a.reason,
+          status: a.status || 'pending',
+          doctor_name: a.medical_officer_id ? moMap[a.medical_officer_id] || null : a.visiting_doctor_id ? vdMap[a.visiting_doctor_id] || null : null,
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching student appointments:', error);
+    }
+  };
+
+  const fetchStudentVisits = async () => {
+    if (!user) return;
+    try {
+      // Get student id first
+      const { data: student } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!student) return;
+
+      const { data } = await supabase
+        .from('health_visits')
+        .select(`
+          id,
+          visit_date,
+          reason_category,
+          reason_notes,
+          diagnosis,
+          prescription,
+          doctor_id
+        `)
+        .eq('student_id', student.id)
+        .order('visit_date', { ascending: false })
+        .limit(5);
+
+      if (data) {
+        const doctorIds = data.filter(v => v.doctor_id).map(v => v.doctor_id!);
+        let doctorMap: Record<string, string> = {};
+        if (doctorIds.length > 0) {
+          const { data: docs } = await supabase.from('medical_officers').select('id, name').in('id', doctorIds);
+          docs?.forEach(d => { doctorMap[d.id] = d.name; });
+        }
+
+        setStudentVisits(data.map(v => ({
+          id: v.id,
+          visit_date: v.visit_date,
+          reason_category: v.reason_category,
+          reason_notes: v.reason_notes,
+          diagnosis: v.diagnosis,
+          prescription: v.prescription,
+          doctor_name: v.doctor_id ? doctorMap[v.doctor_id] || null : null,
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching student visits:', error);
+    }
+  };
+
+  const fetchMentorData = async () => {
+    if (!mentorId) return;
+    try {
+      // Get mentor's students
+      const { data: mentorStudents } = await supabase
+        .from('students')
+        .select('id, full_name, roll_number, email, phone, batch, branch')
+        .eq('mentor_id', mentorId);
+
+      if (!mentorStudents || mentorStudents.length === 0) return;
+
+      const studentIds = mentorStudents.map(s => s.id);
+      const studentMap = new Map(mentorStudents.map(s => [s.id, s]));
+
+      // Fetch recent health visits for mentees
+      const { data: visits } = await supabase
+        .from('health_visits')
+        .select(`
+          id,
+          visit_date,
+          reason_category,
+          reason_notes,
+          diagnosis,
+          prescription,
+          follow_up_required,
+          follow_up_date,
+          student_id
+        `)
+        .in('student_id', studentIds)
+        .order('visit_date', { ascending: false })
+        .limit(10);
+
+      if (visits) {
+        setMentorRecentVisits(visits.map(v => {
+          const s = studentMap.get(v.student_id);
+          return {
+            id: v.id,
+            visit_date: v.visit_date,
+            reason_category: v.reason_category,
+            reason_notes: v.reason_notes,
+            diagnosis: v.diagnosis,
+            prescription: v.prescription,
+            follow_up_required: v.follow_up_required || false,
+            follow_up_date: v.follow_up_date,
+            student_name: s?.full_name || 'Unknown',
+            student_roll: s?.roll_number || 'N/A',
+            student_email: s?.email || null,
+            student_phone: s?.phone || null,
+          };
+        }));
+      }
+
+      // Calculate students needing attention (3+ visits in last 3 months)
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const { data: allVisits } = await supabase
+        .from('health_visits')
+        .select('id, student_id, visit_date, reason_category')
+        .in('student_id', studentIds)
+        .gte('visit_date', threeMonthsAgo.toISOString());
+
+      if (allVisits) {
+        const visitsByStudent = new Map<string, { count: number; reasons: string[]; lastVisit: string }>();
+        allVisits.forEach(v => {
+          const existing = visitsByStudent.get(v.student_id);
+          if (existing) {
+            existing.count++;
+            existing.reasons.push(v.reason_category);
+            if (v.visit_date > existing.lastVisit) existing.lastVisit = v.visit_date;
+          } else {
+            visitsByStudent.set(v.student_id, { count: 1, reasons: [v.reason_category], lastVisit: v.visit_date });
+          }
+        });
+
+        const attention: AttentionStudent[] = [];
+        visitsByStudent.forEach((data, studentId) => {
+          if (data.count >= 2) {
+            const s = studentMap.get(studentId);
+            if (!s) return;
+            // Determine primary concern from most frequent reason
+            const reasonCounts: Record<string, number> = {};
+            data.reasons.forEach(r => { reasonCounts[r] = (reasonCounts[r] || 0) + 1; });
+            const primaryReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'other';
+            
+            attention.push({
+              student_id: studentId,
+              roll_number: s.roll_number,
+              full_name: s.full_name,
+              email: s.email,
+              phone: s.phone,
+              batch: s.batch,
+              branch: s.branch,
+              visit_count: data.count,
+              primary_concern: formatReasonCategory(primaryReason),
+              last_visit: data.lastVisit,
+              risk_level: data.count >= 5 ? 'high' : data.count >= 3 ? 'medium' : 'low',
+            });
+          }
+        });
+
+        setStudentsNeedingAttention(attention.sort((a, b) => b.visit_count - a.visit_count));
+      }
+    } catch (error) {
+      console.error('Error fetching mentor data:', error);
+    }
+  };
+
   const fetchStudentProfile = async () => {
     try {
-      // Fetch student profile
       const { data: studentData } = await supabase
         .from('students')
         .select(`
@@ -284,26 +411,22 @@ const HealthDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch students count
       const { data: students, count: studentCount } = await supabase
         .from('students')
         .select('id, roll_number, full_name', { count: 'exact' });
 
-      // Fetch today's visits
       const today = new Date().toISOString().split('T')[0];
       const { data: todayVisits } = await supabase
         .from('health_visits')
         .select('id')
         .gte('visit_date', today);
 
-      // Fetch pending follow-ups
       const { data: followUps } = await supabase
         .from('health_visits')
         .select('id')
         .eq('follow_up_required', true)
         .gte('follow_up_date', today);
 
-      // Fetch recent visits
       const { data: recent } = await supabase
         .from('health_visits')
         .select(`
@@ -318,7 +441,6 @@ const HealthDashboard = () => {
         .order('visit_date', { ascending: false })
         .limit(5);
 
-      // Calculate frequent visitors
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       
@@ -385,6 +507,13 @@ const HealthDashboard = () => {
     return category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
+  };
 
   const getUserDisplayName = () => {
     return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -437,7 +566,7 @@ const HealthDashboard = () => {
                 <Calendar className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{DUMMY_STUDENT_APPOINTMENTS.length}</div>
+                <div className="text-2xl font-bold">{studentAppointments.length}</div>
                 <p className="text-xs text-muted-foreground">Scheduled visits</p>
               </CardContent>
             </Card>
@@ -448,8 +577,8 @@ const HealthDashboard = () => {
                 <Heart className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{DUMMY_STUDENT_VISITS.length}</div>
-                <p className="text-xs text-muted-foreground">This year</p>
+                <div className="text-2xl font-bold">{studentHealthStats?.totalVisits || 0}</div>
+                <p className="text-xs text-muted-foreground">All time</p>
               </CardContent>
             </Card>
 
@@ -468,7 +597,7 @@ const HealthDashboard = () => {
                 <FileText className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">5</div>
+                <div className="text-2xl font-bold">{studentVisits.length}</div>
                 <p className="text-xs text-muted-foreground">Documents available</p>
               </CardContent>
             </Card>
@@ -479,8 +608,22 @@ const HealthDashboard = () => {
                 <Clock className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-lg font-bold">Jan 20</div>
-                <p className="text-xs text-muted-foreground">10:00 AM - Dr. Rajesh</p>
+                {studentAppointments.length > 0 ? (
+                  <>
+                    <div className="text-lg font-bold">
+                      {format(new Date(studentAppointments[0].appointment_date), 'MMM d')}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTime(studentAppointments[0].appointment_time)}
+                      {studentAppointments[0].doctor_name ? ` - ${studentAppointments[0].doctor_name}` : ''}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-lg font-bold text-muted-foreground">—</div>
+                    <p className="text-xs text-muted-foreground">No upcoming</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -530,28 +673,38 @@ const HealthDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {DUMMY_STUDENT_APPOINTMENTS.map((apt) => (
-                      <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Stethoscope className="h-6 w-6 text-primary" />
+                  {studentAppointments.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CalendarCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No upcoming appointments</p>
+                      <Button variant="link" asChild className="mt-2">
+                        <Link to="/appointments">Book one now</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {studentAppointments.map((apt) => (
+                        <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Stethoscope className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{apt.doctor_name || 'Doctor'}</p>
+                              <p className="text-sm text-muted-foreground">{apt.reason || 'General Consultation'}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{apt.doctor}</p>
-                            <p className="text-sm text-muted-foreground">{apt.type}</p>
+                          <div className="text-right">
+                            <p className="font-medium">{format(new Date(apt.appointment_date), 'MMM d, yyyy')}</p>
+                            <p className="text-sm text-muted-foreground">{formatTime(apt.appointment_time)}</p>
+                            <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
+                              {apt.status}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium">{format(new Date(apt.date), 'MMM d, yyyy')}</p>
-                          <p className="text-sm text-muted-foreground">{apt.time}</p>
-                          <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
-                            {apt.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -565,23 +718,34 @@ const HealthDashboard = () => {
                   <CardDescription>Your past health centre visits</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {DUMMY_STUDENT_VISITS.map((visit) => (
-                      <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
-                        <div>
-                          <p className="font-medium">{visit.reason}</p>
-                          <p className="text-sm text-muted-foreground">{visit.doctor}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm">{format(new Date(visit.date), 'MMM d, yyyy')}</p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                            <Pill className="h-3 w-3" />
-                            {visit.prescription}
+                  {studentVisits.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No visit history yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {studentVisits.map((visit) => (
+                        <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
+                          <div>
+                            <p className="font-medium">
+                              {visit.reason_notes || formatReasonCategory(visit.reason_category)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{visit.doctor_name || 'Health Centre'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                            {visit.prescription && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <Pill className="h-3 w-3" />
+                                {visit.prescription.length > 40 ? visit.prescription.slice(0, 40) + '...' : visit.prescription}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -622,34 +786,6 @@ const HealthDashboard = () => {
                     <span>Update Profile</span>
                   </Link>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Today's Available Slots */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Today's Available Appointment Slots
-              </CardTitle>
-              <CardDescription>Quick view of available slots for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {DUMMY_SLOTS.map((slot, index) => (
-                  <div
-                    key={index}
-                    className="p-4 rounded-lg border text-center hover:border-primary transition-colors cursor-pointer"
-                    onClick={() => navigate('/appointments')}
-                  >
-                    <p className="font-semibold text-lg">{slot.time}</p>
-                    <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
-                    <Badge variant={slot.available > 2 ? "secondary" : "destructive"}>
-                      {slot.available} slots left
-                    </Badge>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>
@@ -744,92 +880,105 @@ const HealthDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Visits - Enhanced for Mentor Portal */}
+          {/* Recent Visits */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
                 Recent Visits
               </CardTitle>
-              <CardDescription>Latest health centre visits by your mentees</CardDescription>
+              <CardDescription>Latest health centre visits{isMentor ? ' by your mentees' : ''}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {isMentor ? (
-                  DUMMY_MENTOR_RECENT_VISITS.map((visit) => (
-                    <div
-                      key={visit.id}
-                      className="p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-foreground">{visit.students.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{visit.students.roll_number}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge 
-                            variant="secondary"
-                            className={
-                              visit.reason_category === 'mental_wellness' 
-                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
-                                : visit.reason_category === 'medical_illness'
-                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                : visit.reason_category === 'injury'
-                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            }
-                          >
-                            {formatReasonCategory(visit.reason_category)}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(new Date(visit.visit_date), 'MMM d, yyyy • h:mm a')}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Complaint:</span>
-                          <span className="ml-2 text-foreground">{visit.reason_notes}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Diagnosis:</span>
-                          <span className="ml-2 text-foreground">{visit.diagnosis}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Prescription:</span>
-                          <span className="ml-2 text-foreground">{visit.prescription}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                        <div className="flex items-center gap-4 text-xs">
-                          <a href={`mailto:${visit.students.email}`} className="text-primary hover:underline flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            Email
-                          </a>
-                          <a href={`tel:${visit.students.phone}`} className="text-primary hover:underline flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            Call
-                          </a>
-                        </div>
-                        {visit.follow_up_required ? (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-600">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            Follow-up: {format(new Date(visit.follow_up_date!), 'MMM d')}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
-                            Completed
-                          </Badge>
-                        )}
-                      </div>
+                  mentorRecentVisits.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No recent visits by your mentees</p>
                     </div>
-                  ))
+                  ) : (
+                    mentorRecentVisits.map((visit) => (
+                      <div
+                        key={visit.id}
+                        className="p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <p className="font-semibold text-foreground">{visit.student_name}</p>
+                            <p className="text-sm text-muted-foreground">{visit.student_roll}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge 
+                              variant="secondary"
+                              className={
+                                visit.reason_category === 'mental_wellness' 
+                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
+                                  : visit.reason_category === 'medical_illness'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  : visit.reason_category === 'injury'
+                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              }
+                            >
+                              {formatReasonCategory(visit.reason_category)}
+                            </Badge>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {format(new Date(visit.visit_date), 'MMM d, yyyy • h:mm a')}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {(visit.reason_notes || visit.diagnosis || visit.prescription) && (
+                          <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
+                            {visit.reason_notes && (
+                              <div>
+                                <span className="text-muted-foreground">Complaint:</span>
+                                <span className="ml-2 text-foreground">{visit.reason_notes}</span>
+                              </div>
+                            )}
+                            {visit.diagnosis && (
+                              <div>
+                                <span className="text-muted-foreground">Diagnosis:</span>
+                                <span className="ml-2 text-foreground">{visit.diagnosis}</span>
+                              </div>
+                            )}
+                            {visit.prescription && (
+                              <div>
+                                <span className="text-muted-foreground">Prescription:</span>
+                                <span className="ml-2 text-foreground">{visit.prescription}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                          <div className="flex items-center gap-4 text-xs">
+                            {visit.student_email && (
+                              <a href={`mailto:${visit.student_email}`} className="text-primary hover:underline flex items-center gap-1">
+                                Email
+                              </a>
+                            )}
+                            {visit.student_phone && (
+                              <a href={`tel:${visit.student_phone}`} className="text-primary hover:underline flex items-center gap-1">
+                                Call
+                              </a>
+                            )}
+                          </div>
+                          {visit.follow_up_required ? (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-600">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Follow-up: {visit.follow_up_date ? format(new Date(visit.follow_up_date), 'MMM d') : 'TBD'}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
+                              Completed
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )
                 ) : (
                   recentVisits.length === 0 ? (
                     <p className="text-muted-foreground text-center py-4">No recent visits</p>
@@ -860,7 +1009,7 @@ const HealthDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Students Needing Attention - Enhanced for Mentor Portal */}
+          {/* Students Needing Attention */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -872,71 +1021,73 @@ const HealthDashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {isMentor ? (
-                  DUMMY_STUDENTS_NEEDING_ATTENTION.map((student) => (
-                    <div
-                      key={student.student_id}
-                      className={`p-4 rounded-lg border-l-4 ${
-                        student.risk_level === 'high' 
-                          ? 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10' 
-                          : student.risk_level === 'medium'
-                          ? 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10'
-                          : 'border-l-green-500 bg-green-50/50 dark:bg-green-900/10'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-foreground">{student.full_name}</p>
-                            <Badge 
-                              variant={student.risk_level === 'high' ? 'destructive' : student.risk_level === 'medium' ? 'secondary' : 'outline'}
-                              className="text-xs"
-                            >
-                              {student.risk_level === 'high' ? 'High Priority' : student.risk_level === 'medium' ? 'Medium' : 'Low'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{student.roll_number} • {student.batch}</p>
-                        </div>
-                        <Badge variant="destructive" className="text-xs">
-                          {student.visit_count} visits
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-1.5 text-sm mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Branch:</span>
-                          <span className="text-foreground">{student.branch}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Primary Concern:</span>
-                          <Badge variant="outline" className="text-xs">{student.primary_concern}</Badge>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Last Visit:</span>
-                          <span className="text-foreground">{format(new Date(student.last_visit), 'MMM d, yyyy')}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-muted/50 rounded p-2 text-sm">
-                        <span className="text-muted-foreground">Notes: </span>
-                        <span className="text-foreground">{student.notes}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs">
-                        <a href={`mailto:${student.email}`} className="text-primary hover:underline flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          {student.email}
-                        </a>
-                        <a href={`tel:${student.phone}`} className="text-primary hover:underline flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                          {student.phone}
-                        </a>
-                      </div>
+                  studentsNeedingAttention.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertTriangle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No students require attention currently</p>
                     </div>
-                  ))
+                  ) : (
+                    studentsNeedingAttention.map((student) => (
+                      <div
+                        key={student.student_id}
+                        className={`p-4 rounded-lg border-l-4 ${
+                          student.risk_level === 'high' 
+                            ? 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10' 
+                            : student.risk_level === 'medium'
+                            ? 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10'
+                            : 'border-l-green-500 bg-green-50/50 dark:bg-green-900/10'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-foreground">{student.full_name}</p>
+                              <Badge 
+                                variant={student.risk_level === 'high' ? 'destructive' : student.risk_level === 'medium' ? 'secondary' : 'outline'}
+                                className="text-xs"
+                              >
+                                {student.risk_level === 'high' ? 'High Priority' : student.risk_level === 'medium' ? 'Medium' : 'Low'}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{student.roll_number} • {student.batch}</p>
+                          </div>
+                          <Badge variant="destructive" className="text-xs">
+                            {student.visit_count} visits
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-1.5 text-sm mb-3">
+                          {student.branch && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Branch:</span>
+                              <span className="text-foreground">{student.branch}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">Primary Concern:</span>
+                            <Badge variant="outline" className="text-xs">{student.primary_concern}</Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">Last Visit:</span>
+                            <span className="text-foreground">{format(new Date(student.last_visit), 'MMM d, yyyy')}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs">
+                          {student.email && (
+                            <a href={`mailto:${student.email}`} className="text-primary hover:underline">
+                              {student.email}
+                            </a>
+                          )}
+                          {student.phone && (
+                            <a href={`tel:${student.phone}`} className="text-primary hover:underline">
+                              {student.phone}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )
                 ) : (
                   stats?.frequentVisitors.length === 0 ? (
                     <p className="text-muted-foreground text-center py-4">No alerts</p>
@@ -965,33 +1116,6 @@ const HealthDashboard = () => {
 
         {/* Health Records Section */}
         <HealthRecordsSection />
-
-        {/* Today's Available Slots */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Today's Available Appointment Slots
-            </CardTitle>
-            <CardDescription>Quick view of available slots for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {DUMMY_SLOTS.map((slot, index) => (
-                <div
-                  key={index}
-                  className="p-4 rounded-lg border text-center hover:border-primary transition-colors"
-                >
-                  <p className="font-semibold text-lg">{slot.time}</p>
-                  <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
-                  <Badge variant={slot.available > 2 ? "secondary" : "destructive"}>
-                    {slot.available} slots left
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
       <Footer />
     </div>
