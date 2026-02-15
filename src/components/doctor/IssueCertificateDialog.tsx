@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -24,11 +24,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { FileCheck, User, Search, Printer, Download, Check, Stethoscope } from "lucide-react";
+import { FileCheck, Search, Printer, Download, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { getFooterStyles, getFooterHtml } from "@/lib/print/generateVerificationQR";
-import { generateQRDataUrl } from "@/hooks/useQRCode";
+import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 
 interface IssueCertificateDialogProps {
   trigger: React.ReactNode;
@@ -67,7 +66,7 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
-  const printRef = useRef<HTMLDivElement>(null);
+  
 
   // Fetch real students from database
   const { data: dbStudents } = useQuery({
@@ -116,46 +115,67 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
   };
 
   const handlePrint = async () => {
-    if (printRef.current) {
-      const documentId = certificateNumber;
-      const verificationUrl = `${window.location.origin}/verify?doc=certificate&id=${documentId}`;
-      const qrDataUrl = await generateQRDataUrl(verificationUrl, 80);
-      const currentDate = format(new Date(), "PPP");
+    if (!selectedStudent) return;
 
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Medical Certificate - ${selectedStudent?.name}</title>
-              <style>
-                body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-                .header { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 30px; }
-                .header h1 { color: #1e3a5f; margin: 0; font-size: 24px; }
-                .header p { margin: 5px 0; color: #666; }
-                .content { line-height: 1.8; }
-                .field { margin: 15px 0; }
-                .field-label { font-weight: bold; }
-                .signature { margin-top: 60px; text-align: right; }
-                .stamp { border: 2px solid #1e3a5f; border-radius: 50%; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; color: #1e3a5f; margin-right: 30px; }
-                .certificate-number { font-size: 12px; color: #888; margin-top: 10px; }
-                ${getFooterStyles()}
-              </style>
-            </head>
-            <body>
-              ${printRef.current.innerHTML}
-              ${getFooterHtml(documentId, 'Medical Certificate', qrDataUrl, currentDate)}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }
+    const certTitle = getCertificateTitle();
+    const doctorName = doctorProfile?.name || "Medical Officer";
+    const doctorDesignation = doctorProfile?.designation || "Chief Medical Officer";
+    const doctorQualification = doctorProfile?.qualification || "MBBS, MD (General Medicine)";
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml()}
+      <div class="doc-title">
+        <h3>${certTitle.toUpperCase()}</h3>
+        <p class="cert-no">Certificate No: ${certificateNumber}</p>
+      </div>
+      <div class="section body-text">
+        <p>This is to certify that:</p>
+        <div class="info-box">
+          <div class="info-grid">
+            <div class="info-item"><span class="info-label">Name:</span><span>${selectedStudent.name}</span></div>
+            <div class="info-item"><span class="info-label">Roll Number:</span><span>${selectedStudent.rollNumber}</span></div>
+            <div class="info-item"><span class="info-label">Department:</span><span>${selectedStudent.branch}</span></div>
+            <div class="info-item"><span class="info-label">Year of Study:</span><span>${selectedStudent.year}</span></div>
+          </div>
+        </div>
+        <p>Was examined on <strong>${format(new Date(examinationDate), "PPPP")}</strong> at the Health Centre, NIT Warangal.</p>
+        ${findings ? `<p><strong>Clinical Findings:</strong></p><p style="margin-left:16px;">${findings}</p>` : ""}
+        ${certificateType === "fitness" ? `<p style="color:#0066cc;font-weight:bold;">The above-mentioned student is hereby certified to be medically fit to resume regular academic activities and participate in curricular/extracurricular programs.</p>` : ""}
+        ${remarks ? `<p><strong>Remarks:</strong></p><p style="margin-left:16px;">${remarks}</p>` : ""}
+      </div>
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="emblem-area">
+            <img src="/nitw-emblem.png" alt="NIT Warangal Official Emblem" />
+            <p class="emblem-label">Official Emblem</p>
+          </div>
+        </div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${doctorName}</div>
+          <div class="signature-line">
+            <strong>${doctorName}</strong><br/>
+            ${doctorDesignation}<br/>
+            <span style="font-size:10px;">${doctorQualification}</span><br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-footer">
+        <p>Date of Issue: ${format(new Date(), "PPPP")}</p>
+        <p>This certificate is valid for official purposes. For verification, contact Health Centre, NIT Warangal.</p>
+      </div>
+    `;
+
+    await printDocument({
+      title: `Medical Certificate - ${selectedStudent.name}`,
+      bodyHtml,
+      documentId: certificateNumber,
+      documentType: "Medical Certificate",
+    });
 
     toast({
       title: "Certificate Generated",
-      description: `Medical certificate for ${selectedStudent?.name} has been sent to print.`,
+      description: `Medical certificate for ${selectedStudent.name} has been sent to print.`,
     });
   };
 
@@ -306,7 +326,7 @@ export default function IssueCertificateDialog({ trigger, doctorId, doctorProfil
         ) : (
           <div className="space-y-6 mt-4">
             {/* Certificate Preview */}
-            <div ref={printRef} className="border rounded-lg p-8 bg-white">
+            <div className="border rounded-lg p-8 bg-white">
               {/* Official Header with Emblem on Left */}
               <div className="border-b-2 border-primary pb-6 mb-6">
                 <div className="flex items-start gap-4">

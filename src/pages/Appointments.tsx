@@ -184,6 +184,27 @@ export default function Appointments() {
 
   const availableDates = getAvailableDates();
 
+  // Fetch existing bookings for the selected doctor on the selected date
+  const { data: existingBookings } = useQuery({
+    queryKey: ['existing-bookings', selectedDoctor, selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, doctorType],
+    queryFn: async () => {
+      if (!selectedDoctor || !selectedDate) return [];
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const doctorField = doctorType === 'medical_officer' ? 'medical_officer_id' : 'visiting_doctor_id';
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('appointment_time')
+        .eq(doctorField, selectedDoctor)
+        .eq('appointment_date', dateStr)
+        .in('status', ['pending', 'confirmed']);
+      if (error) throw error;
+      return data?.map(a => a.appointment_time) || [];
+    },
+    enabled: !!selectedDoctor && !!selectedDate,
+  });
+
+  const bookedTimes = new Set(existingBookings || []);
+
   const timeSlots = visitingDoctorSchedule
     ? generateTimeSlots(visitingDoctorSchedule.visit_time_start, visitingDoctorSchedule.visit_time_end)
     : generateTimeSlots('09:00', '17:00');
@@ -489,17 +510,22 @@ export default function Appointments() {
                   <CardContent>
                     {selectedDate ? (
                       <div className="grid grid-cols-3 gap-2">
-                        {timeSlots.map((time) => (
-                          <Button
-                            key={time}
-                            variant={selectedTime === time ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedTime(time)}
-                            className="text-sm"
-                          >
-                            {formatTime(time)}
-                          </Button>
-                        ))}
+                        {timeSlots.map((time) => {
+                          const isBooked = bookedTimes.has(time);
+                          return (
+                            <Button
+                              key={time}
+                              variant={selectedTime === time ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setSelectedTime(time)}
+                              className={`text-sm ${isBooked ? 'opacity-40 line-through' : ''}`}
+                              disabled={isBooked}
+                              title={isBooked ? 'This slot is already booked' : ''}
+                            >
+                              {formatTime(time)}
+                            </Button>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-center text-muted-foreground py-8">

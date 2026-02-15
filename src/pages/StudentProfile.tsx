@@ -186,68 +186,54 @@ const StudentProfile = () => {
     }
   };
 
-  const handlePrintPrescription = (prescription: Prescription) => {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return;
-
+  const handlePrintPrescription = async (prescription: Prescription) => {
+    const { printDocument, getNitwHeaderHtml } = await import('@/lib/print/printDocument');
     const items = prescription.prescription_items || [];
     const doctorName = (prescription.medical_officers as any)?.name || 'Health Centre Doctor';
+    const doctorDesignation = (prescription.medical_officers as any)?.designation || 'Medical Officer';
+    const prescriptionId = `RX-${prescription.id.slice(0, 8).toUpperCase()}`;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Prescription - ${student?.full_name}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Times New Roman', serif; padding: 40px; color: #1a1a1a; line-height: 1.6; }
-          .header { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 24px; }
-          .header h1 { font-size: 20px; color: #1e3a5f; letter-spacing: 1px; }
-          .header h2 { font-size: 16px; color: #1e3a5f; }
-          .header p { font-size: 11px; color: #666; }
-          .header .hc { font-size: 14px; font-weight: 600; color: #0066cc; margin-top: 8px; }
-          .title { text-align: center; margin: 20px 0; font-size: 18px; text-decoration: underline; color: #003366; font-weight: bold; }
-          .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
-          .info-label { font-weight: bold; min-width: 120px; }
-          .section-title { font-weight: bold; color: #003366; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 16px 0 8px; font-size: 14px; text-transform: uppercase; }
-          table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
-          th { background: #f0f4f8; text-align: left; padding: 8px; border: 1px solid #ddd; font-size: 12px; }
-          td { padding: 8px; border: 1px solid #ddd; }
-          .notes { margin-top: 16px; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; }
-          .signature { margin-top: 50px; text-align: right; }
-          .signature .name { font-family: 'Brush Script MT', cursive; font-size: 24px; color: #003366; }
-          .signature .title-text { font-size: 12px; color: #666; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
-          <h2>WARANGAL</h2>
-          <p>(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
-          <div class="hc">HEALTH CENTRE — PRESCRIPTION</div>
+    const bodyHtml = `
+      ${getNitwHeaderHtml('PRESCRIPTION')}
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${student?.full_name}</span>
+        <span><strong>Date:</strong> ${format(new Date(prescription.created_at), 'PPP')}</span>
+      </div>
+      <div class="ref-date">
+        <span><strong>Roll No:</strong> ${student?.roll_number}</span>
+        <span><strong>Program:</strong> ${student?.program}${student?.branch ? ' - ' + student.branch : ''}</span>
+      </div>
+      ${prescription.diagnosis ? `<div class="section-title">Diagnosis</div><p style="font-size:13px;margin-bottom:12px;">${prescription.diagnosis}</p>` : ''}
+      <div class="section-title">Prescribed Medicines</div>
+      <table>
+        <thead><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Timing</th><th>Instructions</th></tr></thead>
+        <tbody>${items.map((item, i) => `<tr><td>${i + 1}</td><td>${item.medicine_name}</td><td>${item.dosage}</td><td>${item.frequency}</td><td>${item.duration}</td><td>${MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '-'}</td><td>${item.instructions || '-'}</td></tr>`).join('')}</tbody>
+      </table>
+      ${prescription.notes ? `<div class="notes-box"><strong>Doctor Notes:</strong> ${prescription.notes}</div>` : ''}
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="emblem-area">
+            <img src="/nitw-emblem.png" alt="NIT Warangal Official Emblem" />
+            <p class="emblem-label">Official Emblem</p>
+          </div>
         </div>
-        <div class="info-row"><span><span class="info-label">Patient:</span> ${student?.full_name}</span><span><span class="info-label">Date:</span> ${format(new Date(prescription.created_at), 'PPP')}</span></div>
-        <div class="info-row"><span><span class="info-label">Roll No:</span> ${student?.roll_number}</span><span><span class="info-label">Program:</span> ${student?.program}${student?.branch ? ' - ' + student.branch : ''}</span></div>
-        ${prescription.diagnosis ? `<div class="section-title">Diagnosis</div><p style="font-size:13px;">${prescription.diagnosis}</p>` : ''}
-        <div class="section-title">Prescribed Medicines</div>
-        <table>
-          <thead><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Timing</th><th>Instructions</th></tr></thead>
-          <tbody>${items.map((item, i) => `<tr><td>${i + 1}</td><td>${item.medicine_name}</td><td>${item.dosage}</td><td>${item.frequency}</td><td>${item.duration}</td><td>${MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '-'}</td><td>${item.instructions || '-'}</td></tr>`).join('')}</tbody>
-        </table>
-        ${prescription.notes ? `<div class="notes"><strong>Doctor Notes:</strong> ${prescription.notes}</div>` : ''}
-        <div class="signature">
-          <div class="name">${doctorName}</div>
-          <div class="title-text">Medical Officer, Health Centre</div>
-          <div class="title-text">NIT Warangal</div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${doctorName}</div>
+          <div class="signature-line">
+            <strong>${doctorName}</strong><br/>
+            ${doctorDesignation}<br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
         </div>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+      </div>
+    `;
+
+    await printDocument({
+      title: `Prescription - ${student?.full_name}`,
+      bodyHtml,
+      documentId: prescriptionId,
+      documentType: 'Prescription',
+    });
   };
 
   if (roleLoading || loading) {

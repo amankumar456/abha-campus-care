@@ -517,9 +517,66 @@ This is a computer-generated document.
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!selectedRecord) return;
-    window.print();
+    const { printDocument, getNitwHeaderHtml } = await import('@/lib/print/printDocument');
+    const docId = `HR-${selectedRecord.id.padStart(4, '0')}`;
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml(selectedRecord.type.toUpperCase())}
+      <div class="doc-title">
+        <h3>${selectedRecord.title.toUpperCase()}</h3>
+        <p class="cert-no">Date: ${format(new Date(selectedRecord.date), 'MMMM d, yyyy')}</p>
+      </div>
+      <div class="info-grid" style="margin-bottom:16px;">
+        <div class="info-item"><span class="info-label">Patient:</span><span>${selectedRecord.student}</span></div>
+        <div class="info-item"><span class="info-label">Roll Number:</span><span>${selectedRecord.studentRoll}</span></div>
+        <div class="info-item"><span class="info-label">Doctor:</span><span>${selectedRecord.doctor}</span></div>
+        <div class="info-item"><span class="info-label">Department:</span><span>${selectedRecord.department}</span></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Summary</div>
+        <p style="font-size:13px;">${selectedRecord.summary}</p>
+      </div>
+      <div class="section">
+        <div class="section-title">Details</div>
+        <ul style="font-size:12px;padding-left:20px;">
+          ${selectedRecord.details.map(d => `<li style="margin-bottom:4px;">${d}</li>`).join('')}
+        </ul>
+      </div>
+      ${selectedRecord.recommendations ? `
+      <div class="section">
+        <div class="section-title">Recommendations</div>
+        <ul style="font-size:12px;padding-left:20px;">
+          ${selectedRecord.recommendations.map(r => `<li style="margin-bottom:4px;">${r}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      ${selectedRecord.validUntil ? `<p style="font-size:12px;margin-top:12px;"><strong>Valid Until:</strong> ${format(new Date(selectedRecord.validUntil), 'MMMM d, yyyy')}</p>` : ''}
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="emblem-area">
+            <img src="/nitw-emblem.png" alt="NIT Warangal" />
+            <p class="emblem-label">Official Emblem</p>
+          </div>
+        </div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${selectedRecord.doctor}</div>
+          <div class="signature-line">
+            <strong>${selectedRecord.doctor}</strong><br/>
+            ${selectedRecord.department}<br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    await printDocument({
+      title: `${selectedRecord.title} - ${selectedRecord.student}`,
+      bodyHtml,
+      documentId: docId,
+      documentType: selectedRecord.type,
+    });
+
     toast.success('Print dialog opened');
   };
 
