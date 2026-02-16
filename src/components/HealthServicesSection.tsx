@@ -415,9 +415,36 @@ Generated on: ${new Date().toLocaleString()}
     toast.success("Document downloaded successfully");
   };
 
-  const handlePrint = () => {
-    window.print();
-    toast.success("Print dialog opened");
+  const handlePrint = async () => {
+    const { printDocument, getNitwHeaderHtml } = await import('@/lib/print/printDocument');
+    const docId = `REC-${record.date.replace(/\s+/g, '')}`;
+    const bodyHtml = `
+      ${getNitwHeaderHtml()}
+      <div class="doc-title"><h3>${record.title}</h3></div>
+      <div class="ref-date"><div><strong>Date:</strong> ${record.date}</div><div><strong>Type:</strong> ${record.type}</div></div>
+      <div class="section">
+        <div class="section-title">Patient Information</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Patient Name:</span><span>${record.studentName}</span></div>
+          <div class="info-item"><span class="info-label">Roll Number:</span><span>${record.rollNumber}</span></div>
+          <div class="info-item"><span class="info-label">Attending Doctor:</span><span>${record.doctor}</span></div>
+          <div class="info-item"><span class="info-label">Department:</span><span>${record.department}</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Clinical Summary</div>
+        <p class="body-text">${record.summary}</p>
+      </div>
+      <div class="section">
+        <div class="section-title">Detailed Findings</div>
+        <div class="info-box"><pre style="white-space:pre-wrap;font-size:12px;font-family:monospace;">${record.details}</pre></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Recommendations</div>
+        <p class="body-text">${record.recommendations}</p>
+      </div>
+    `;
+    await printDocument({ title: record.title, bodyHtml, documentId: docId, documentType: 'Medical Record' });
   };
 
   return (
@@ -559,9 +586,40 @@ Generated on: ${new Date().toLocaleString()}
     toast.success("Certificate downloaded successfully");
   };
 
-  const handlePrint = () => {
-    window.print();
-    toast.success("Print dialog opened");
+  const handlePrint = async () => {
+    const { printDocument, getNitwHeaderHtml } = await import('@/lib/print/printDocument');
+    const docId = cert.certNo.replace(/\//g, '-');
+    const bodyHtml = `
+      ${getNitwHeaderHtml('MEDICAL CERTIFICATE')}
+      <div class="doc-title"><h3>${cert.title}</h3><p class="cert-no">Certificate No: ${cert.certNo}</p></div>
+      <div class="ref-date"><div><strong>Issue Date:</strong> ${cert.date}</div><div><strong>Status:</strong> ${cert.status}</div></div>
+      <div class="section">
+        <div class="section-title">Student Information</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Student Name:</span><span>${cert.studentName}</span></div>
+          <div class="info-item"><span class="info-label">Roll Number:</span><span>${cert.rollNumber}</span></div>
+          <div class="info-item"><span class="info-label">Issuing Doctor:</span><span>${cert.doctor}</span></div>
+          <div class="info-item"><span class="info-label">Department:</span><span>${cert.department}</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Certificate Validity</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Valid From:</span><span>${cert.validFrom}</span></div>
+          <div class="info-item"><span class="info-label">Valid To:</span><span>${cert.validTo}</span></div>
+          <div class="info-item"><span class="info-label">Duration:</span><span>${cert.duration}</span></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Diagnosis / Purpose</div>
+        <p class="body-text">${cert.diagnosis}</p>
+      </div>
+      <div class="section">
+        <div class="section-title">Remarks</div>
+        <div class="info-box">${cert.remarks}</div>
+      </div>
+    `;
+    await printDocument({ title: `${cert.title} - ${cert.certNo}`, bodyHtml, documentId: docId, documentType: 'Medical Certificate' });
   };
 
   return (
