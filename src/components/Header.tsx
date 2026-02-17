@@ -1,9 +1,10 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,26 +33,17 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isDoctor, isMentor, isAdmin, loading: roleLoading } = useUserRole();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    if (!roleLoading) {
       setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    }
+  }, [roleLoading]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -103,7 +95,17 @@ const Header = () => {
   };
 
   const getUserType = () => {
+    if (isDoctor) return 'doctor';
+    if (isMentor) return 'mentor';
+    if (isAdmin) return 'admin';
     return user?.user_metadata?.user_type || 'student';
+  };
+
+  const getDashboardPath = () => {
+    if (isAdmin) return '/admin';
+    if (isDoctor) return '/doctor/dashboard';
+    if (isMentor) return '/mentor/dashboard';
+    return '/health-dashboard';
   };
 
   return (
@@ -188,6 +190,8 @@ const Header = () => {
                     <Button variant="outline" size="sm" className="gap-2">
                       {getUserType() === 'doctor' ? (
                         <Stethoscope className="w-4 h-4" />
+                      ) : getUserType() === 'mentor' ? (
+                        <Users className="w-4 h-4" />
                       ) : (
                         <GraduationCap className="w-4 h-4" />
                       )}
@@ -196,7 +200,7 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
-                      <Link to="/health-dashboard" className="flex items-center gap-2">
+                      <Link to={getDashboardPath()} className="flex items-center gap-2">
                         <User className="w-4 h-4" />
                         My Dashboard
                       </Link>
