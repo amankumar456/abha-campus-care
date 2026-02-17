@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -199,6 +199,23 @@ const Header = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    {isDoctor && (
+                      <>
+                        <div className="px-2 py-1.5">
+                          <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : 'Student'}
+                          </p>
+                        </div>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to={isDoctor ? '/doctor/profile' : getDashboardPath()} className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to={getDashboardPath()} className="flex items-center gap-2">
                         <User className="w-4 h-4" />
@@ -211,6 +228,14 @@ const Header = () => {
                         My Appointments
                       </Link>
                     </DropdownMenuItem>
+                    {isDoctor && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/doctor/profile?tab=settings" className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />
