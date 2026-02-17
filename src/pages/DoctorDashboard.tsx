@@ -182,11 +182,11 @@ export default function DoctorDashboard() {
                     <p className="text-xs text-muted-foreground">{doctorProfile?.designation}</p>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/doctor/profile')}>
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/doctor/profile?tab=settings')}>
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>

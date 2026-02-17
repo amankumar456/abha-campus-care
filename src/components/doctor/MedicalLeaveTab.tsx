@@ -95,6 +95,7 @@ export default function MedicalLeaveTab() {
   const [activeSubTab, setActiveSubTab] = useState("new-referral");
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [referralFilter, setReferralFilter] = useState<"all" | "pending" | "on_leave" | "completed">("all");
 
   // Fetch doctor's referrals
   const { data: referrals, isLoading: referralsLoading, refetch } = useQuery({
@@ -208,24 +209,44 @@ export default function MedicalLeaveTab() {
                 </div>
               </div>
 
-              {/* Quick Stats */}
+              {/* Quick Stats - Clickable Filters */}
               <div className="grid grid-cols-4 gap-3 pt-4">
-                <div className="text-center p-3 rounded-lg bg-muted/50">
+                <button
+                  onClick={() => setReferralFilter("all")}
+                  className={`text-center p-3 rounded-lg transition-all cursor-pointer ${
+                    referralFilter === "all" ? "bg-muted ring-2 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                  }`}
+                >
                   <p className="text-2xl font-bold text-foreground">{stats.total}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-warning/10 border border-warning/20">
+                </button>
+                <button
+                  onClick={() => setReferralFilter("pending")}
+                  className={`text-center p-3 rounded-lg transition-all cursor-pointer ${
+                    referralFilter === "pending" ? "bg-warning/20 ring-2 ring-warning/40 border-warning/30" : "bg-warning/10 border border-warning/20 hover:bg-warning/20"
+                  }`}
+                >
                   <p className="text-2xl font-bold text-warning-foreground">{stats.pending}</p>
                   <p className="text-xs text-muted-foreground">Pending</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-secondary/10 border border-secondary/20">
+                </button>
+                <button
+                  onClick={() => setReferralFilter("on_leave")}
+                  className={`text-center p-3 rounded-lg transition-all cursor-pointer ${
+                    referralFilter === "on_leave" ? "bg-secondary/20 ring-2 ring-secondary/40 border-secondary/30" : "bg-secondary/10 border border-secondary/20 hover:bg-secondary/20"
+                  }`}
+                >
                   <p className="text-2xl font-bold text-secondary-foreground">{stats.onLeave}</p>
                   <p className="text-xs text-muted-foreground">On Leave</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/20">
+                </button>
+                <button
+                  onClick={() => setReferralFilter("completed")}
+                  className={`text-center p-3 rounded-lg transition-all cursor-pointer ${
+                    referralFilter === "completed" ? "bg-primary/15 ring-2 ring-primary/30 border-primary/30" : "bg-primary/5 border border-primary/20 hover:bg-primary/15"
+                  }`}
+                >
                   <p className="text-2xl font-bold text-primary">{stats.completed}</p>
                   <p className="text-xs text-muted-foreground">Completed</p>
-                </div>
+                </button>
               </div>
             </CardHeader>
 
@@ -236,7 +257,14 @@ export default function MedicalLeaveTab() {
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
-              ) : referrals && referrals.length > 0 ? (
+              ) : referrals && referrals.length > 0 ? (() => {
+                const filteredReferrals = referralFilter === "all" ? referrals : referrals.filter(r => {
+                  if (referralFilter === "pending") return ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status);
+                  if (referralFilter === "on_leave") return r.status === "on_leave";
+                  if (referralFilter === "completed") return ["returned", "completed"].includes(r.status);
+                  return true;
+                });
+                return filteredReferrals.length > 0 ? (
                 <div className="rounded-md border overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -250,7 +278,7 @@ export default function MedicalLeaveTab() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {referrals.map((request) => {
+                      {filteredReferrals.map((request) => {
                         const statusConfig = getStatusConfig(request.status);
                         const StatusIcon = statusConfig.icon;
                         return (
@@ -325,7 +353,21 @@ export default function MedicalLeaveTab() {
                     </TableBody>
                   </Table>
                 </div>
-              ) : (
+                ) : (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <h3 className="text-base font-medium text-foreground">No {referralFilter === "all" ? "" : referralFilter.replace("_", " ")} referrals</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {referralFilter !== "all" ? "Try selecting a different filter" : "Create a new referral to get started"}
+                    </p>
+                    {referralFilter !== "all" && (
+                      <Button variant="outline" size="sm" className="mt-3" onClick={() => setReferralFilter("all")}>
+                        Show All
+                      </Button>
+                    )}
+                  </div>
+                );
+              })() : (
                 <div className="text-center py-12">
                   <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-foreground">No referrals yet</h3>

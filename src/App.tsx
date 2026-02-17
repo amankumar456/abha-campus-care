@@ -8,6 +8,7 @@ import StudentRegistration from "./pages/StudentRegistration";
 import DoctorRegistration from "./pages/DoctorRegistration";
 import MentorRegistration from "./pages/MentorRegistration";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import DoctorProfile from "./pages/DoctorProfile";
 import MedicalTeam from "./pages/MedicalTeam";
 import Appointments from "./pages/Appointments";
 import MyAppointments from "./pages/MyAppointments";
@@ -49,6 +50,9 @@ const App = () => (
           } />
           <Route path="/doctor/dashboard" element={
             <ProtectedRoute><DoctorDashboard /></ProtectedRoute>
+          } />
+          <Route path="/doctor/profile" element={
+            <ProtectedRoute><DoctorProfile /></ProtectedRoute>
           } />
           <Route path="/appointments" element={
             <ProtectedRoute><Appointments /></ProtectedRoute>
