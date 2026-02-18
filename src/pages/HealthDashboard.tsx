@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import StudentProfileCard from '@/components/profile/StudentProfileCard';
 import HealthRecordsSection from '@/components/health/HealthRecordsSection';
 import StudentMedicalLeaveSection from '@/components/medical-leave/StudentMedicalLeaveSection';
 
@@ -541,40 +540,58 @@ const HealthDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="max-w-7xl mx-auto p-8 space-y-8">
-          {/* Welcome Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-6">
+
+          {/* Welcome Banner */}
+          <div className="rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Welcome, {getUserDisplayName()}!</h1>
-              <p className="text-muted-foreground mt-1">
-                Your personal health dashboard
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                Welcome back, {getUserDisplayName()}! 👋
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Your personal health dashboard — stay on top of your wellbeing.
               </p>
+              {studentProfile && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {studentProfile.rollNumber} · {studentProfile.program}
+                  {studentProfile.branch ? ` · ${studentProfile.branch}` : ''}
+                  {studentProfile.yearOfStudy ? ` · Year ${studentProfile.yearOfStudy}` : ''}
+                </p>
+              )}
             </div>
-            <Button asChild>
-              <Link to="/appointments">
-                <CalendarCheck className="h-4 w-4 mr-2" />
-                Book Appointment
-              </Link>
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/student/profile">
+                  <User className="h-4 w-4 mr-1" />
+                  My Profile
+                </Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/appointments">
+                  <CalendarCheck className="h-4 w-4 mr-2" />
+                  Book Appointment
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          {/* Quick Stats for Students */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/my-appointments')}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
+                <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
                 <Calendar className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{studentAppointments.length}</div>
-                <p className="text-xs text-muted-foreground">Scheduled visits</p>
+                <p className="text-xs text-muted-foreground">Appointments</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Total Visits</CardTitle>
-                <Heart className="h-4 w-4 text-red-500" />
+                <Heart className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{studentHealthStats?.totalVisits || 0}</div>
@@ -582,30 +599,21 @@ const HealthDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card 
-              className="hover:shadow-md transition-shadow cursor-pointer" 
-              onClick={() => {
-                navigate('/');
-                setTimeout(() => {
-                  const element = document.getElementById('health-services');
-                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-              }}
-            >
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Health Records</CardTitle>
-                <FileText className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                <Activity className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{studentVisits.length}</div>
-                <p className="text-xs text-muted-foreground">Documents available</p>
+                <div className="text-2xl font-bold">{studentHealthStats?.thisMonthVisits || 0}</div>
+                <p className="text-xs text-muted-foreground">Health visits</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Next Appointment</CardTitle>
-                <Clock className="h-4 w-4 text-green-500" />
+                <Clock className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 {studentAppointments.length > 0 ? (
@@ -615,140 +623,125 @@ const HealthDashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {formatTime(studentAppointments[0].appointment_time)}
-                      {studentAppointments[0].doctor_name ? ` - ${studentAppointments[0].doctor_name}` : ''}
                     </p>
                   </>
                 ) : (
                   <>
                     <div className="text-lg font-bold text-muted-foreground">—</div>
-                    <p className="text-xs text-muted-foreground">No upcoming</p>
+                    <p className="text-xs text-muted-foreground">None scheduled</p>
                   </>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* My Profile Card */}
-            <div className="lg:col-span-1">
-              {studentProfile ? (
-                <StudentProfileCard 
-                  profile={studentProfile}
-                  healthStats={studentHealthStats}
-                />
-              ) : (
-                <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <User className="w-5 h-5 text-primary" />
-                      My Profile
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">Complete your profile to see your details here</p>
-                    <Button asChild>
-                      <Link to="/student/register">Complete Profile</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+          {/* Pending follow-up alert */}
+          {studentHealthStats?.pendingFollowups > 0 && (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                You have <strong>{studentHealthStats.pendingFollowups} pending follow-up(s)</strong>. Please schedule a follow-up visit at the Health Centre.
+              </p>
+              <Button size="sm" variant="outline" className="ml-auto" asChild>
+                <Link to="/appointments">Book Now</Link>
+              </Button>
             </div>
+          )}
 
-            {/* Right Column - Appointments & Visits */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Upcoming Appointments */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <CalendarCheck className="h-5 w-5 text-primary" />
-                        Upcoming Appointments
-                      </CardTitle>
-                      <CardDescription>Your scheduled visits</CardDescription>
-                    </div>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to="/my-appointments">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+          {/* Main Content - Full width, 2 columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upcoming Appointments */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <CalendarCheck className="h-5 w-5 text-primary" />
+                      Upcoming Appointments
+                    </CardTitle>
+                    <CardDescription>Your scheduled visits</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/my-appointments">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {studentAppointments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CalendarCheck className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No upcoming appointments</p>
+                    <Button variant="link" asChild className="mt-2 text-xs">
+                      <Link to="/appointments">Book one now →</Link>
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {studentAppointments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No upcoming appointments</p>
-                      <Button variant="link" asChild className="mt-2">
-                        <Link to="/appointments">Book one now</Link>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {studentAppointments.map((apt) => (
-                        <div key={apt.id} className="flex items-center justify-between p-4 rounded-lg border">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Stethoscope className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{apt.doctor_name || 'Doctor'}</p>
-                              <p className="text-sm text-muted-foreground">{apt.reason || 'General Consultation'}</p>
-                            </div>
+                ) : (
+                  <div className="space-y-3">
+                    {studentAppointments.map((apt) => (
+                      <div key={apt.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Stethoscope className="h-5 w-5 text-primary" />
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium">{format(new Date(apt.appointment_date), 'MMM d, yyyy')}</p>
-                            <p className="text-sm text-muted-foreground">{formatTime(apt.appointment_time)}</p>
-                            <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1">
-                              {apt.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Recent Visit History */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5 text-primary" />
-                    Recent Visit History
-                  </CardTitle>
-                  <CardDescription>Your past health centre visits</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {studentVisits.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No visit history yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {studentVisits.map((visit) => (
-                        <div key={visit.id} className="flex items-center justify-between p-4 rounded-lg border">
                           <div>
-                            <p className="font-medium">
-                              {visit.reason_notes || formatReasonCategory(visit.reason_category)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{visit.doctor_name || 'Health Centre'}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
-                            {visit.prescription && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <Pill className="h-3 w-3" />
-                                {visit.prescription.length > 40 ? visit.prescription.slice(0, 40) + '...' : visit.prescription}
-                              </div>
-                            )}
+                            <p className="font-medium text-sm">{apt.doctor_name || 'Doctor'}</p>
+                            <p className="text-xs text-muted-foreground">{apt.reason || 'General Consultation'}</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm">{format(new Date(apt.appointment_date), 'MMM d')}</p>
+                          <p className="text-xs text-muted-foreground">{formatTime(apt.appointment_time)}</p>
+                          <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1 text-xs">
+                            {apt.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Visit History */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" />
+                  Recent Visit History
+                </CardTitle>
+                <CardDescription>Your past health centre visits</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {studentVisits.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No visit history yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {studentVisits.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {visit.reason_notes || formatReasonCategory(visit.reason_category)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{visit.doctor_name || 'Health Centre'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                          {visit.prescription && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <Pill className="h-3 w-3" />
+                              <span className="max-w-[100px] truncate">{visit.prescription}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Medical Leave Section */}
@@ -757,33 +750,32 @@ const HealthDashboard = () => {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks you can do</CardDescription>
+              <CardTitle className="text-base">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
                   <Link to="/appointments">
-                    <CalendarCheck className="h-6 w-6" />
-                    <span>Book Appointment</span>
+                    <CalendarCheck className="h-5 w-5" />
+                    Book Appointment
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
                   <Link to="/my-appointments">
-                    <Calendar className="h-6 w-6" />
-                    <span>My Appointments</span>
+                    <Calendar className="h-5 w-5" />
+                    My Appointments
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
-                  <Link to="/medical-team">
-                    <Stethoscope className="h-6 w-6" />
-                    <span>Medical Team</span>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
+                  <Link to="/medical-leave">
+                    <FileText className="h-5 w-5" />
+                    Medical Leave
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2" asChild>
-                  <Link to="/student/register">
-                    <User className="h-6 w-6" />
-                    <span>Update Profile</span>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
+                  <Link to="/student/profile">
+                    <User className="h-5 w-5" />
+                    My Profile
                   </Link>
                 </Button>
               </div>
