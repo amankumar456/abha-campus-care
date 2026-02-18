@@ -211,7 +211,12 @@ const Header = () => {
                       </>
                     )}
                     <DropdownMenuItem asChild>
-                      <Link to={isDoctor ? '/doctor/profile' : getDashboardPath()} className="flex items-center gap-2">
+                      <Link to={
+                        isDoctor ? '/doctor/profile' : 
+                        isMentor ? '/mentor/profile' :
+                        isAdmin ? '/admin' :
+                        '/student/profile'
+                      } className="flex items-center gap-2">
                         <User className="w-4 h-4" />
                         Profile
                       </Link>
@@ -228,14 +233,16 @@ const Header = () => {
                         My Appointments
                       </Link>
                     </DropdownMenuItem>
-                    {isDoctor && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/doctor/profile?tab=settings" className="flex items-center gap-2">
-                          <Settings className="w-4 h-4" />
-                          Settings
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to={
+                        isDoctor ? '/doctor/profile?tab=settings' :
+                        isMentor ? '/mentor/profile?tab=settings' :
+                        '/student/profile?tab=settings'
+                      } className="flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />

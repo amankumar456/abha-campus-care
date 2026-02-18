@@ -9,6 +9,7 @@ import DoctorRegistration from "./pages/DoctorRegistration";
 import MentorRegistration from "./pages/MentorRegistration";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorProfile from "./pages/DoctorProfile";
+import StudentProfilePage from "./pages/StudentProfilePage";
 import MedicalTeam from "./pages/MedicalTeam";
 import Appointments from "./pages/Appointments";
 import MyAppointments from "./pages/MyAppointments";
@@ -44,6 +45,9 @@ const App = () => (
           {/* Protected Routes - Require Login */}
           <Route path="/student/register" element={
             <ProtectedRoute><StudentRegistration /></ProtectedRoute>
+          } />
+          <Route path="/student/profile" element={
+            <ProtectedRoute><StudentProfilePage /></ProtectedRoute>
           } />
           <Route path="/doctor/register" element={
             <ProtectedRoute><DoctorRegistration /></ProtectedRoute>
