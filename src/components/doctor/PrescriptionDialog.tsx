@@ -12,6 +12,7 @@ import {
   Stethoscope,
   FileText,
   CheckCircle2,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 
 interface MedicineItem {
   id: string;
@@ -195,6 +197,112 @@ export default function PrescriptionDialog({
     setDiagnosis("");
     setNotes("");
     setMedicines([createEmptyMedicine()]);
+  };
+
+  const handlePrintPreview = async () => {
+    const validMedicines = medicines.filter((m) => m.medicine_name.trim() && m.dosage.trim());
+    const prescriptionId = crypto.randomUUID();
+    const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+
+    const mealLabel = (val: string) =>
+      ({ before_meal: "Before Meal", after_meal: "After Meal", with_meal: "With Meal", empty_stomach: "Empty Stomach", any_time: "Any Time", bedtime: "At Bedtime" }[val] ?? val);
+
+    const medicinesRows = validMedicines.length > 0
+      ? validMedicines.map((m, i) => `
+          <tr>
+            <td style="text-align:center">${i + 1}</td>
+            <td><strong>${m.medicine_name}</strong></td>
+            <td>${m.dosage}</td>
+            <td>${m.frequency}</td>
+            <td>${m.duration}</td>
+            <td>${mealLabel(m.meal_timing)}</td>
+            <td>${m.instructions || "—"}</td>
+          </tr>`).join("")
+      : `<tr><td colspan="7" style="text-align:center;color:#888;">No medicines prescribed</td></tr>`;
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml("OUTPATIENT PRESCRIPTION")}
+
+      <div class="doc-title">
+        <h3>MEDICAL PRESCRIPTION</h3>
+        <div class="cert-no">Prescription No.: RX-${prescriptionId.slice(0, 8).toUpperCase()} &nbsp;|&nbsp; Date: ${today}</div>
+      </div>
+
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${studentName}</span>
+        <span><strong>Type:</strong> OPD Visit</span>
+      </div>
+
+      ${diagnosis ? `
+      <div class="section">
+        <div class="section-title">Diagnosis / Clinical Notes</div>
+        <div class="info-box" style="background:#f0f7ff;border-color:#cce0ff;">
+          ${diagnosis}
+        </div>
+      </div>` : ""}
+
+      <div class="section">
+        <div class="section-title">Prescribed Medicines (Rx)</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px">#</th>
+              <th>Medicine</th>
+              <th>Dosage</th>
+              <th>Frequency</th>
+              <th>Duration</th>
+              <th>Meal Timing</th>
+              <th>Special Instructions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${medicinesRows}
+          </tbody>
+        </table>
+      </div>
+
+      ${notes ? `
+      <div class="notes-box">
+        <strong>Doctor's Notes:</strong> ${notes}
+      </div>` : ""}
+
+      <div class="section" style="margin-top:16px;">
+        <div class="section-title">Important Instructions</div>
+        <ul style="font-size:11px;color:#444;padding-left:18px;line-height:1.8">
+          <li>Complete the full course of medication even if you feel better.</li>
+          <li>Do not share medicines with others or self-medicate.</li>
+          <li>Report any adverse reactions to the Health Centre immediately.</li>
+          <li>Return for follow-up if symptoms persist beyond the prescription duration.</li>
+        </ul>
+      </div>
+
+      <div class="signature-section">
+        <div class="emblem-area">
+          <img src="/nitw-emblem.png" alt="NITW Emblem" />
+          <div class="emblem-label">NIT Warangal</div>
+        </div>
+        <div class="signature-box">
+          <div class="online-signature">Medical Officer</div>
+          <div class="signature-line">
+            <strong>Medical Officer</strong>
+            <div class="doctor-type">NIT Warangal Health Centre</div>
+            <div class="doctor-type">Reg. No.: As per records</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-footer">
+        <p>This prescription is valid for 30 days from the date of issue.</p>
+        <p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p>
+      </div>
+    `;
+
+    await printDocument({
+      title: `Prescription — ${studentName}`,
+      bodyHtml,
+      documentId: prescriptionId,
+      documentType: "PRESCRIPTION",
+    });
   };
 
   const handleSubmit = () => {
@@ -422,14 +530,25 @@ export default function PrescriptionDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button
-            variant="ghost"
-            onClick={handleSkipPrescription}
-            className="text-muted-foreground"
-          >
-            Skip & Complete
-          </Button>
+        <DialogFooter className="flex-col sm:flex-row gap-2 items-center justify-between w-full">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleSkipPrescription}
+              className="text-muted-foreground"
+            >
+              Skip & Complete
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePrintPreview}
+              className="gap-1.5"
+              type="button"
+            >
+              <Printer className="h-4 w-4" />
+              Print Preview
+            </Button>
+          </div>
           <Button
             onClick={handleSubmit}
             disabled={completeMutation.isPending}
