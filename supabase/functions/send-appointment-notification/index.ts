@@ -94,12 +94,12 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Fetch student details
+    // Fetch student details - patient_id is the auth user_id, not the student table id
     const { data: student, error: studentError } = await supabase
       .from("students")
       .select("id, full_name, email, roll_number, program, branch")
-      .eq("id", appointment.patient_id)
-      .single();
+      .eq("user_id", appointment.patient_id)
+      .maybeSingle();
 
     if (studentError || !student || !student.email) {
       console.error("Student not found or missing email:", studentError);
