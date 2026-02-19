@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
-import DoctorProfileCard from "@/components/profile/DoctorProfileCard";
+
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
 import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
@@ -294,20 +294,8 @@ export default function DoctorDashboard() {
                     {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
                   </div>
 
-                  {/* Right Column - Profile & Quick Actions */}
+                  {/* Right Column - Quick Actions */}
                   <div className="space-y-6">
-                    {/* Doctor Profile Card */}
-                    {doctorProfile && (
-                      <DoctorProfileCard 
-                        profile={doctorProfile}
-                        stats={{
-                          todayAppointments: appointmentStats?.todayCount || 0,
-                          pendingApprovals: appointmentStats?.pendingCount || 0,
-                          totalPatients: appointmentStats?.totalPatients || 0
-                        }}
-                      />
-                    )}
-
                     {/* Pending Follow-ups */}
                     <PendingFollowupsList doctorId={doctorId} />
 
