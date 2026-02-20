@@ -353,23 +353,25 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
                 </>
               )}
 
-              {/* Confirmed appointments: Show Issue Leave and Complete */}
+               {/* Confirmed appointments: Show Issue Leave and Complete */}
               {appointment.status === "confirmed" && (
                 <>
                    <Button
                      variant="outline"
                      size="sm"
+                     className="border-amber-400 text-amber-700 hover:bg-amber-50"
                      onClick={() => setShowLeaveDialog(true)}
                    >
                      <AlertTriangle className="w-4 h-4 mr-1" />
                      Issue Leave
                    </Button>
                    <Button
-                     variant="secondary"
+                     variant="default"
                      size="sm"
                      onClick={() => setShowPrescriptionDialog(true)}
                    >
-                     Complete
+                     <FileText className="w-4 h-4 mr-1" />
+                     Prescribe & Complete
                    </Button>
                 </>
               )}
