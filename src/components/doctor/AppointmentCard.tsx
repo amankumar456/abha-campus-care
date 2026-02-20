@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle, Stethoscope, ClipboardList } from "lucide-react";
+import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MedicalLeaveDialog from "./MedicalLeaveDialog";
 import PrescriptionDialog from "./PrescriptionDialog";
@@ -96,7 +96,6 @@ const getStatusBadge = (status: string) => {
 const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDenyDialog, setShowDenyDialog] = useState(false);
-  const [showMedicalLeavePrompt, setShowMedicalLeavePrompt] = useState(false);
   const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [denialReason, setDenialReason] = useState("");
   const queryClient = useQueryClient();
@@ -132,13 +131,13 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
 
       if (error) throw error;
 
-      // Create in-app notification for the student
+      // Simple approval notification — no leave form link
       const { error: notifError } = await supabase
         .from("notifications")
         .insert({
           user_id: appointment.patient_id,
-          title: "Appointment Approved",
-          message: `Your appointment on ${new Date(appointment.appointment_date).toLocaleDateString()} at ${formatTime(appointment.appointment_time)} has been approved.`,
+          title: "✅ Appointment Approved",
+          message: `Your appointment on ${new Date(appointment.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} at ${formatTime(appointment.appointment_time)} has been approved. Please arrive 10 minutes before your scheduled time.`,
           type: "approved",
           related_appointment_id: appointment.id
         });
@@ -164,8 +163,7 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
         description: "The student has been notified."
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
-      // Show medical leave prompt after approval
-      setShowMedicalLeavePrompt(true);
+      // Do NOT show medical leave prompt — doctor uses the confirmed card buttons for that
     },
     onError: () => {
       toast.error("Failed to approve appointment");
@@ -238,15 +236,8 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
     denyAppointmentMutation.mutate(denialReason);
   };
 
-  const handleMedicalLeaveDecision = (needsLeave: boolean) => {
-    setShowMedicalLeavePrompt(false);
-    if (needsLeave) {
-      setShowLeaveDialog(true);
-    } else {
-      // No leave needed — open prescription dialog immediately
-      setShowPrescriptionDialog(true);
-    }
-  };
+
+
 
   const student = appointment.student;
 
@@ -425,70 +416,6 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
         </DialogContent>
       </Dialog>
 
-      {/* Medical Leave Prompt Dialog — two clear paths */}
-      <Dialog open={showMedicalLeavePrompt} onOpenChange={setShowMedicalLeavePrompt}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              Appointment Approved — Next Step
-            </DialogTitle>
-            <DialogDescription className="text-sm mt-1">
-              <span className="font-medium text-foreground">{student?.full_name || "The student"}</span>'s appointment is confirmed.
-              Does this patient require <strong>medical leave</strong> or just a <strong>prescription</strong>?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            {/* Path 1 — No Leave, Prescribe */}
-            <button
-              onClick={() => handleMedicalLeaveDecision(false)}
-              className="group flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <Stethoscope className="w-6 h-6 text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground">No Leave Needed</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Issue a prescription / treatment plan for the patient
-                </p>
-              </div>
-              <Badge variant="outline" className="text-xs border-primary text-primary">
-                Open Prescription →
-              </Badge>
-            </button>
-
-            {/* Path 2 — Issue Medical Leave */}
-            <button
-              onClick={() => handleMedicalLeaveDecision(true)}
-              className="group flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all text-left"
-            >
-              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-amber-900/50 transition-colors">
-                <AlertTriangle className="w-6 h-6 text-amber-600" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground">Issue Medical Leave</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Refer the student for off-campus hospital treatment
-                </p>
-              </div>
-              <Badge variant="outline" className="text-xs border-amber-500 text-amber-700">
-                Open Leave Referral →
-              </Badge>
-            </button>
-          </div>
-
-          <div className="mt-3 pt-3 border-t">
-            <button
-              onClick={() => setShowMedicalLeavePrompt(false)}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
-            >
-              Skip for now — decide later from the appointment card
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Medical Leave Dialog */}
       {student && (
