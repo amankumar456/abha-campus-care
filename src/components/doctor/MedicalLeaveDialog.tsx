@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getMentorUserId } from "@/lib/notifications/medical-leave-notifications";
 import {
   Dialog,
   DialogContent,
@@ -86,18 +87,20 @@ const MedicalLeaveDialog = ({
 
       const doctorName = doctorData?.name || "The doctor";
 
-      // Fetch the student's user_id for the notification
+      // Fetch the student's user_id and mentor_id for notifications
       const { data: studentUser } = await supabase
         .from("students")
-        .select("user_id")
+        .select("user_id, mentor_id")
         .eq("id", student.id)
         .maybeSingle();
 
+      const hospital = referralHospital || "NIT Warangal Health Centre";
+
       // Create medical leave request with auto-filled student data
-      const { error } = await supabase.from("medical_leave_requests").insert({
+      const { data: leaveData, error } = await supabase.from("medical_leave_requests").insert({
         student_id: student.id,
         referring_doctor_id: doctorId,
-        referral_hospital: referralHospital || "NIT Warangal Health Centre",
+        referral_hospital: hospital,
         expected_duration: `${days} days`,
         rest_days: days,
         doctor_notes: doctorNotes || null,
@@ -107,25 +110,38 @@ const MedicalLeaveDialog = ({
         approval_date: new Date().toISOString(),
         health_priority: selectedPriority,
         appointment_id: appointmentId,
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
-      // Update appointment status
+      // Update appointment status to completed
       await supabase
         .from("appointments")
         .update({ status: "completed" })
         .eq("id", appointmentId);
 
-      // Send targeted notification to student about the leave grant
+      // 1. Notify student — actionable message to fill departure form
       if (studentUser?.user_id) {
-        const hospital = referralHospital || "NIT Warangal Health Centre";
         await supabase.from("notifications").insert({
           user_id: studentUser.user_id,
           title: "📋 Medical Leave Granted",
-          message: `${doctorName} has marked medical leave for ${days} day${days > 1 ? "s" : ""} and referred you to ${hospital}. Please fill the departure form before leaving the health centre. Your referral letter is available in the Medical Leave section.`,
+          message: `${doctorName} has marked medical leave for ${days} day${days > 1 ? "s" : ""}. You have been referred to ${hospital}. ⚠️ Please fill the departure form before leaving the health centre. Open Medical Leave section to complete your form.`,
           type: "medical_leave_referral",
+          related_appointment_id: appointmentId,
         });
+      }
+
+      // 2. Notify mentor about student's medical leave
+      if (studentUser?.mentor_id) {
+        const mentorUserId = await getMentorUserId(studentUser.mentor_id);
+        if (mentorUserId) {
+          await supabase.from("notifications").insert({
+            user_id: mentorUserId,
+            title: "🏥 Mentee Medical Leave",
+            message: `Your mentee ${student.full_name} (${student.roll_number}) has been granted medical leave for ${days} day${days > 1 ? "s" : ""} by ${doctorName}. They are referred to ${hospital}.`,
+            type: "mentee_leave_on_leave",
+          });
+        }
       }
     },
     onSuccess: () => {

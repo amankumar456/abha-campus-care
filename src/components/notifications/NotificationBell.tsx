@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, FileText, Stethoscope, ArrowRight } from "lucide-react";
+import { Bell, Stethoscope, ArrowRight, CheckCircle2, XCircle, Calendar, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -112,29 +112,54 @@ const NotificationBell = () => {
   const getTypeStyles = (type: string) => {
     switch (type) {
       case 'approved':
-        return 'border-l-green-500 bg-green-50';
+        return 'border-l-green-500 bg-green-50 dark:bg-green-950/20';
       case 'rejected':
-        return 'border-l-red-500 bg-red-50';
+        return 'border-l-red-500 bg-red-50 dark:bg-red-950/20';
       case 'rescheduled':
-        return 'border-l-yellow-500 bg-yellow-50';
-      // Medical Leave notifications
+        return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20';
       case 'medical_leave_referral':
-        return 'border-l-purple-500 bg-purple-50';
+        return 'border-l-purple-500 bg-purple-50 dark:bg-purple-950/20';
       case 'medical_leave_on_leave':
-        return 'border-l-blue-500 bg-blue-50';
+        return 'border-l-blue-500 bg-blue-50 dark:bg-blue-950/20';
       case 'medical_leave_returned':
-        return 'border-l-green-500 bg-green-50';
+        return 'border-l-green-500 bg-green-50 dark:bg-green-950/20';
       case 'mentee_leave_on_leave':
-        return 'border-l-orange-500 bg-orange-50';
+        return 'border-l-orange-500 bg-orange-50 dark:bg-orange-950/20';
       case 'mentee_leave_returned':
-        return 'border-l-teal-500 bg-teal-50';
+        return 'border-l-teal-500 bg-teal-50 dark:bg-teal-950/20';
       case 'referral_on_leave':
-        return 'border-l-indigo-500 bg-indigo-50';
+        return 'border-l-indigo-500 bg-indigo-50 dark:bg-indigo-950/20';
       case 'referral_returned':
-        return 'border-l-emerald-500 bg-emerald-50';
+        return 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20';
       default:
-        return 'border-l-blue-500 bg-blue-50';
+        return 'border-l-primary bg-primary/5';
     }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'approved': return <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />;
+      case 'rejected': return <XCircle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />;
+      case 'rescheduled': return <Calendar className="h-3.5 w-3.5 text-yellow-600 flex-shrink-0" />;
+      case 'medical_leave_referral':
+      case 'medical_leave_on_leave':
+      case 'medical_leave_returned':
+      case 'mentee_leave_on_leave':
+      case 'mentee_leave_returned':
+      case 'referral_on_leave':
+      case 'referral_returned':
+        return <Stethoscope className="h-3.5 w-3.5 text-primary flex-shrink-0" />;
+      default:
+        return <Bell className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />;
+    }
+  };
+
+  const getActionLabel = (type: string) => {
+    if (type.startsWith('medical_leave_') || type.startsWith('mentee_leave_') || type.startsWith('referral_')) {
+      return 'Open Medical Leave';
+    }
+    if (type === 'approved' || type === 'rejected') return 'View My Appointments';
+    return null;
   };
 
   if (!userId) return null;
@@ -176,57 +201,60 @@ const NotificationBell = () => {
               <p>No notifications yet</p>
             </div>
           ) : (
-            <div className="divide-y">
-                {notifications.map((notification) => {
-                  const isMedicalLeave = notification.type.startsWith('medical_leave_') || 
-                    notification.type.startsWith('mentee_leave_') || 
-                    notification.type.startsWith('referral_');
-                  
-                  return (
-                    <div
-                      key={notification.id}
-                      className={cn(
-                        "p-4 border-l-4 cursor-pointer transition-colors hover:bg-muted/50",
-                        getTypeStyles(notification.type),
-                        !notification.read && "font-medium"
-                      )}
-                      onClick={() => {
-                        if (!notification.read) {
-                          markAsReadMutation.mutate(notification.id);
-                        }
-                        if (isMedicalLeave || notification.type === 'approved') {
-                          setOpen(false);
-                          navigate("/medical-leave");
-                        }
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            {isMedicalLeave && <Stethoscope className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
-                            <p className="text-sm font-medium truncate">{notification.title}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {notification.message}
-                          </p>
-                          {isMedicalLeave && (
-                            <p className="text-xs text-primary mt-1.5 flex items-center gap-1 font-medium">
-                              <ArrowRight className="h-3 w-3" />
-                              Open Medical Leave
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                          </p>
+          <div className="divide-y">
+              {notifications.map((notification) => {
+                const isMedicalLeave = notification.type.startsWith('medical_leave_') || 
+                  notification.type.startsWith('mentee_leave_') || 
+                  notification.type.startsWith('referral_');
+                const actionLabel = getActionLabel(notification.type);
+                
+                return (
+                  <div
+                    key={notification.id}
+                    className={cn(
+                      "p-4 border-l-4 cursor-pointer transition-colors hover:bg-muted/50",
+                      getTypeStyles(notification.type),
+                      !notification.read && "font-medium"
+                    )}
+                    onClick={() => {
+                      if (!notification.read) {
+                        markAsReadMutation.mutate(notification.id);
+                      }
+                      setOpen(false);
+                      if (isMedicalLeave) {
+                        navigate("/medical-leave");
+                      } else if (notification.type === 'approved' || notification.type === 'rejected') {
+                        navigate("/my-appointments");
+                      }
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          {getNotificationIcon(notification.type)}
+                          <p className="text-sm font-medium truncate">{notification.title}</p>
                         </div>
-                        {!notification.read && (
-                          <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        {actionLabel && (
+                          <p className="text-xs text-primary mt-1.5 flex items-center gap-1 font-medium">
+                            <ArrowRight className="h-3 w-3" />
+                            {actionLabel}
+                          </p>
                         )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
                       </div>
+                      {!notification.read && (
+                        <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
+                      )}
                     </div>
-                  );
-                })}
-            </div>
+                  </div>
+                );
+              })}
+          </div>
           )}
         </ScrollArea>
       </PopoverContent>
