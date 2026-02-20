@@ -77,6 +77,22 @@ const MedicalLeaveDialog = ({
         throw new Error("Please enter valid number of rest days");
       }
 
+      // Fetch the current doctor's name for the notification
+      const { data: doctorData } = await supabase
+        .from("medical_officers")
+        .select("name")
+        .eq("id", doctorId)
+        .maybeSingle();
+
+      const doctorName = doctorData?.name || "The doctor";
+
+      // Fetch the student's user_id for the notification
+      const { data: studentUser } = await supabase
+        .from("students")
+        .select("user_id")
+        .eq("id", student.id)
+        .maybeSingle();
+
       // Create medical leave request with auto-filled student data
       const { error } = await supabase.from("medical_leave_requests").insert({
         student_id: student.id,
@@ -100,10 +116,21 @@ const MedicalLeaveDialog = ({
         .from("appointments")
         .update({ status: "completed" })
         .eq("id", appointmentId);
+
+      // Send targeted notification to student about the leave grant
+      if (studentUser?.user_id) {
+        const hospital = referralHospital || "NIT Warangal Health Centre";
+        await supabase.from("notifications").insert({
+          user_id: studentUser.user_id,
+          title: "📋 Medical Leave Granted",
+          message: `${doctorName} has marked medical leave for ${days} day${days > 1 ? "s" : ""} and referred you to ${hospital}. Please fill the departure form before leaving the health centre. Your referral letter is available in the Medical Leave section.`,
+          type: "medical_leave_referral",
+        });
+      }
     },
     onSuccess: () => {
       toast.success("Medical leave approved", {
-        description: `Leave letter generated for ${student.full_name}. Student will be notified.`,
+        description: `Leave letter generated for ${student.full_name}. Student has been notified to fill the form.`,
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["medical-leave-requests"] });
