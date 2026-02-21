@@ -146,9 +146,23 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
   };
 
   const all = leaveStudents || [];
-  const highPriority = all.filter((s) => s.health_priority === "high");
-  const mediumLow = all.filter((s) => s.health_priority !== "high");
-  const onLeave = all.filter((s) => s.status === "on_leave");
+
+  // Sort helper: closest return date to today first, nulls last
+  const sortByReturnDate = (a: MedicalLeaveStudent, b: MedicalLeaveStudent) => {
+    const today = new Date();
+    const dateA = a.expected_return_date ? Math.abs(differenceInDays(parseISO(a.expected_return_date), today)) : Infinity;
+    const dateB = b.expected_return_date ? Math.abs(differenceInDays(parseISO(b.expected_return_date), today)) : Infinity;
+    return dateA - dateB;
+  };
+
+  // High priority: only active leave cases (exclude returned & cleared)
+  const highPriority = all
+    .filter((s) => s.health_priority === "high" && s.status !== "returned" && s.doctor_clearance !== true)
+    .sort(sortByReturnDate);
+  const mediumLow = all
+    .filter((s) => s.health_priority !== "high" && s.status !== "returned" && s.doctor_clearance !== true)
+    .sort(sortByReturnDate);
+  const onLeave = all.filter((s) => s.status === "on_leave").sort(sortByReturnDate);
   const cleared = all.filter((s) => s.doctor_clearance === true);
 
   const counts = {
