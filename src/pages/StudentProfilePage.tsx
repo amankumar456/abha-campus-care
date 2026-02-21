@@ -17,10 +17,11 @@ import {
 import {
   User, Mail, Phone, GraduationCap, Building2, Calendar, Users,
   Activity, AlertCircle, Settings, Bell, Shield, Heart,
-  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText
+  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { printDocument, getNitwHeaderHtml } from '@/lib/print/printDocument';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfileCompletionIndicator from '@/components/profile/ProfileCompletionIndicator';
@@ -56,6 +57,32 @@ interface StudentHealthProfile {
   covid_vaccination_status: string | null;
 }
 
+interface PrescriptionItem {
+  id: string;
+  medicine_name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string | null;
+  meal_timing: string | null;
+}
+
+interface StudentPrescription {
+  id: string;
+  created_at: string;
+  diagnosis: string | null;
+  notes: string | null;
+  prescription_items: PrescriptionItem[];
+}
+
+const MEAL_LABELS: Record<string, string> = {
+  before_meal: 'Before Meal',
+  after_meal: 'After Meal',
+  with_meal: 'With Meal',
+  empty_stomach: 'Empty Stomach',
+  any_time: 'Any Time',
+  bedtime: 'At Bedtime',
+};
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -66,6 +93,7 @@ export default function StudentProfilePage() {
   const [student, setStudent] = useState<StudentData | null>(null);
   const [healthProfile, setHealthProfile] = useState<StudentHealthProfile | null>(null);
   const [healthStats, setHealthStats] = useState({ totalVisits: 0, thisMonthVisits: 0, pendingFollowups: 0, lastVisitDate: null as string | null });
+  const [prescriptions, setPrescriptions] = useState<StudentPrescription[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit state
@@ -107,12 +135,17 @@ export default function StudentProfilePage() {
         setEditPhone(studentData.phone || '');
         setEditEmail(studentData.email || '');
 
-        const [profileRes, visitsRes] = await Promise.all([
+        const [profileRes, visitsRes, prescriptionsRes] = await Promise.all([
           supabase.from('student_profiles').select('*').eq('student_id', studentData.id).maybeSingle(),
           supabase.from('health_visits').select('id, visit_date, follow_up_required').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
+          supabase.from('prescriptions')
+            .select(`id, created_at, diagnosis, notes, prescription_items ( id, medicine_name, dosage, frequency, duration, instructions, meal_timing )`)
+            .eq('student_id', user!.id)
+            .order('created_at', { ascending: false }),
         ]);
 
         setHealthProfile(profileRes.data as StudentHealthProfile | null);
+        setPrescriptions((prescriptionsRes.data as unknown as StudentPrescription[]) || []);
 
         const visits = visitsRes.data || [];
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -148,6 +181,34 @@ export default function StudentProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePrintStudentPrescription = async (rx: StudentPrescription) => {
+    const items = rx.prescription_items || [];
+    const prescriptionId = `RX-${rx.id.slice(0, 8).toUpperCase()}`;
+    const dateStr = format(new Date(rx.created_at), 'PPP');
+
+    const medicinesRows = items.length > 0
+      ? items.map((m, i) => `<tr><td style="text-align:center">${i + 1}</td><td><strong>${m.medicine_name}</strong></td><td>${m.dosage}</td><td>${m.frequency}</td><td>${m.duration}</td><td>${MEAL_LABELS[m.meal_timing || ''] || m.meal_timing || '-'}</td><td>${m.instructions || '—'}</td></tr>`).join('')
+      : `<tr><td colspan="7" style="text-align:center;color:#888;">No medicines prescribed</td></tr>`;
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml('OUTPATIENT PRESCRIPTION')}
+      <div class="doc-title"><h3>MEDICAL PRESCRIPTION</h3><div class="cert-no">Prescription No.: ${prescriptionId} | Date: ${dateStr}</div></div>
+      <div class="ref-date"><span><strong>Patient:</strong> ${student?.full_name}</span><span><strong>Roll No:</strong> ${student?.roll_number}</span></div>
+      ${rx.diagnosis ? `<div class="section"><div class="section-title">Diagnosis</div><div class="info-box" style="background:#f0f7ff;border-color:#cce0ff;">${rx.diagnosis}</div></div>` : ''}
+      <div class="section"><div class="section-title">Prescribed Medicines (Rx)</div>
+        <table><thead><tr><th style="width:30px">#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Meal Timing</th><th>Instructions</th></tr></thead><tbody>${medicinesRows}</tbody></table>
+      </div>
+      ${rx.notes ? `<div class="notes-box"><strong>Doctor's Notes:</strong> ${rx.notes}</div>` : ''}
+      <div class="section" style="margin-top:16px;"><div class="section-title">Important Instructions</div>
+        <ul style="font-size:11px;color:#444;padding-left:18px;line-height:1.8"><li>Complete the full course of medication even if you feel better.</li><li>Do not share medicines with others or self-medicate.</li><li>Report any adverse reactions to the Health Centre immediately.</li><li>Return for follow-up if symptoms persist beyond the prescription duration.</li></ul>
+      </div>
+      <div class="signature-section"><div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW Emblem" /><div class="emblem-label">NIT Warangal</div></div><div class="signature-box"><div class="online-signature">Medical Officer</div><div class="signature-line"><strong>Medical Officer</strong><div class="doctor-type">NIT Warangal Health Centre</div></div></div></div>
+      <div class="doc-footer"><p>This prescription is valid for 30 days from the date of issue.</p><p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p></div>
+    `;
+
+    await printDocument({ title: `Prescription — ${student?.full_name}`, bodyHtml, documentId: prescriptionId, documentType: 'PRESCRIPTION' });
   };
 
   const profileFields = student ? [
@@ -243,10 +304,14 @@ export default function StudentProfilePage() {
 
         {/* Tabs */}
         <Tabs defaultValue={defaultTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
+            </TabsTrigger>
+            <TabsTrigger value="prescriptions" className="flex items-center gap-2">
+              <Pill className="w-4 h-4" />
+              Prescriptions
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -454,6 +519,90 @@ export default function StudentProfilePage() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* ── PRESCRIPTIONS TAB ── */}
+          <TabsContent value="prescriptions" className="mt-4 space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Pill className="w-4 h-4 text-primary" />
+                  Prescription History
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {prescriptions.length} prescription{prescriptions.length !== 1 ? 's' : ''} on record
+                </p>
+              </CardHeader>
+              <CardContent>
+                {prescriptions.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Pill className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">No prescriptions yet</p>
+                    <p className="text-sm">Prescriptions from your health centre visits will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {prescriptions.map((rx) => (
+                      <div key={rx.id} className="rounded-lg border p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {format(new Date(rx.created_at), 'PPP')}
+                            </p>
+                            {rx.diagnosis && (
+                              <p className="text-sm text-muted-foreground mt-0.5">
+                                <strong>Diagnosis:</strong> {rx.diagnosis}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrintStudentPrescription(rx)}
+                          >
+                            <Printer className="w-3 h-3 mr-1" />
+                            Print
+                          </Button>
+                        </div>
+                        {rx.prescription_items && rx.prescription_items.length > 0 && (
+                          <div className="rounded-md border overflow-hidden">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="bg-muted/50">
+                                  <th className="text-left p-2 font-medium">#</th>
+                                  <th className="text-left p-2 font-medium">Medicine</th>
+                                  <th className="text-left p-2 font-medium">Dosage</th>
+                                  <th className="text-left p-2 font-medium">Frequency</th>
+                                  <th className="text-left p-2 font-medium">Duration</th>
+                                  <th className="text-left p-2 font-medium">Timing</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rx.prescription_items.map((item, i) => (
+                                  <tr key={item.id} className="border-t">
+                                    <td className="p-2 text-muted-foreground">{i + 1}</td>
+                                    <td className="p-2 font-medium">{item.medicine_name}</td>
+                                    <td className="p-2">{item.dosage}</td>
+                                    <td className="p-2">{item.frequency}</td>
+                                    <td className="p-2">{item.duration}</td>
+                                    <td className="p-2">{MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {rx.notes && (
+                          <p className="text-sm text-muted-foreground bg-muted/30 rounded p-2">
+                            <strong>Notes:</strong> {rx.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ── SETTINGS TAB ── */}
