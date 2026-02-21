@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import MenteeCard from "@/components/mentor/MenteeCard";
-import MentorProfileCard from "@/components/mentor/MentorProfileCard";
+// MentorProfileCard removed - profile is now in /mentor/profile page
 import RecentVisitsList from "@/components/mentor/RecentVisitsList";
 import { 
   Users, 
@@ -174,21 +174,12 @@ export default function MentorDashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section & Mentor Profile */}
+        {/* Welcome Section */}
         <div className="mb-8">
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Monitor your mentees' health visits and wellbeing
-              </p>
-            </div>
-            {mentorProfile && (
-              <div className="w-full lg:w-96">
-                <MentorProfileCard profile={mentorProfile} menteeCount={students.length} />
-              </div>
-            )}
-          </div>
+          <h1 className="text-3xl font-bold text-foreground">Mentor Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            {mentorProfile ? `Welcome, ${mentorProfile.name}` : 'Monitor your mentees\' health visits and wellbeing'}
+          </p>
         </div>
 
         {/* Stats Cards */}

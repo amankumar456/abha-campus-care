@@ -199,17 +199,13 @@ const Header = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    {isDoctor && (
-                      <>
-                        <div className="px-2 py-1.5">
-                          <p className="text-sm font-medium">{getUserDisplayName()}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : 'Student'}
-                          </p>
-                        </div>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
+                    <div className="px-2 py-1.5">
+                      <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : 'Student'}
+                      </p>
+                    </div>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to={
                         isDoctor ? '/doctor/profile' : 
