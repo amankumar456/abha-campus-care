@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MedicalLeaveDialog from "./MedicalLeaveDialog";
 import PrescriptionDialog from "./PrescriptionDialog";
@@ -98,8 +98,23 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
   const [showDenyDialog, setShowDenyDialog] = useState(false);
   const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [denialReason, setDenialReason] = useState("");
+  const [showViewPrescription, setShowViewPrescription] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Fetch existing prescription for completed appointments
+  const { data: existingPrescription } = useQuery({
+    queryKey: ["appointment-prescription", appointment.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("prescriptions")
+        .select(`id, created_at, diagnosis, notes, medical_officers:doctor_id ( name, designation ), prescription_items ( id, medicine_name, dosage, frequency, duration, instructions, meal_timing )`)
+        .eq("appointment_id", appointment.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: appointment.status === "completed",
+  });
 
   const updatePriorityMutation = useMutation({
     mutationFn: async (priority: string) => {
@@ -373,9 +388,21 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
                      <FileText className="w-4 h-4 mr-1" />
                      Prescribe & Complete
                    </Button>
-                </>
-              )}
-            </div>
+                 </>
+               )}
+
+               {/* Completed appointments: View Prescription if exists */}
+               {appointment.status === "completed" && existingPrescription && (
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={() => setShowViewPrescription(true)}
+                 >
+                   <Eye className="w-4 h-4 mr-1" />
+                   View Prescription
+                 </Button>
+               )}
+             </div>
           </div>
         </CardContent>
       </Card>
@@ -441,6 +468,79 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
         studentName={student?.full_name || "Student"}
         onCompleted={() => {}}
       />
+
+      {/* View Existing Prescription Dialog */}
+      {existingPrescription && (
+        <Dialog open={showViewPrescription} onOpenChange={setShowViewPrescription}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Prescription — {student?.full_name || "Student"}
+              </DialogTitle>
+              <DialogDescription>
+                Issued on {new Date(existingPrescription.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {existingPrescription.diagnosis && (
+                <div className="p-3 rounded-lg bg-muted/30 border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Diagnosis</p>
+                  <p className="text-sm">{existingPrescription.diagnosis}</p>
+                </div>
+              )}
+              {(existingPrescription as any).prescription_items?.length > 0 && (
+                <div className="rounded-md border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="text-left p-2 font-medium">#</th>
+                        <th className="text-left p-2 font-medium">Medicine</th>
+                        <th className="text-left p-2 font-medium">Dosage</th>
+                        <th className="text-left p-2 font-medium">Frequency</th>
+                        <th className="text-left p-2 font-medium">Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(existingPrescription as any).prescription_items.map((item: any, i: number) => (
+                        <tr key={item.id} className="border-t">
+                          <td className="p-2 text-muted-foreground">{i + 1}</td>
+                          <td className="p-2 font-medium">{item.medicine_name}</td>
+                          <td className="p-2">{item.dosage}</td>
+                          <td className="p-2">{item.frequency}</td>
+                          <td className="p-2">{item.duration}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {existingPrescription.notes && (
+                <div className="p-3 rounded-lg bg-muted/30 border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Doctor's Notes</p>
+                  <p className="text-sm">{existingPrescription.notes}</p>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setShowViewPrescription(false)}>Close</Button>
+                <Button onClick={async () => {
+                  const { printDocument, getNitwHeaderHtml } = await import('@/lib/print/printDocument');
+                  const items = (existingPrescription as any).prescription_items || [];
+                  const doctorName = (existingPrescription as any).medical_officers?.name || 'Medical Officer';
+                  const prescriptionId = `RX-${existingPrescription.id.slice(0, 8).toUpperCase()}`;
+                  const mealLabel = (val: string) => ({ before_meal: 'Before Meal', after_meal: 'After Meal', with_meal: 'With Meal', empty_stomach: 'Empty Stomach', any_time: 'Any Time', bedtime: 'At Bedtime' }[val] ?? val);
+                  const rows = items.map((m: any, i: number) => `<tr><td style="text-align:center">${i + 1}</td><td><strong>${m.medicine_name}</strong></td><td>${m.dosage}</td><td>${m.frequency}</td><td>${m.duration}</td><td>${mealLabel(m.meal_timing || '')}</td><td>${m.instructions || '—'}</td></tr>`).join('');
+                  const bodyHtml = `${getNitwHeaderHtml('PRESCRIPTION')}<div class="ref-date"><span><strong>Patient:</strong> ${student?.full_name}</span><span><strong>Date:</strong> ${new Date(existingPrescription.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>${existingPrescription.diagnosis ? `<div class="section-title">Diagnosis</div><p style="font-size:13px;margin-bottom:12px;">${existingPrescription.diagnosis}</p>` : ''}<div class="section-title">Prescribed Medicines</div><table><thead><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Timing</th><th>Instructions</th></tr></thead><tbody>${rows}</tbody></table>${existingPrescription.notes ? `<div class="notes-box"><strong>Notes:</strong> ${existingPrescription.notes}</div>` : ''}<div class="signature-section"><div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW" /><div class="emblem-label">NIT Warangal</div></div><div class="signature-box"><div class="online-signature">${doctorName}</div><div class="signature-line"><strong>${doctorName}</strong><div class="doctor-type">Health Centre, NIT Warangal</div></div></div></div>`;
+                  await printDocument({ title: `Prescription - ${student?.full_name}`, bodyHtml, documentId: prescriptionId, documentType: 'Prescription' });
+                }}>
+                  <FileText className="w-4 h-4 mr-1" />
+                  Print Prescription
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
