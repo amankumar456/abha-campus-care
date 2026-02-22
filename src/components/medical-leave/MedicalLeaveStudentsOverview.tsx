@@ -162,7 +162,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
   const mediumLow = all
     .filter((s) => s.health_priority !== "high" && s.status !== "returned" && s.doctor_clearance !== true)
     .sort(sortByReturnDate);
-  const onLeave = all.filter((s) => s.status === "on_leave").sort(sortByReturnDate);
+  const onLeave = all.filter((s) => s.status !== "returned" && s.doctor_clearance !== true).sort(sortByReturnDate);
   const cleared = all.filter((s) => s.doctor_clearance === true);
 
   const counts = {
