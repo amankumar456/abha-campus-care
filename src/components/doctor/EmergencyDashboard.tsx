@@ -33,7 +33,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import EmergencyTreatmentLog from "@/components/doctor/EmergencyTreatmentLog";
+import EmergencyHandoverSection from "@/components/doctor/EmergencyHandoverSection";
 
 interface AmbulanceRequest {
   id: string;
@@ -452,100 +455,112 @@ export default function EmergencyDashboard() {
         </div>
       </div>
 
-      {/* Details Dialog */}
+      {/* Details Dialog with Treatment & Handover */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Ambulance className="h-5 w-5 text-primary" />
-              Ambulance Request Details
+              Emergency Case Management
             </DialogTitle>
             <DialogDescription>
-              Complete information about this emergency case
+              Complete case information, treatment log, and handover notes
             </DialogDescription>
           </DialogHeader>
           
           {selectedRequest && (
-            <div className="space-y-4">
-              {/* Patient Info */}
-              <div className="p-3 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary" />
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Case Details</TabsTrigger>
+                <TabsTrigger value="treatment">Treatment Log</TabsTrigger>
+                <TabsTrigger value="handover">Handover</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="space-y-4 mt-4">
+                {/* Patient Info */}
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{selectedRequest.student?.full_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedRequest.student?.roll_number} • {selectedRequest.student?.program}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Priority</p>
+                    <Badge className={PRIORITY_CONFIGS[selectedRequest.priority_level as keyof typeof PRIORITY_CONFIGS]?.color || ""}>
+                      {selectedRequest.priority_level.toUpperCase()}
+                    </Badge>
                   </div>
                   <div>
-                    <p className="font-medium">{selectedRequest.student?.full_name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedRequest.student?.roll_number} • {selectedRequest.student?.program}
-                    </p>
+                    <p className="text-muted-foreground">Status</p>
+                    <Select
+                      value={selectedRequest.status}
+                      onValueChange={(value) => {
+                        updateStatusMutation.mutate({ id: selectedRequest.id, status: value });
+                        setSelectedRequest({ ...selectedRequest, status: value });
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dispatched">Dispatched</SelectItem>
+                        <SelectItem value="arrived">Arrived</SelectItem>
+                        <SelectItem value="in_transit">In Transit</SelectItem>
+                        <SelectItem value="delivered">At Hospital</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Ambulance Type</p>
+                    <p className="font-medium uppercase">{selectedRequest.ambulance_type}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">ETA</p>
+                    <p className="font-medium">{selectedRequest.estimated_arrival_minutes} min</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Destination</p>
+                    <p className="font-medium">{selectedRequest.destination_hospital}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Pickup Location</p>
+                    <p className="font-medium">{selectedRequest.pickup_location}</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Priority</p>
-                  <Badge className={PRIORITY_CONFIGS[selectedRequest.priority_level as keyof typeof PRIORITY_CONFIGS]?.color || ""}>
-                    {selectedRequest.priority_level.toUpperCase()}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Status</p>
-                  <Select
-                    value={selectedRequest.status}
-                    onValueChange={(value) => {
-                      updateStatusMutation.mutate({ id: selectedRequest.id, status: value });
-                      setSelectedRequest({ ...selectedRequest, status: value });
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dispatched">Dispatched</SelectItem>
-                      <SelectItem value="arrived">Arrived</SelectItem>
-                      <SelectItem value="in_transit">In Transit</SelectItem>
-                      <SelectItem value="delivered">At Hospital</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Ambulance Type</p>
-                  <p className="font-medium uppercase">{selectedRequest.ambulance_type}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">ETA</p>
-                  <p className="font-medium">{selectedRequest.estimated_arrival_minutes} min</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground">Destination</p>
-                  <p className="font-medium">{selectedRequest.destination_hospital}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-muted-foreground">Pickup Location</p>
-                  <p className="font-medium">{selectedRequest.pickup_location}</p>
-                </div>
-              </div>
-
-              {/* Emergency Contact */}
-              {selectedRequest.emergency_contact_name && (
-                <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-                  <p className="text-sm font-medium mb-1">Emergency Contact</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">{selectedRequest.emergency_contact_name}</span>
-                    <a href={`tel:${selectedRequest.emergency_contact_phone}`} className="text-primary text-sm font-medium">
-                      {selectedRequest.emergency_contact_phone}
-                    </a>
+                {/* Emergency Contact */}
+                {selectedRequest.emergency_contact_name && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <p className="text-sm font-medium mb-1">Emergency Contact</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">{selectedRequest.emergency_contact_name}</span>
+                      <a href={`tel:${selectedRequest.emergency_contact_phone}`} className="text-primary text-sm font-medium">
+                        {selectedRequest.emergency_contact_phone}
+                      </a>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </TabsContent>
 
-              <Button variant="outline" onClick={() => setDetailsOpen(false)} className="w-full">
-                Close
-              </Button>
-            </div>
+              <TabsContent value="treatment" className="mt-4">
+                <EmergencyTreatmentLog ambulanceRequestId={selectedRequest.id} />
+              </TabsContent>
+
+              <TabsContent value="handover" className="mt-4">
+                <EmergencyHandoverSection ambulanceRequestId={selectedRequest.id} />
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
