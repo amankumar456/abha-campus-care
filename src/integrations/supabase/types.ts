@@ -238,6 +238,124 @@ export type Database = {
           },
         ]
       }
+      emergency_handovers: {
+        Row: {
+          ambulance_request_id: string | null
+          confirmed: boolean | null
+          confirmed_at: string | null
+          created_at: string
+          current_status: string
+          follow_up_instructions: string | null
+          handover_from_doctor_id: string | null
+          handover_to_doctor_id: string | null
+          id: string
+          pending_actions: string[] | null
+        }
+        Insert: {
+          ambulance_request_id?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string
+          current_status: string
+          follow_up_instructions?: string | null
+          handover_from_doctor_id?: string | null
+          handover_to_doctor_id?: string | null
+          id?: string
+          pending_actions?: string[] | null
+        }
+        Update: {
+          ambulance_request_id?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          created_at?: string
+          current_status?: string
+          follow_up_instructions?: string | null
+          handover_from_doctor_id?: string | null
+          handover_to_doctor_id?: string | null
+          id?: string
+          pending_actions?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_handovers_ambulance_request_id_fkey"
+            columns: ["ambulance_request_id"]
+            isOneToOne: false
+            referencedRelation: "ambulance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_handovers_handover_from_doctor_id_fkey"
+            columns: ["handover_from_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_handovers_handover_to_doctor_id_fkey"
+            columns: ["handover_to_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_treatments: {
+        Row: {
+          ambulance_request_id: string | null
+          created_at: string
+          doctor_id: string | null
+          id: string
+          medication_given: string | null
+          notes: string | null
+          outcome: string | null
+          procedure_performed: string | null
+          requires_followup: boolean | null
+          treatment_type: string
+          vitals_recorded: Json | null
+        }
+        Insert: {
+          ambulance_request_id?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          medication_given?: string | null
+          notes?: string | null
+          outcome?: string | null
+          procedure_performed?: string | null
+          requires_followup?: boolean | null
+          treatment_type: string
+          vitals_recorded?: Json | null
+        }
+        Update: {
+          ambulance_request_id?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          medication_given?: string | null
+          notes?: string | null
+          outcome?: string | null
+          procedure_performed?: string | null
+          requires_followup?: boolean | null
+          treatment_type?: string
+          vitals_recorded?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_treatments_ambulance_request_id_fkey"
+            columns: ["ambulance_request_id"]
+            isOneToOne: false
+            referencedRelation: "ambulance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emergency_treatments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_visits: {
         Row: {
           created_at: string

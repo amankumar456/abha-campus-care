@@ -21,6 +21,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   HeartPulse,
+  Siren,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,7 @@ import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PendingFollowupsList from "@/components/doctor/PendingFollowupsList";
 import MedicalLeaveStudentsOverview from "@/components/medical-leave/MedicalLeaveStudentsOverview";
 import DoctorHealthOverview from "@/components/doctor/DoctorHealthOverview";
+import EmergencyPage from "@/pages/EmergencyPage";
 
 export default function DoctorDashboard() {
   const navigate = useNavigate();
@@ -216,10 +218,14 @@ export default function DoctorDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-lg grid-cols-3 mb-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="emergency" className="flex items-center gap-2">
+              <Siren className="w-4 h-4" />
+              Emergency
             </TabsTrigger>
             <TabsTrigger value="medical-leave" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />
@@ -354,6 +360,11 @@ export default function DoctorDashboard() {
             ) : (
               <DoctorHealthOverview />
             )}
+          </TabsContent>
+
+          {/* Emergency Tab */}
+          <TabsContent value="emergency">
+            <EmergencyPage />
           </TabsContent>
 
           {/* Medical Leave Tab */}
