@@ -37,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import EmergencyTreatmentLog from "@/components/doctor/EmergencyTreatmentLog";
 import EmergencyHandoverSection from "@/components/doctor/EmergencyHandoverSection";
+import EmergencyCaseTimeline from "@/components/doctor/EmergencyCaseTimeline";
 
 interface AmbulanceRequest {
   id: string;
@@ -470,9 +471,10 @@ export default function EmergencyDashboard() {
           
           {selectedRequest && (
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">Case Details</TabsTrigger>
-                <TabsTrigger value="treatment">Treatment Log</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="treatment">Treatment</TabsTrigger>
                 <TabsTrigger value="handover">Handover</TabsTrigger>
               </TabsList>
 
@@ -551,6 +553,10 @@ export default function EmergencyDashboard() {
                     </div>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="timeline" className="mt-4">
+                <EmergencyCaseTimeline ambulanceRequestId={selectedRequest.id} />
               </TabsContent>
 
               <TabsContent value="treatment" className="mt-4">

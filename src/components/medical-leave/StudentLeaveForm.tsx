@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Building2, Calendar, FileText, Phone, Send, User, Users } from "lucide-react";
+import { AlertTriangle, Building2, Calendar, Edit, FileText, History, Phone, Plus, Send, User, Users } from "lucide-react";
 import { studentLeaveFormSchema, StudentLeaveFormData, ACCOMPANIST_TYPES } from "@/lib/validations/medical-leave";
 import { format } from "date-fns";
 import { 
@@ -42,6 +43,27 @@ interface StudentLeaveFormProps {
 
 const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) => {
   const queryClient = useQueryClient();
+  const [useLastDetails, setUseLastDetails] = useState<boolean | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch previous leave request data for the same student
+  const { data: previousLeave, isLoading: loadingPrevious } = useQuery({
+    queryKey: ["previous-leave-details", leaveRequest.student_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_leave_requests")
+        .select("illness_description, accompanist_type, accompanist_name, accompanist_contact, accompanist_relationship")
+        .eq("student_id", leaveRequest.student_id)
+        .not("student_form_submitted_at", "is", null)
+        .neq("id", leaveRequest.id)
+        .order("student_form_submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const form = useForm<StudentLeaveFormData>({
     resolver: zodResolver(studentLeaveFormSchema),
@@ -57,6 +79,28 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
       returnAcknowledgement: false,
     },
   });
+
+  const handleUsePreviousDetails = () => {
+    setUseLastDetails(true);
+    if (previousLeave) {
+      if (previousLeave.accompanist_type) {
+        form.setValue("accompanistType", previousLeave.accompanist_type as "parent_guardian" | "friend" | "other");
+      }
+      form.setValue("accompanistName", previousLeave.accompanist_name || "");
+      form.setValue("accompanistContact", previousLeave.accompanist_contact || "");
+      form.setValue("accompanistRelationship", previousLeave.accompanist_relationship || "");
+    }
+    setIsEditing(false);
+  };
+
+  const handleNewRegistration = () => {
+    setUseLastDetails(false);
+    form.setValue("accompanistType", undefined as any);
+    form.setValue("accompanistName", "");
+    form.setValue("accompanistContact", "");
+    form.setValue("accompanistRelationship", "");
+    setIsEditing(false);
+  };
 
   // Fetch student data for notifications
   const { data: studentData } = useQuery({
@@ -90,7 +134,6 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
 
       if (error) throw error;
 
-      // Notify doctor about form submission
       if (leaveRequest.referring_doctor_id && studentData) {
         const doctorUserId = await getDoctorUserId(leaveRequest.referring_doctor_id);
         if (doctorUserId) {
@@ -103,7 +146,6 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
         }
       }
 
-      // Notify mentor about student's departure
       if (studentData?.mentor_id) {
         const mentorUserId = await getMentorUserId(studentData.mentor_id);
         if (mentorUserId) {
@@ -137,7 +179,7 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
   };
 
   return (
-    <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
+    <Card className="bg-card/95 backdrop-blur-sm shadow-lg border-0">
       <CardHeader className="border-b bg-gradient-to-r from-amber-500/5 to-amber-500/10">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-full bg-amber-500/10">
@@ -170,7 +212,38 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
           </AlertDescription>
         </Alert>
 
-        <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
+        {/* Use Previous Details Option */}
+        {previousLeave && useLastDetails === null && !loadingPrevious && (
+          <div className="p-4 rounded-lg border-2 border-primary/20 bg-primary/5 space-y-3">
+            <h4 className="font-semibold flex items-center gap-2 text-foreground">
+              <History className="h-4 w-4 text-primary" />
+              Previous Leave Details Found
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              We found accompaniment details from your last medical leave. Would you like to reuse them?
+            </p>
+            {previousLeave.accompanist_name && (
+              <div className="p-3 rounded-md bg-background border text-sm space-y-1">
+                <p><strong>Accompanist:</strong> {previousLeave.accompanist_name}</p>
+                <p><strong>Type:</strong> {previousLeave.accompanist_type || "—"}</p>
+                <p><strong>Contact:</strong> {previousLeave.accompanist_contact || "—"}</p>
+                <p><strong>Relationship:</strong> {previousLeave.accompanist_relationship || "—"}</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button onClick={handleUsePreviousDetails} className="gap-2">
+                <History className="h-4 w-4" />
+                Use Previous Details
+              </Button>
+              <Button variant="outline" onClick={handleNewRegistration} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Enter New Details
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:text-amber-200 dark:border-amber-800">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Important Instructions</AlertTitle>
           <AlertDescription>
@@ -248,10 +321,24 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
 
             {/* Part B: Departure & Safety Details */}
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary">B</span>
-                Departure & Safety Details
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary">B</span>
+                  Departure & Safety Details
+                </h3>
+                {useLastDetails !== null && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="gap-1.5 text-primary"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    {isEditing ? "Done Editing" : "Edit Details"}
+                  </Button>
+                )}
+              </div>
 
               <FormField
                 control={form.control}
@@ -276,10 +363,18 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
               />
 
               <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
-                <h4 className="font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Accompaniment Details (Mandatory)
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Accompaniment Details (Mandatory)
+                  </h4>
+                  {useLastDetails === true && !isEditing && (
+                    <Badge variant="secondary" className="gap-1">
+                      <History className="h-3 w-3" />
+                      From previous leave
+                    </Badge>
+                  )}
+                </div>
 
                 <FormField
                   control={form.control}
@@ -287,7 +382,11 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>I will be accompanied by</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={useLastDetails === true && !isEditing}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select accompanist type..." />
@@ -317,7 +416,11 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
                           Name of Accompanist
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Full name..." {...field} />
+                          <Input
+                            placeholder="Full name..."
+                            disabled={useLastDetails === true && !isEditing}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -337,6 +440,7 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
                           <Input
                             placeholder="10-digit mobile number"
                             maxLength={10}
+                            disabled={useLastDetails === true && !isEditing}
                             {...field}
                           />
                         </FormControl>
@@ -353,7 +457,11 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
                     <FormItem>
                       <FormLabel>Relationship to Student</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Father, Mother, Friend, Uncle..." {...field} />
+                        <Input
+                          placeholder="e.g., Father, Mother, Friend, Uncle..."
+                          disabled={useLastDetails === true && !isEditing}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
