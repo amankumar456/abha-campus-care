@@ -102,15 +102,28 @@ const StudentLeaveForm = ({ leaveRequest, onSuccess }: StudentLeaveFormProps) =>
     setIsEditing(false);
   };
 
-  // Fetch student data for notifications
+  // Fetch student data including profile for notifications and auto-fill
   const { data: studentData } = useQuery({
     queryKey: ["student-for-notification", leaveRequest.student_id],
     queryFn: async () => {
       const { data } = await supabase
         .from("students")
-        .select("full_name, roll_number, mentor_id")
+        .select("full_name, roll_number, mentor_id, email, phone")
         .eq("id", leaveRequest.student_id)
-        .single();
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Fetch student profile for emergency contact auto-fill
+  const { data: studentProfile } = useQuery({
+    queryKey: ["student-profile-for-leave", leaveRequest.student_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_profiles")
+        .select("emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact")
+        .eq("student_id", leaveRequest.student_id)
+        .maybeSingle();
       return data;
     },
   });
