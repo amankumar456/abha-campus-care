@@ -172,10 +172,10 @@ const EMPANELLED_HOSPITALS: Record<string, HospitalInfo[]> = {
       name: "M/s. Medicover Hospitals", 
       location: "Hyderabad & Warangal", 
       entitlement: "Employees & Students",
-      phone: "0870-6662288",
-      emergency: "1800-599-1818",
+      phone: "040-68334455",
+      emergency: "040-68334455",
       address: "Nakkalagutta, Hanamkonda, Warangal & Hi-Tech City, Hyderabad",
-      directions: "Warangal branch at Nakkalagutta. 6 km from NIT Warangal.",
+      directions: "Warangal branch at Nakkalagutta. 6 km from NIT Warangal. Email: info@medicoverhospitals.in | 24/7 Helpline: 040-68334455",
       mapUrl: "https://maps.google.com/?q=Medicover+Hospitals+Warangal",
       specialties: ["Multi-Specialty", "Emergency Care", "Diagnostics"]
     },
@@ -603,7 +603,7 @@ const DoctorReferralForm = () => {
         .from("medical_officers")
         .select("name")
         .eq("id", doctorId)
-        .single();
+        .maybeSingle();
 
       const { data: insertedData, error } = await supabase.from("medical_leave_requests").insert({
         student_id: foundStudent.id,
@@ -617,7 +617,7 @@ const DoctorReferralForm = () => {
         expected_return_date: expectedReturnDate.toISOString().split('T')[0],
         rest_days: data.leaveDays,
         status: "student_form_pending",
-      }).select("id").single();
+      }).select("id").maybeSingle();
 
       if (error) throw error;
 

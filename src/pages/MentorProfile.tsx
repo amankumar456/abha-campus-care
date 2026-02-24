@@ -56,6 +56,7 @@ export default function MentorProfile() {
   const [menteeCount, setMenteeCount] = useState(0);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [healthAlerts, setHealthAlerts] = useState(true);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
   const form = useForm<MentorProfileForm>({
     resolver: zodResolver(mentorProfileSchema),
@@ -114,7 +115,8 @@ export default function MentorProfile() {
       if (error) throw error;
       setMentorData({ name: data.name, email: data.email || null, phone: data.phone || null, department: data.department });
       setIsEditing(false);
-      toast({ title: "Profile Updated!", description: "Your mentor profile has been saved successfully." });
+      setShowSaveConfirmation(true);
+      toast({ title: "✅ Profile Saved Successfully", description: `Name: ${data.name} | Dept: ${data.department}` });
     } catch (error: any) {
       toast({ title: "Update Failed", description: error.message || "An error occurred.", variant: "destructive" });
     } finally {
@@ -204,7 +206,27 @@ export default function MentorProfile() {
           </TabsList>
 
           {/* Profile Tab */}
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="space-y-4">
+            {/* Save Confirmation */}
+            {showSaveConfirmation && (
+              <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Shield className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-green-800 dark:text-green-200">Profile Saved Successfully</p>
+                      <div className="mt-2 text-sm space-y-1 text-green-700 dark:text-green-300">
+                        <p><strong>Name:</strong> {mentorData?.name}</p>
+                        <p><strong>Department:</strong> {mentorData?.department}</p>
+                        <p><strong>Email:</strong> {mentorData?.email || '—'}</p>
+                        <p><strong>Phone:</strong> {mentorData?.phone || '—'}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowSaveConfirmation(false)}>Dismiss</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">

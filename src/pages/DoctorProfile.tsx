@@ -29,6 +29,7 @@ export default function DoctorProfile() {
   const defaultTab = searchParams.get("tab") === "settings" ? "settings" : "profile";
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [isEditing, setIsEditing] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -114,9 +115,12 @@ export default function DoctorProfile() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Profile updated successfully");
+      toast.success("Profile updated successfully", {
+        description: `Office: ${editForm.phone_office || '—'} | Mobile: ${editForm.phone_mobile_0 || '—'}`,
+      });
       queryClient.invalidateQueries({ queryKey: ["doctor-profile-full"] });
       setIsEditing(false);
+      setShowSaveConfirmation(true);
     },
     onError: () => toast.error("Failed to update profile"),
   });
@@ -202,7 +206,34 @@ export default function DoctorProfile() {
                 </CardHeader>
               </Card>
 
-              {/* Profile Card */}
+              {/* Save Confirmation */}
+              {showSaveConfirmation && (
+                <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-green-800 dark:text-green-200">Profile Saved Successfully</p>
+                        <div className="mt-2 text-sm space-y-1 text-green-700 dark:text-green-300">
+                          <p><strong>Name:</strong> {profile?.name}</p>
+                          <p><strong>Designation:</strong> {profile?.designation}</p>
+                          <p><strong>Email:</strong> {profile?.email || '—'}</p>
+                          <p><strong>Office Phone:</strong> {editForm.phone_office || '—'}</p>
+                          <p><strong>Mobile:</strong> {editForm.phone_mobile_0 || '—'}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 text-green-700 hover:text-green-900"
+                          onClick={() => setShowSaveConfirmation(false)}
+                        >
+                          Dismiss
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">

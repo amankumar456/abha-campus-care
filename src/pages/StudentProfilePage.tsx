@@ -101,6 +101,7 @@ export default function StudentProfilePage() {
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
   // Settings state
   const [notifAppointments, setNotifAppointments] = useState(true);
@@ -175,7 +176,8 @@ export default function StudentProfilePage() {
       if (error) throw error;
       setStudent(prev => prev ? { ...prev, phone: editPhone, email: editEmail } : null);
       setIsEditing(false);
-      toast({ title: 'Profile Updated', description: 'Your contact details have been saved.' });
+      setShowSaveConfirmation(true);
+      toast({ title: '✅ Profile Saved Successfully', description: `Email: ${editEmail || '—'} | Phone: ${editPhone || '—'}` });
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
     } finally {
@@ -339,6 +341,36 @@ export default function StudentProfilePage() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Save Confirmation */}
+            {showSaveConfirmation && (
+              <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-green-800 dark:text-green-200">Profile Saved Successfully</p>
+                      <div className="mt-2 text-sm space-y-1 text-green-700 dark:text-green-300">
+                        <p><strong>Name:</strong> {student?.full_name}</p>
+                        <p><strong>Roll No:</strong> {student?.roll_number}</p>
+                        <p><strong>Email:</strong> {student?.email || '—'}</p>
+                        <p><strong>Phone:</strong> {student?.phone || '—'}</p>
+                        <p><strong>Program:</strong> {student?.program} · {student?.batch}</p>
+                        {student?.branch && <p><strong>Branch:</strong> {student.branch}</p>}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 text-green-700 hover:text-green-900"
+                        onClick={() => setShowSaveConfirmation(false)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Personal Information */}
             <Card>

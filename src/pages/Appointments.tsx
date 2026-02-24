@@ -94,6 +94,8 @@ export default function Appointments() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
+  const [checkingProfile, setCheckingProfile] = useState(false);
 
   // Check auth state
   useEffect(() => {
@@ -107,6 +109,44 @@ export default function Appointments() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Check profile completion
+  useEffect(() => {
+    if (!user) return;
+    const checkProfile = async () => {
+      setCheckingProfile(true);
+      try {
+        const { data: student } = await supabase
+          .from('students')
+          .select('id, full_name, roll_number, email, phone, program, batch, mentor_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!student) {
+          setProfileComplete(false);
+          return;
+        }
+
+        // Check required fields
+        const requiredFilled = !!(student.full_name && student.roll_number && student.email && student.phone && student.program && student.batch);
+        
+        // Also check student_profiles exists
+        const { data: profile } = await supabase
+          .from('student_profiles')
+          .select('blood_group, emergency_contact')
+          .eq('student_id', student.id)
+          .maybeSingle();
+
+        const hasHealthProfile = !!(profile?.blood_group && profile?.emergency_contact);
+        setProfileComplete(requiredFilled && hasHealthProfile);
+      } catch {
+        setProfileComplete(false);
+      } finally {
+        setCheckingProfile(false);
+      }
+    };
+    checkProfile();
+  }, [user]);
 
   // Handle URL params
   useEffect(() => {
@@ -265,6 +305,35 @@ export default function Appointments() {
               </Button>
               <Button asChild variant="outline" className="w-full">
                 <Link to="/medical-team">View Medical Team</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Profile incomplete gate
+  if (user && profileComplete === false && !checkingProfile) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader className="text-center">
+              <User className="w-12 h-12 mx-auto text-warning mb-4" />
+              <CardTitle>Complete Your Profile First</CardTitle>
+              <CardDescription>
+                You need to complete your profile before booking an appointment. This ensures we have your medical and emergency contact information.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button asChild className="w-full">
+                <Link to="/student/register">Complete Profile</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/student/profile">View My Profile</Link>
               </Button>
             </CardContent>
           </Card>
