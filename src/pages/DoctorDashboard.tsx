@@ -45,6 +45,7 @@ import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PendingFollowupsList from "@/components/doctor/PendingFollowupsList";
 import MedicalLeaveStudentsOverview from "@/components/medical-leave/MedicalLeaveStudentsOverview";
 import DoctorHealthOverview from "@/components/doctor/DoctorHealthOverview";
+import DoctorTreatmentOverview from "@/components/doctor/DoctorTreatmentOverview";
 import EmergencyPage from "@/pages/EmergencyPage";
 
 export default function DoctorDashboard() {
@@ -269,6 +270,11 @@ export default function DoctorDashboard() {
 
             {dashboardSubTab === "my-dashboard" ? (
               <>
+                {/* Treatment Overview Section */}
+                <div className="mb-8">
+                  <DoctorTreatmentOverview doctorId={doctorId} />
+                </div>
+
                 {/* Medical Leave Students Overview */}
                 <div className="mb-8">
                   <MedicalLeaveStudentsOverview doctorId={doctorId} />
