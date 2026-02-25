@@ -159,7 +159,8 @@ const AppointmentDashboard = () => {
     date: new Date(apt.appointment_date),
     time: apt.appointment_time,
     reason: apt.reason || undefined,
-    status: apt.status as 'pending' | 'confirmed' | 'completed' | 'cancelled'
+    status: apt.status as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+    appointmentDate: apt.appointment_date,
   })) || [];
 
   if (roleLoading) {
