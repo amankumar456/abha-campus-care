@@ -34,126 +34,214 @@ interface RecentVisit {
   };
 }
 
-const DUMMY_SLOTS = [
-  { time: '09:00 AM', doctor: 'Dr. Rajesh Kumar', available: 3 },
-  { time: '10:00 AM', doctor: 'Dr. Priya Sharma', available: 2 },
-  { time: '11:00 AM', doctor: 'Dr. Suresh Menon (Ortho)', available: 5 },
-  { time: '02:00 PM', doctor: 'Dr. Anil Reddy', available: 4 },
-  { time: '03:00 PM', doctor: 'Dr. Lakshmi Devi (Derma)', available: 1 },
-];
-
-const DUMMY_MENTOR_RECENT_VISITS = [
-  { 
-    id: '1', visit_date: '2026-01-18T10:30:00', reason_category: 'medical_illness',
-    reason_notes: 'High fever (102°F) with cold symptoms for 3 days', diagnosis: 'Viral infection',
-    prescription: 'Paracetamol 500mg, Cetirizine, Rest for 3 days', follow_up_required: true,
-    follow_up_date: '2026-01-25',
-    students: { roll_number: '22EI1001', full_name: 'Priya Sharma', email: 'priya.22ei1001@student.nitw.ac.in', phone: '+91 9876543001' }
-  },
-  { 
-    id: '2', visit_date: '2026-01-19T09:00:00', reason_category: 'mental_wellness',
-    reason_notes: 'Academic stress and anxiety, difficulty sleeping', diagnosis: 'Mild anxiety disorder',
-    prescription: 'Counseling session scheduled, relaxation techniques advised', follow_up_required: true,
-    follow_up_date: '2026-01-26',
-    students: { roll_number: '22EI1002', full_name: 'Arjun Kumar', email: 'arjun.22ei1002@student.nitw.ac.in', phone: '+91 9876543002' }
-  },
-  { 
-    id: '3', visit_date: '2026-01-15T11:30:00', reason_category: 'injury',
-    reason_notes: 'Ankle sprain during basketball practice', diagnosis: 'Grade 1 ankle sprain',
-    prescription: 'Ice pack, compression bandage, avoid sports for 2 weeks', follow_up_required: false,
-    follow_up_date: null,
-    students: { roll_number: '22EI1003', full_name: 'Ananya Reddy', email: 'ananya.22ei1003@student.nitw.ac.in', phone: '+91 9876543003' }
-  },
-  { 
-    id: '4', visit_date: '2026-01-20T15:00:00', reason_category: 'vaccination',
-    reason_notes: 'COVID-19 booster dose administered', diagnosis: 'Vaccination completed',
-    prescription: 'Monitor for side effects, paracetamol if fever occurs', follow_up_required: false,
-    follow_up_date: null,
-    students: { roll_number: '23EI1001', full_name: 'Vikash Singh', email: 'vikash.23ei1001@student.nitw.ac.in', phone: '+91 9876543004' }
-  },
-  { 
-    id: '5', visit_date: '2026-01-17T16:30:00', reason_category: 'mental_wellness',
-    reason_notes: 'Feeling overwhelmed with project deadlines', diagnosis: 'Situational stress',
-    prescription: 'Time management counseling, breathing exercises', follow_up_required: true,
-    follow_up_date: '2026-01-24',
-    students: { roll_number: '23EI1002', full_name: 'Meera Patel', email: 'meera.23ei1002@student.nitw.ac.in', phone: '+91 9876543005' }
-  }
-];
-
-const DUMMY_STUDENTS_NEEDING_ATTENTION = [
-  { student_id: '1', roll_number: '22EI1002', full_name: 'Arjun Kumar', email: 'arjun.22ei1002@student.nitw.ac.in', phone: '+91 9876543002', batch: '2022', branch: 'Electronics & Instrumentation', visit_count: 5, primary_concern: 'Mental Wellness', last_visit: '2026-01-19', risk_level: 'high', notes: 'Multiple stress-related visits, recommend regular counseling' },
-  { student_id: '2', roll_number: '23EI1002', full_name: 'Meera Patel', email: 'meera.23ei1002@student.nitw.ac.in', phone: '+91 9876543005', batch: '2023', branch: 'Electronics & Instrumentation', visit_count: 4, primary_concern: 'Mental Wellness', last_visit: '2026-01-17', risk_level: 'medium', notes: 'Academic pressure related stress, follow-up scheduled' },
-  { student_id: '3', roll_number: '22EI1001', full_name: 'Priya Sharma', email: 'priya.22ei1001@student.nitw.ac.in', phone: '+91 9876543001', batch: '2022', branch: 'Electronics & Instrumentation', visit_count: 3, primary_concern: 'Recurring Illness', last_visit: '2026-01-18', risk_level: 'medium', notes: 'Frequent fever episodes, immunity check recommended' },
-  { student_id: '4', roll_number: '22EI1003', full_name: 'Ananya Reddy', email: 'ananya.22ei1003@student.nitw.ac.in', phone: '+91 9876543003', batch: '2022', branch: 'Electronics & Instrumentation', visit_count: 3, primary_concern: 'Sports Injuries', last_visit: '2026-01-15', risk_level: 'low', notes: 'Active in sports, proper warm-up guidance needed' }
-];
+interface TodayScheduleSlot {
+  time: string;
+  doctor: string;
+  totalAppointments: number;
+  pendingAppointments: number;
+}
 
 export default function DoctorHealthOverview() {
   const navigate = useNavigate();
-  const { user, isDoctor, isMentor, loading: roleLoading, mentorId } = useUserRole();
+  const { user, loading: roleLoading } = useUserRole();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentVisits, setRecentVisits] = useState<RecentVisit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [todaySchedule, setTodaySchedule] = useState<TodayScheduleSlot[]>([]);
   const [searchRoll, setSearchRoll] = useState('');
 
   useEffect(() => {
     if (!roleLoading && user) {
       fetchDashboardData();
     }
-  }, [roleLoading, user, mentorId]);
+  }, [roleLoading, user]);
 
   const fetchDashboardData = async () => {
     try {
-      const { data: students, count: studentCount } = await supabase
-        .from('students')
-        .select('id, roll_number, full_name', { count: 'exact' });
-
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayVisits } = await supabase
-        .from('health_visits')
-        .select('id')
-        .gte('visit_date', today);
-
-      const { data: followUps } = await supabase
-        .from('health_visits')
-        .select('id')
-        .eq('follow_up_required', true)
-        .gte('follow_up_date', today);
-
-      const { data: recent } = await supabase
-        .from('health_visits')
-        .select(`id, visit_date, reason_category, students (roll_number, full_name)`)
-        .order('visit_date', { ascending: false })
-        .limit(5);
-
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      
-      const { data: allVisits } = await supabase
-        .from('health_visits')
-        .select(`student_id, students (roll_number, full_name)`)
-        .gte('visit_date', threeMonthsAgo.toISOString());
 
-      const visitCounts = new Map<string, { roll_number: string; full_name: string; count: number }>();
-      allVisits?.forEach((visit: any) => {
-        if (visit.students) {
-          const key = visit.student_id;
-          const existing = visitCounts.get(key);
-          if (existing) { existing.count++; } 
-          else { visitCounts.set(key, { roll_number: visit.students.roll_number, full_name: visit.students.full_name, count: 1 }); }
+      const [
+        studentsResponse,
+        todayVisitsResponse,
+        followUpsResponse,
+        recentHealthVisitsResponse,
+        allVisitsResponse,
+        todayAppointmentsResponse,
+        recentCompletedAppointmentsResponse,
+      ] = await Promise.all([
+        supabase.from('students').select('id', { count: 'exact', head: true }),
+        supabase.from('health_visits').select('id').gte('visit_date', today),
+        supabase.from('health_visits').select('id').eq('follow_up_required', true).gte('follow_up_date', today),
+        supabase
+          .from('health_visits')
+          .select(`id, visit_date, reason_category, students (roll_number, full_name)`)
+          .order('visit_date', { ascending: false })
+          .limit(5),
+        supabase
+          .from('health_visits')
+          .select(`student_id, students (roll_number, full_name)`)
+          .gte('visit_date', threeMonthsAgo.toISOString()),
+        supabase
+          .from('appointments')
+          .select(`id, appointment_time, status, doctor_type, medical_officers (name), visiting_doctors (name, specialization)`)
+          .eq('appointment_date', today)
+          .neq('status', 'cancelled'),
+        supabase
+          .from('appointments')
+          .select('id, appointment_date, appointment_time, status, doctor_type, patient_id')
+          .gte('appointment_date', threeMonthsAgo.toISOString().split('T')[0])
+          .eq('status', 'completed')
+          .order('appointment_date', { ascending: false })
+          .limit(200),
+      ]);
+
+      const queryErrors = [
+        studentsResponse.error,
+        todayVisitsResponse.error,
+        followUpsResponse.error,
+        recentHealthVisitsResponse.error,
+        allVisitsResponse.error,
+        todayAppointmentsResponse.error,
+        recentCompletedAppointmentsResponse.error,
+      ].filter(Boolean);
+
+      if (queryErrors.length > 0) {
+        throw queryErrors[0];
+      }
+
+      const completedAppointments = recentCompletedAppointmentsResponse.data || [];
+      const patientUserIds = Array.from(
+        new Set(completedAppointments.map((appointment) => appointment.patient_id).filter((id): id is string => Boolean(id)))
+      );
+
+      let studentByUserId = new Map<string, { roll_number: string; full_name: string }>();
+      if (patientUserIds.length > 0) {
+        const { data: appointmentStudents, error: studentsLookupError } = await supabase
+          .from('students')
+          .select('user_id, roll_number, full_name, updated_at')
+          .in('user_id', patientUserIds)
+          .order('updated_at', { ascending: false });
+
+        if (studentsLookupError) {
+          throw studentsLookupError;
+        }
+
+        studentByUserId = (appointmentStudents || []).reduce((acc, student) => {
+          if (student.user_id && !acc.has(student.user_id)) {
+            acc.set(student.user_id, {
+              roll_number: student.roll_number,
+              full_name: student.full_name,
+            });
+          }
+          return acc;
+        }, new Map<string, { roll_number: string; full_name: string }>());
+      }
+
+      const frequentVisitorMap = new Map<string, { student_id: string; roll_number: string; full_name: string; visit_count: number }>();
+
+      (allVisitsResponse.data || []).forEach((visit: any) => {
+        const rollNumber = visit.students?.roll_number;
+        const fullName = visit.students?.full_name;
+        if (!rollNumber || !fullName) return;
+
+        const existing = frequentVisitorMap.get(rollNumber);
+        if (existing) {
+          existing.visit_count += 1;
+        } else {
+          frequentVisitorMap.set(rollNumber, {
+            student_id: visit.student_id,
+            roll_number: rollNumber,
+            full_name: fullName,
+            visit_count: 1,
+          });
         }
       });
 
-      const frequentVisitors = Array.from(visitCounts.entries())
-        .filter(([_, data]) => data.count >= 3)
-        .map(([studentId, data]) => ({ student_id: studentId, roll_number: data.roll_number, full_name: data.full_name, visit_count: data.count }))
+      completedAppointments.forEach((appointment) => {
+        const student = studentByUserId.get(appointment.patient_id);
+        if (!student) return;
+
+        const existing = frequentVisitorMap.get(student.roll_number);
+        if (existing) {
+          existing.visit_count += 1;
+        } else {
+          frequentVisitorMap.set(student.roll_number, {
+            student_id: appointment.patient_id,
+            roll_number: student.roll_number,
+            full_name: student.full_name,
+            visit_count: 1,
+          });
+        }
+      });
+
+      const frequentVisitors = Array.from(frequentVisitorMap.values())
+        .filter((student) => student.visit_count >= 3)
         .sort((a, b) => b.visit_count - a.visit_count);
 
-      setStats({ totalStudents: studentCount || 0, visitsToday: todayVisits?.length || 0, pendingFollowUps: followUps?.length || 0, frequentVisitors });
-      setRecentVisits(recent as RecentVisit[] || []);
+      const fallbackRecentVisits: RecentVisit[] = completedAppointments
+        .slice(0, 5)
+        .map((appointment) => {
+          const student = studentByUserId.get(appointment.patient_id);
+          if (!student) return null;
+
+          return {
+            id: appointment.id,
+            visit_date: `${appointment.appointment_date}T${appointment.appointment_time}`,
+            reason_category: appointment.doctor_type || 'appointment',
+            students: {
+              roll_number: student.roll_number,
+              full_name: student.full_name,
+            },
+          };
+        })
+        .filter((visit): visit is RecentVisit => visit !== null);
+
+      const recentVisitsData = (recentHealthVisitsResponse.data as RecentVisit[] | null) || [];
+      setRecentVisits(recentVisitsData.length > 0 ? recentVisitsData : fallbackRecentVisits);
+
+      const todayAppointments = todayAppointmentsResponse.data || [];
+      const todayScheduleMap = new Map<string, TodayScheduleSlot>();
+
+      todayAppointments.forEach((appointment: any) => {
+        const visitingDoctorName = appointment.visiting_doctors?.name;
+        const specialization = appointment.visiting_doctors?.specialization;
+        const medicalOfficerName = appointment.medical_officers?.name;
+
+        const doctorName = visitingDoctorName
+          ? `${visitingDoctorName}${specialization ? ` (${specialization})` : ''}`
+          : medicalOfficerName || 'Health Centre Doctor';
+
+        const key = `${appointment.appointment_time}-${doctorName}`;
+        const existing = todayScheduleMap.get(key);
+
+        if (existing) {
+          existing.totalAppointments += 1;
+          if (appointment.status === 'pending') existing.pendingAppointments += 1;
+        } else {
+          todayScheduleMap.set(key, {
+            time: appointment.appointment_time,
+            doctor: doctorName,
+            totalAppointments: 1,
+            pendingAppointments: appointment.status === 'pending' ? 1 : 0,
+          });
+        }
+      });
+
+      const todaysCompletedOrConfirmed = todayAppointments.filter(
+        (appointment) => appointment.status === 'completed' || appointment.status === 'confirmed'
+      ).length;
+
+      setTodaySchedule(Array.from(todayScheduleMap.values()).sort((a, b) => a.time.localeCompare(b.time)));
+
+      setStats({
+        totalStudents: studentsResponse.count || 0,
+        visitsToday: (todayVisitsResponse.data?.length || 0) + todaysCompletedOrConfirmed,
+        pendingFollowUps: followUpsResponse.data?.length || 0,
+        frequentVisitors,
+      });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -165,6 +253,16 @@ export default function DoctorHealthOverview() {
 
   const formatReasonCategory = (category: string) => {
     return category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const formatScheduleTime = (time: string) => {
+    if (!time) return 'Time TBD';
+
+    try {
+      return format(new Date(`1970-01-01T${time}`), 'hh:mm a');
+    } catch {
+      return time;
+    }
   };
 
   return (
@@ -316,30 +414,35 @@ export default function DoctorHealthOverview() {
       {/* Health Records Section */}
       <HealthRecordsSection />
 
-      {/* Today's Available Slots */}
+      {/* Today's Appointment Schedule */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Today's Available Appointment Slots
+            Today's Appointment Schedule
           </CardTitle>
-          <CardDescription>Quick view of available slots for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
+          <CardDescription>Live schedule for {format(new Date(), 'EEEE, MMMM d, yyyy')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {DUMMY_SLOTS.map((slot, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg border text-center hover:border-primary transition-colors"
-              >
-                <p className="font-semibold text-lg">{slot.time}</p>
-                <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
-                <Badge variant={slot.available > 2 ? "secondary" : "destructive"}>
-                  {slot.available} slots left
-                </Badge>
-              </div>
-            ))}
-          </div>
+          {todaySchedule.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No appointments scheduled for today</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {todaySchedule.map((slot) => (
+                <div
+                  key={`${slot.time}-${slot.doctor}`}
+                  className="p-4 rounded-lg border text-center hover:border-primary transition-colors"
+                >
+                  <p className="font-semibold text-lg">{formatScheduleTime(slot.time)}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{slot.doctor}</p>
+                  <Badge variant="secondary">{slot.totalAppointments} booked</Badge>
+                  {slot.pendingAppointments > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">{slot.pendingAppointments} pending</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
