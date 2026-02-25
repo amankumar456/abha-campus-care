@@ -35,6 +35,8 @@ interface PrintableHospitalCardProps {
   studentBranch?: string;
   referralDate?: string;
   emergencyContacts?: StudentEmergencyContacts;
+  illnessDescription?: string;
+  doctorNotes?: string;
 }
 
 const PrintableHospitalCard = ({ 
@@ -44,7 +46,9 @@ const PrintableHospitalCard = ({
   studentProgram,
   studentBranch,
   referralDate,
-  emergencyContacts
+  emergencyContacts,
+  illnessDescription,
+  doctorNotes
 }: PrintableHospitalCardProps) => {
   const handlePrint = async () => {
     const documentId = `HC-${Date.now().toString(36).toUpperCase()}`;
@@ -277,17 +281,51 @@ const PrintableHospitalCard = ({
             font-size: 10px;
           }
           .specialties {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 4px;
+280:             display: flex;
+281:             flex-wrap: wrap;
+282:             gap: 4px;
+283:             margin-top: 4px;
+284:           }
+285:           .specialty-tag {
+286:             background: #e2e8f0;
+287:             padding: 2px 8px;
+288:             border-radius: 10px;
+289:             font-size: 10px;
+290:             color: #4a5568;
+291:           }
+          .medical-details {
+            background: #fffbeb;
+            border-top: 2px solid #d97706;
+            padding: 12px 16px;
           }
-          .specialty-tag {
-            background: #e2e8f0;
-            padding: 2px 8px;
-            border-radius: 10px;
+          .medical-details h4 {
             font-size: 10px;
-            color: #4a5568;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+          }
+          .medical-details .detail-item {
+            margin-bottom: 8px;
+          }
+          .medical-details .detail-label {
+            font-size: 9px;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+          }
+          .medical-details .detail-value {
+            font-size: 12px;
+            color: #1a1a1a;
+            line-height: 1.4;
+          }
+          .doctor-notes-value {
+            font-style: italic;
+            color: #4a5568 !important;
+            border-left: 3px solid #d97706;
+            padding-left: 8px;
           }
           ${getCompactFooterStyles()}
           @media print {
@@ -382,6 +420,24 @@ const PrintableHospitalCard = ({
               <p>${currentDate}</p>
             </div>
           `}
+          
+          ${illnessDescription || doctorNotes ? `
+            <div class="medical-details">
+              <h4>🩺 Medical Information</h4>
+              ${illnessDescription ? `
+                <div class="detail-item">
+                  <div class="detail-label">Illness / Condition</div>
+                  <div class="detail-value">${illnessDescription}</div>
+                </div>
+              ` : ''}
+              ${doctorNotes ? `
+                <div class="detail-item">
+                  <div class="detail-label">Doctor's Notes</div>
+                  <div class="detail-value doctor-notes-value">${doctorNotes}</div>
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
           
           ${emergencyContacts ? `
             <div class="emergency-contacts">
