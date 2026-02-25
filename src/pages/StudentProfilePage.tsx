@@ -136,25 +136,34 @@ export default function StudentProfilePage() {
         setEditPhone(studentData.phone || '');
         setEditEmail(studentData.email || '');
 
-        const [profileRes, visitsRes, prescriptionsRes] = await Promise.all([
+        const [profileRes, visitsRes, prescriptionsRes, completedApptsRes] = await Promise.all([
           supabase.from('student_profiles').select('*').eq('student_id', studentData.id).maybeSingle(),
           supabase.from('health_visits').select('id, visit_date, follow_up_required').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
           supabase.from('prescriptions')
             .select(`id, created_at, diagnosis, notes, prescription_items ( id, medicine_name, dosage, frequency, duration, instructions, meal_timing )`)
-            .eq('student_id', user!.id)
+            .eq('student_id', studentData.id)
             .order('created_at', { ascending: false }),
+          supabase.from('appointments')
+            .select('id, appointment_date')
+            .eq('patient_id', user!.id)
+            .eq('status', 'completed'),
         ]);
 
         setHealthProfile(profileRes.data as StudentHealthProfile | null);
         setPrescriptions((prescriptionsRes.data as unknown as StudentPrescription[]) || []);
 
         const visits = visitsRes.data || [];
+        const completedAppts = completedApptsRes.data || [];
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const totalVisits = visits.length + completedAppts.length;
+        const thisMonthVisits = visits.filter(v => new Date(v.visit_date) >= firstDayOfMonth).length +
+          completedAppts.filter(a => new Date(a.appointment_date) >= firstDayOfMonth).length;
         setHealthStats({
-          totalVisits: visits.length,
-          thisMonthVisits: visits.filter(v => new Date(v.visit_date) >= firstDayOfMonth).length,
+          totalVisits,
+          thisMonthVisits,
           pendingFollowups: visits.filter(v => v.follow_up_required).length,
-          lastVisitDate: visits[0]?.visit_date ? format(new Date(visits[0].visit_date), 'MMM d, yyyy') : null,
+          lastVisitDate: visits[0]?.visit_date ? format(new Date(visits[0].visit_date), 'MMM d, yyyy') :
+            completedAppts[0]?.appointment_date ? format(new Date(completedAppts[0].appointment_date), 'MMM d, yyyy') : null,
         });
       }
     } catch (err) {
