@@ -336,7 +336,7 @@ export default function StudentProfilePage() {
                 <Button asChild variant="outline" size="sm" className="mt-3">
                   <Link to="/student/register">
                     <Edit3 className="w-3 h-3 mr-1" />
-                    Update Full Profile
+                    Edit Full Profile
                   </Link>
                 </Button>
               </CardContent>
