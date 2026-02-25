@@ -481,12 +481,26 @@ const referralFormSchema = z.object({
 
 type ReferralFormData = z.infer<typeof referralFormSchema>;
 
+interface ApprovedLeaveInfo {
+  id: string;
+  doctorName: string;
+  doctorNotes: string | null;
+  restDays: number | null;
+  referralHospital: string;
+  healthPriority: string | null;
+  expectedDuration: string;
+  createdAt: string;
+  status: string;
+}
+
 const DoctorReferralForm = () => {
   const { doctorId, isDoctor } = useUserRole();
   const queryClient = useQueryClient();
   const [foundStudent, setFoundStudent] = useState<Student | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [approvedLeave, setApprovedLeave] = useState<ApprovedLeaveInfo | null>(null);
+  const [leaveCheckDone, setLeaveCheckDone] = useState(false);
 
   const form = useForm<ReferralFormData>({
     resolver: zodResolver(referralFormSchema),
@@ -523,7 +537,9 @@ const DoctorReferralForm = () => {
 
     setIsSearching(true);
     setSearchError(null);
-    setFoundStudent(null);
+      setFoundStudent(null);
+      setApprovedLeave(null);
+      setLeaveCheckDone(false);
 
     try {
       const { data, error } = await supabase
@@ -571,14 +587,55 @@ const DoctorReferralForm = () => {
         personalPhone: studentWithEmail?.phone || undefined,
       };
 
-      setFoundStudent({ 
+      const studentResult = { 
         ...data, 
         email,
         phone: studentWithEmail?.phone,
         mentor_name: studentWithEmail?.mentor_name,
         mentor_contact: studentWithEmail?.mentor_contact,
         emergencyContacts,
-      });
+      };
+      setFoundStudent(studentResult);
+
+      // Check for today's approved medical leave
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data: leaveData } = await supabase
+        .from("medical_leave_requests")
+        .select(`
+          id, doctor_notes, rest_days, referral_hospital, health_priority, 
+          expected_duration, created_at, status,
+          medical_officers:referring_doctor_id(name)
+        `)
+        .eq("student_id", data.id)
+        .gte("created_at", `${todayStr}T00:00:00`)
+        .lte("created_at", `${todayStr}T23:59:59`)
+        .in("status", ["student_form_pending", "on_leave", "doctor_referred"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (leaveData) {
+        const doctorInfo = leaveData.medical_officers as any;
+        setApprovedLeave({
+          id: leaveData.id,
+          doctorName: doctorInfo?.name || "A doctor",
+          doctorNotes: leaveData.doctor_notes,
+          restDays: leaveData.rest_days,
+          referralHospital: leaveData.referral_hospital,
+          healthPriority: leaveData.health_priority,
+          expectedDuration: leaveData.expected_duration,
+          createdAt: leaveData.created_at,
+          status: leaveData.status,
+        });
+        // Auto-fill form fields from existing approval
+        form.setValue("referralHospital", leaveData.referral_hospital || "");
+        form.setValue("healthPriority", (leaveData.health_priority as any) || "medium");
+        form.setValue("leaveDays", leaveData.rest_days || 3);
+        form.setValue("illnessDescription", leaveData.doctor_notes || "");
+        form.setValue("expectedDuration", leaveData.expected_duration || "");
+      }
+      setLeaveCheckDone(true);
+
       toast.success("Student found", {
         description: `${data.full_name} - ${data.roll_number}`,
       });
@@ -714,6 +771,8 @@ const DoctorReferralForm = () => {
                             field.onChange(e);
                             setFoundStudent(null);
                             setSearchError(null);
+                            setApprovedLeave(null);
+                            setLeaveCheckDone(false);
                           }}
                         />
                       </FormControl>
@@ -740,6 +799,8 @@ const DoctorReferralForm = () => {
                             field.onChange(e);
                             setFoundStudent(null);
                             setSearchError(null);
+                            setApprovedLeave(null);
+                            setLeaveCheckDone(false);
                           }}
                         />
                       </FormControl>
@@ -796,8 +857,43 @@ const DoctorReferralForm = () => {
               )}
             </div>
 
-            {/* Referral Details - Only show after student verification */}
-            {foundStudent && (
+            {/* Workflow Verification: Approval Check */}
+            {foundStudent && leaveCheckDone && !approvedLeave && (
+              <Alert variant="destructive" className="border-2">
+                <AlertTriangle className="h-5 w-5" />
+                <AlertDescription className="space-y-2">
+                  <p className="font-semibold text-base">Medical Leave Not Approved</p>
+                  <p>
+                    Doctor has not approved medical leave or treatment for <strong>{foundStudent.full_name}</strong> ({foundStudent.roll_number}) today. 
+                    Please complete the medical leave process first from the Doctor Dashboard before creating an off-campus referral.
+                  </p>
+                  <p className="text-sm opacity-80">
+                    Workflow: Appointment → Doctor issues medical leave → Then referral can proceed.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {foundStudent && leaveCheckDone && approvedLeave && (
+              <div className="p-4 rounded-xl bg-green-50 border-2 border-green-200 dark:bg-green-950/20 dark:border-green-800 space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold text-green-800 dark:text-green-200 text-base">Medical Leave Approved Today</span>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
+                  Dr. <strong>{approvedLeave.doctorName}</strong> has approved medical leave for this student.
+                  {approvedLeave.doctorNotes && <> Reason: <em>{approvedLeave.doctorNotes}</em>.</>}
+                  {" "}Rest days: <strong>{approvedLeave.restDays ?? "N/A"}</strong>.
+                  {approvedLeave.referralHospital && <> Referral hospital: <strong>{approvedLeave.referralHospital}</strong>.</>}
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400">
+                  ✅ Workflow verified — you may now proceed with the off-campus referral details below. Form fields have been auto-filled from the leave approval.
+                </p>
+              </div>
+            )}
+
+            {/* Referral Details - Only show after student verification AND approval */}
+            {foundStudent && leaveCheckDone && approvedLeave && (
               <>
                 <div className="space-y-4 pt-4 border-t">
                   <Label className="text-base font-semibold flex items-center gap-2">
