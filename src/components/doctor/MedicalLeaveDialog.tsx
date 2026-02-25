@@ -70,12 +70,15 @@ const MedicalLeaveDialog = ({
   const [restDays, setRestDays] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
   const [selectedPriority, setSelectedPriority] = useState(healthPriority);
+  const [referredForTreatment, setReferredForTreatment] = useState(false);
+  const [referredForTest, setReferredForTest] = useState(false);
+  const [testDetails, setTestDetails] = useState("");
 
   const createLeaveMutation = useMutation({
     mutationFn: async () => {
       const days = parseInt(restDays);
-      if (isNaN(days) || days < 1) {
-        throw new Error("Please enter valid number of rest days");
+      if (isNaN(days) || days < 0) {
+        throw new Error("Please enter valid number of rest days (0 or more)");
       }
 
       // Fetch the current doctor's name for the notification
@@ -96,20 +99,26 @@ const MedicalLeaveDialog = ({
 
       const hospital = referralHospital || "NIT Warangal Health Centre";
 
+      // Build referral type array
+      const referralTypes: string[] = [];
+      if (referredForTreatment) referralTypes.push("treatment");
+      if (referredForTest) referralTypes.push("test_checkup");
+
       // Create medical leave request with auto-filled student data
       const { data: leaveData, error } = await supabase.from("medical_leave_requests").insert({
         student_id: student.id,
         referring_doctor_id: doctorId,
         referral_hospital: hospital,
-        expected_duration: `${days} days`,
+        expected_duration: days > 0 ? `${days} days` : "Test/Checkup only",
         rest_days: days,
-        doctor_notes: doctorNotes || null,
+        doctor_notes: [doctorNotes, testDetails ? `Test/Checkup: ${testDetails}` : ""].filter(Boolean).join(" | ") || null,
         status: "student_form_pending",
         academic_leave_approved: true,
         approved_by_doctor_id: doctorId,
         approval_date: new Date().toISOString(),
         health_priority: selectedPriority,
         appointment_id: appointmentId,
+        referral_type: referralTypes,
       }).select("id").single();
 
       if (error) throw error;
@@ -122,10 +131,13 @@ const MedicalLeaveDialog = ({
 
       // 1. Notify student — actionable message to fill departure form
       if (studentUser?.user_id) {
+        const referralInfo = referralTypes.length > 0 
+          ? ` Referral: ${referralTypes.includes("treatment") ? "Treatment" : ""}${referralTypes.length === 2 ? " & " : ""}${referralTypes.includes("test_checkup") ? "Test/Checkup" : ""} at ${hospital}.${testDetails ? ` (${testDetails})` : ""}`
+          : "";
         await supabase.from("notifications").insert({
           user_id: studentUser.user_id,
           title: "📋 Medical Leave Granted",
-          message: `${doctorName} has marked medical leave for ${days} day${days > 1 ? "s" : ""}. You have been referred to ${hospital}. ⚠️ Please fill the departure form before leaving the health centre. Open Medical Leave section to complete your form.`,
+          message: `${doctorName} has marked medical leave${days > 0 ? ` for ${days} day${days > 1 ? "s" : ""} rest` : ""}.${referralInfo} ⚠️ Please fill the departure form before leaving the health centre. Open Medical Leave section to complete your form.`,
           type: "medical_leave_referral",
           related_appointment_id: appointmentId,
         });
@@ -156,6 +168,9 @@ const MedicalLeaveDialog = ({
       setRestDays("");
       setDoctorNotes("");
       setSelectedPriority("medium");
+      setReferredForTreatment(false);
+      setReferredForTest(false);
+      setTestDetails("");
       // Redirect to Medical Leave Management section
       navigate("/medical-leave");
     },
@@ -168,8 +183,13 @@ const MedicalLeaveDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!restDays) {
+    if (restDays === "" || restDays === undefined) {
       toast.error("Please specify number of rest days");
+      return;
+    }
+    const days = parseInt(restDays);
+    if (days === 0 && !referredForTreatment && !referredForTest) {
+      toast.error("If rest days is 0, you must select at least one referral option (Treatment or Test/Checkup)");
       return;
     }
     createLeaveMutation.mutate();
@@ -287,15 +307,17 @@ const MedicalLeaveDialog = ({
                 <Input
                   id="restDays"
                   type="number"
-                  min="1"
+                  min="0"
                   max="30"
-                  placeholder="Enter days (e.g., 3)"
+                  placeholder="Enter days (0 for test/checkup only)"
                   value={restDays}
                   onChange={(e) => setRestDays(e.target.value)}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Student will be excused from academic work for this duration
+                  {restDays === "0" 
+                    ? "Student is being referred for outside campus visit only" 
+                    : "Student will be excused from academic work for this duration"}
                 </p>
               </div>
 
@@ -311,6 +333,83 @@ const MedicalLeaveDialog = ({
                   onChange={(e) => setReferralHospital(e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Outside Campus Referral Type */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Outside Campus Referral {restDays === "0" && <span className="text-destructive">* (required when 0 rest days)</span>}
+              </Label>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Select if the student is being referred outside campus. Both can be selected.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setReferredForTreatment(!referredForTreatment)}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                    referredForTreatment 
+                      ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                      : "border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      referredForTreatment ? "border-primary bg-primary" : "border-muted-foreground/40"
+                    }`}>
+                      {referredForTreatment && <span className="text-primary-foreground text-xs">✓</span>}
+                    </div>
+                    <span className="font-medium text-sm">Referred for Treatment</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-6">
+                    Student needs treatment at an outside hospital
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setReferredForTest(!referredForTest)}
+                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                    referredForTest 
+                      ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                      : "border-border hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      referredForTest ? "border-primary bg-primary" : "border-muted-foreground/40"
+                    }`}>
+                      {referredForTest && <span className="text-primary-foreground text-xs">✓</span>}
+                    </div>
+                    <span className="font-medium text-sm">Referred for Test/Checkup</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-6">
+                    Student needs tests or checkup at an outside facility
+                  </p>
+                </button>
+              </div>
+
+              {referredForTest && (
+                <div className="space-y-2 ml-1">
+                  <Label htmlFor="testDetails" className="text-sm">
+                    Test/Checkup Details (optional)
+                  </Label>
+                  <Input
+                    id="testDetails"
+                    placeholder="e.g., MRI scan, Blood test, X-ray..."
+                    value={testDetails}
+                    onChange={(e) => setTestDetails(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {restDays === "0" && !referredForTreatment && !referredForTest && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Please select at least one referral option when rest days is 0
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -358,7 +457,7 @@ const MedicalLeaveDialog = ({
             </Button>
             <Button
               type="submit"
-              disabled={createLeaveMutation.isPending || !restDays}
+              disabled={createLeaveMutation.isPending || restDays === "" || (restDays === "0" && !referredForTreatment && !referredForTest)}
             >
               {createLeaveMutation.isPending ? (
                 "Processing..."

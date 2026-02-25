@@ -1,0 +1,1 @@
+ALTER TABLE public.medical_leave_requests ADD COLUMN IF NOT EXISTS referral_type text[] DEFAULT '{}'::text[];
