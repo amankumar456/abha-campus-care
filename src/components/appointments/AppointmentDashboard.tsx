@@ -8,6 +8,9 @@ import { useUserRole } from "@/hooks/useUserRole";
 import HealthProfileCard from "./HealthProfileCard";
 import UpcomingAppointmentsCard from "./UpcomingAppointmentsCard";
 import QuickBookCard from "./QuickBookCard";
+import DoctorProfileCard from "./DoctorProfileCard";
+import DoctorTodayPatientsCard from "./DoctorTodayPatientsCard";
+import DoctorQuickActionsCard from "./DoctorQuickActionsCard";
 import { Calendar, LogIn } from "lucide-react";
 
 const AppointmentDashboard = () => {
@@ -233,25 +236,35 @@ const AppointmentDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <HealthProfileCard
-            userName={studentProfile?.fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
-            rollNumber={studentProfile?.rollNumber}
-            mentorName={studentProfile?.mentorName || 'Not Assigned'}
-            mentorContact={studentProfile?.mentorContact}
-            totalVisits={healthStats?.totalVisits || 0}
-            thisMonthVisits={healthStats?.thisMonthVisits || 0}
-            pendingFollowups={healthStats?.pendingFollowups || 0}
-            lastVisitDate={healthStats?.lastVisitDate || 'No visits yet'}
-            isProfileComplete={studentProfile?.isProfileComplete || false}
-            emergencyContacts={studentProfile?.emergencyContacts}
-            profilePath={getProfilePath()}
-          />
-          
-          <UpcomingAppointmentsCard
-            appointments={formattedAppointments}
-          />
-          
-          <QuickBookCard />
+          {isDoctor ? (
+            <>
+              <DoctorProfileCard userId={user.id} />
+              <DoctorTodayPatientsCard userId={user.id} />
+              <DoctorQuickActionsCard />
+            </>
+          ) : (
+            <>
+              <HealthProfileCard
+                userName={studentProfile?.fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                rollNumber={studentProfile?.rollNumber}
+                mentorName={studentProfile?.mentorName || 'Not Assigned'}
+                mentorContact={studentProfile?.mentorContact}
+                totalVisits={healthStats?.totalVisits || 0}
+                thisMonthVisits={healthStats?.thisMonthVisits || 0}
+                pendingFollowups={healthStats?.pendingFollowups || 0}
+                lastVisitDate={healthStats?.lastVisitDate || 'No visits yet'}
+                isProfileComplete={studentProfile?.isProfileComplete || false}
+                emergencyContacts={studentProfile?.emergencyContacts}
+                profilePath={getProfilePath()}
+              />
+              
+              <UpcomingAppointmentsCard
+                appointments={formattedAppointments}
+              />
+              
+              <QuickBookCard />
+            </>
+          )}
         </div>
       </div>
     </section>
