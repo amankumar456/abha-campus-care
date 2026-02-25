@@ -27,6 +27,7 @@ interface HealthProfileCardProps {
   commonIssue?: string;
   isProfileComplete?: boolean;
   emergencyContacts?: EmergencyContacts;
+  profilePath?: string;
 }
 
 const HealthProfileCard = ({
@@ -40,7 +41,8 @@ const HealthProfileCard = ({
   lastVisitDate = "No visits yet",
   commonIssue = "N/A",
   isProfileComplete = false,
-  emergencyContacts
+  emergencyContacts,
+  profilePath = "/student/profile"
 }: HealthProfileCardProps) => {
   const [showContactsDialog, setShowContactsDialog] = useState(false);
   const [showIncompleteDialog, setShowIncompleteDialog] = useState(false);
@@ -110,16 +112,27 @@ const HealthProfileCard = ({
             )}
           </div>
 
-          {/* Emergency Contact Button */}
-          <Button 
-            variant="destructive" 
-            className="w-full mt-4" 
-            size="sm"
-            onClick={handleEmergencyClick}
-          >
-            <Phone className="w-4 h-4 mr-2" />
-            Emergency Contact
-          </Button>
+          {/* Profile & Emergency Buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              size="sm"
+              onClick={() => navigate(profilePath)}
+            >
+              <User className="w-4 h-4 mr-1" />
+              My Profile
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="flex-1" 
+              size="sm"
+              onClick={handleEmergencyClick}
+            >
+              <Phone className="w-4 h-4 mr-1" />
+              Emergency
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
