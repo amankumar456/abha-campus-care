@@ -119,12 +119,27 @@ const ReferralDetailsCard = ({ leaveRequest, studentProfile }: ReferralDetailsCa
             <Building2 className="h-4 w-4" />
             Referral Hospital
           </h4>
-          <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+          <div className="p-4 rounded-lg bg-muted/50 space-y-3">
             <p className="font-semibold text-lg">{leaveRequest.referral_hospital}</p>
+            
             {leaveRequest.illness_description && (
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium">Reason:</span> {leaveRequest.illness_description}
-              </p>
+              <div className="p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">
+                  <Stethoscope className="h-3.5 w-3.5" />
+                  Illness / Condition
+                </p>
+                <p className="text-sm text-amber-900 dark:text-amber-200">{leaveRequest.illness_description}</p>
+              </div>
+            )}
+
+            {leaveRequest.doctor_notes && (
+              <div className="p-3 rounded-md bg-blue-50 border border-blue-200 dark:bg-blue-950/30 dark:border-blue-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400 mb-1 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5" />
+                  Doctor's Notes
+                </p>
+                <p className="text-sm text-blue-900 dark:text-blue-200 italic">"{leaveRequest.doctor_notes}"</p>
+              </div>
             )}
           </div>
         </div>
@@ -180,11 +195,6 @@ const ReferralDetailsCard = ({ leaveRequest, studentProfile }: ReferralDetailsCa
               <p className="text-sm text-muted-foreground">
                 {leaveRequest.medical_officers.designation}
                 {leaveRequest.medical_officers.qualification && ` • ${leaveRequest.medical_officers.qualification}`}
-              </p>
-            )}
-            {leaveRequest.doctor_notes && (
-              <p className="text-sm text-muted-foreground mt-2 italic">
-                "{leaveRequest.doctor_notes}"
               </p>
             )}
           </div>
