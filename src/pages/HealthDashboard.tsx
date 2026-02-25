@@ -144,7 +144,6 @@ const HealthDashboard = () => {
         `)
         .eq('patient_id', user.id)
         .in('status', ['pending', 'confirmed'])
-        .gte('appointment_date', new Date().toISOString().split('T')[0])
         .order('appointment_date', { ascending: true })
         .limit(5);
 
@@ -191,6 +190,7 @@ const HealthDashboard = () => {
 
       if (!student) return;
 
+      // Fetch health_visits
       const { data } = await supabase
         .from('health_visits')
         .select(`
@@ -206,7 +206,9 @@ const HealthDashboard = () => {
         .order('visit_date', { ascending: false })
         .limit(5);
 
-      if (data) {
+      let visits: StudentVisit[] = [];
+
+      if (data && data.length > 0) {
         const doctorIds = data.filter(v => v.doctor_id).map(v => v.doctor_id!);
         let doctorMap: Record<string, string> = {};
         if (doctorIds.length > 0) {
@@ -214,7 +216,7 @@ const HealthDashboard = () => {
           docs?.forEach(d => { doctorMap[d.id] = d.name; });
         }
 
-        setStudentVisits(data.map(v => ({
+        visits = data.map(v => ({
           id: v.id,
           visit_date: v.visit_date,
           reason_category: v.reason_category,
@@ -222,8 +224,55 @@ const HealthDashboard = () => {
           diagnosis: v.diagnosis,
           prescription: v.prescription,
           doctor_name: v.doctor_id ? doctorMap[v.doctor_id] || null : null,
-        })));
+        }));
       }
+
+      // If no health_visits, show completed appointments as visit history
+      if (visits.length === 0) {
+        const { data: completedAppts } = await supabase
+          .from('appointments')
+          .select(`
+            id,
+            appointment_date,
+            appointment_time,
+            reason,
+            status,
+            medical_officer_id,
+            visiting_doctor_id
+          `)
+          .eq('patient_id', user.id)
+          .eq('status', 'completed')
+          .order('appointment_date', { ascending: false })
+          .limit(5);
+
+        if (completedAppts) {
+          const moIds = completedAppts.filter(a => a.medical_officer_id).map(a => a.medical_officer_id!);
+          const vdIds = completedAppts.filter(a => a.visiting_doctor_id).map(a => a.visiting_doctor_id!);
+          let moMap: Record<string, string> = {};
+          let vdMap: Record<string, string> = {};
+
+          if (moIds.length > 0) {
+            const { data: mos } = await supabase.from('medical_officers').select('id, name').in('id', moIds);
+            mos?.forEach(mo => { moMap[mo.id] = mo.name; });
+          }
+          if (vdIds.length > 0) {
+            const { data: vds } = await supabase.from('visiting_doctors').select('id, name').in('id', vdIds);
+            vds?.forEach(vd => { vdMap[vd.id] = vd.name; });
+          }
+
+          visits = completedAppts.map(a => ({
+            id: a.id,
+            visit_date: a.appointment_date,
+            reason_category: 'routine_checkup',
+            reason_notes: a.reason,
+            diagnosis: null,
+            prescription: null,
+            doctor_name: a.medical_officer_id ? moMap[a.medical_officer_id] || null : a.visiting_doctor_id ? vdMap[a.visiting_doctor_id] || null : null,
+          }));
+        }
+      }
+
+      setStudentVisits(visits);
     } catch (error) {
       console.error('Error fetching student visits:', error);
     }
@@ -431,7 +480,7 @@ const HealthDashboard = () => {
           mentorPhone: studentData.mentors?.phone || studentData.mentor_contact,
         });
 
-        // Fetch health stats
+        // Fetch health stats from health_visits
         const currentMonth = new Date();
         const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
 
@@ -441,18 +490,35 @@ const HealthDashboard = () => {
           .eq('student_id', studentData.id)
           .order('visit_date', { ascending: false });
 
-        const thisMonthVisits = visits?.filter(v => 
+        // Also count completed appointments as visits
+        const { data: completedAppointments } = await supabase
+          .from('appointments')
+          .select('id, appointment_date')
+          .eq('patient_id', user?.id)
+          .eq('status', 'completed');
+
+        const healthVisitCount = visits?.length || 0;
+        const completedApptCount = completedAppointments?.length || 0;
+        const totalVisits = healthVisitCount + completedApptCount;
+
+        const thisMonthHealthVisits = visits?.filter(v => 
           new Date(v.visit_date) >= firstDayOfMonth
         ).length || 0;
+        const thisMonthCompletedAppts = completedAppointments?.filter(a =>
+          new Date(a.appointment_date) >= firstDayOfMonth
+        ).length || 0;
+        const thisMonthVisits = thisMonthHealthVisits + thisMonthCompletedAppts;
 
         const pendingFollowups = visits?.filter(v => v.follow_up_required).length || 0;
 
         setStudentHealthStats({
-          totalVisits: visits?.length || 0,
+          totalVisits,
           thisMonthVisits,
           pendingFollowups,
           lastVisitDate: visits?.[0]?.visit_date 
             ? format(new Date(visits[0].visit_date), 'MMM d, yyyy')
+            : completedAppointments?.[0]?.appointment_date
+            ? format(new Date(completedAppointments[0].appointment_date), 'MMM d, yyyy')
             : null
         });
       }
