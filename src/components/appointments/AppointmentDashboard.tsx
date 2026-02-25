@@ -4,28 +4,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useUserRole } from "@/hooks/useUserRole";
 import HealthProfileCard from "./HealthProfileCard";
 import UpcomingAppointmentsCard from "./UpcomingAppointmentsCard";
 import QuickBookCard from "./QuickBookCard";
 import { Calendar, LogIn } from "lucide-react";
 
 const AppointmentDashboard = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isDoctor, isMentor, isStudent, loading: roleLoading } = useUserRole();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+  // Determine profile path based on role
+  const getProfilePath = () => {
+    if (isDoctor) return '/doctor/profile';
+    if (isMentor) return '/mentor/profile';
+    return '/student/profile';
+  };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const getDashboardPath = () => {
+    if (isDoctor) return '/doctor/dashboard';
+    if (isMentor) return '/mentor/dashboard';
+    return '/health-dashboard';
+  };
 
   // Fetch student profile with emergency contacts
   const { data: studentProfile } = useQuery({
@@ -33,7 +32,6 @@ const AppointmentDashboard = () => {
     queryFn: async () => {
       if (!user) return null;
       
-      // First get the student record
       const { data: student, error: studentError } = await supabase
         .from('students')
         .select('id, full_name, roll_number, mentor_name, mentor_contact')
@@ -42,8 +40,7 @@ const AppointmentDashboard = () => {
       
       if (studentError || !student) return null;
       
-      // Then get the student profile with emergency contacts
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('student_profiles')
         .select('emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact')
         .eq('student_id', student.id)
@@ -67,13 +64,14 @@ const AppointmentDashboard = () => {
         } : undefined
       };
     },
-    enabled: !!user
+    enabled: !!user && !isDoctor && !isMentor
   });
 
   const { data: appointments } = useQuery({
-    queryKey: ['upcoming-appointments', user?.id],
+    queryKey: ['upcoming-appointments-home', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      const today = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('appointments')
@@ -85,7 +83,7 @@ const AppointmentDashboard = () => {
         .eq('patient_id', user.id)
         .neq('status', 'cancelled')
         .neq('status', 'completed')
-        .gte('appointment_date', new Date().toISOString().split('T')[0])
+        .gte('appointment_date', today)
         .order('appointment_date', { ascending: true })
         .limit(5);
       
@@ -96,33 +94,59 @@ const AppointmentDashboard = () => {
   });
 
   const { data: healthStats } = useQuery({
-    queryKey: ['health-stats', user?.id],
+    queryKey: ['health-stats-home', user?.id],
     queryFn: async () => {
       if (!user) return null;
       
       const currentMonth = new Date();
       const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       
-      const { data: visits, error } = await supabase
-        .from('health_visits')
-        .select('id, visit_date, reason_category, follow_up_required')
-        .order('visit_date', { ascending: false });
-      
-      if (error) return null;
-      
-      const thisMonthVisits = visits?.filter(v => 
-        new Date(v.visit_date) >= firstDayOfMonth
-      ).length || 0;
-      
-      const pendingFollowups = visits?.filter(v => v.follow_up_required).length || 0;
+      // Get student id
+      const { data: student } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let healthVisitCount = 0;
+      let thisMonthHealthVisits = 0;
+      let pendingFollowups = 0;
+      let lastVisitDate: string | null = null;
+
+      if (student) {
+        const { data: visits } = await supabase
+          .from('health_visits')
+          .select('id, visit_date, follow_up_required')
+          .eq('student_id', student.id)
+          .order('visit_date', { ascending: false });
+
+        healthVisitCount = visits?.length || 0;
+        thisMonthHealthVisits = visits?.filter(v => new Date(v.visit_date) >= firstDayOfMonth).length || 0;
+        pendingFollowups = visits?.filter(v => v.follow_up_required).length || 0;
+        lastVisitDate = visits?.[0]?.visit_date
+          ? new Date(visits[0].visit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : null;
+      }
+
+      // Also count completed appointments
+      const { data: completedAppts } = await supabase
+        .from('appointments')
+        .select('id, appointment_date')
+        .eq('patient_id', user.id)
+        .eq('status', 'completed');
+
+      const completedCount = completedAppts?.length || 0;
+      const thisMonthCompleted = completedAppts?.filter(a => new Date(a.appointment_date) >= firstDayOfMonth).length || 0;
+
+      if (!lastVisitDate && completedAppts?.[0]) {
+        lastVisitDate = new Date(completedAppts[0].appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
       
       return {
-        totalVisits: visits?.length || 0,
-        thisMonthVisits,
+        totalVisits: healthVisitCount + completedCount,
+        thisMonthVisits: thisMonthHealthVisits + thisMonthCompleted,
         pendingFollowups,
-        lastVisitDate: visits?.[0]?.visit_date 
-          ? new Date(visits[0].visit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-          : 'No visits yet'
+        lastVisitDate: lastVisitDate || 'No visits yet'
       };
     },
     enabled: !!user
@@ -138,7 +162,7 @@ const AppointmentDashboard = () => {
     status: apt.status as 'pending' | 'confirmed' | 'completed' | 'cancelled'
   })) || [];
 
-  if (loading) {
+  if (roleLoading) {
     return (
       <div className="py-12">
         <div className="container mx-auto px-4">
@@ -188,18 +212,28 @@ const AppointmentDashboard = () => {
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-foreground mb-3">
-            Appointment Dashboard
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Manage your health appointments and records in one place
-          </p>
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-10">
+          <div className="text-center sm:text-left">
+            <h2 className="text-3xl font-bold text-foreground mb-3">
+              Appointment Dashboard
+            </h2>
+            <p className="text-muted-foreground max-w-2xl">
+              Manage your health appointments and records in one place
+            </p>
+          </div>
+          <div className="flex gap-3 mt-4 sm:mt-0">
+            <Button asChild variant="outline">
+              <Link to={getProfilePath()}>My Profile</Link>
+            </Button>
+            <Button asChild>
+              <Link to={getDashboardPath()}>Go to Dashboard</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <HealthProfileCard
-            userName={studentProfile?.fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'}
+            userName={studentProfile?.fullName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
             rollNumber={studentProfile?.rollNumber}
             mentorName={studentProfile?.mentorName || 'Not Assigned'}
             mentorContact={studentProfile?.mentorContact}
@@ -209,6 +243,7 @@ const AppointmentDashboard = () => {
             lastVisitDate={healthStats?.lastVisitDate || 'No visits yet'}
             isProfileComplete={studentProfile?.isProfileComplete || false}
             emergencyContacts={studentProfile?.emergencyContacts}
+            profilePath={getProfilePath()}
           />
           
           <UpcomingAppointmentsCard
