@@ -131,6 +131,7 @@ const HealthDashboard = () => {
   const fetchStudentAppointments = async () => {
     if (!user) return;
     try {
+      const today = new Date().toISOString().split('T')[0];
       const { data } = await supabase
         .from('appointments')
         .select(`
@@ -144,6 +145,7 @@ const HealthDashboard = () => {
         `)
         .eq('patient_id', user.id)
         .in('status', ['pending', 'confirmed'])
+        .gte('appointment_date', today)
         .order('appointment_date', { ascending: true })
         .limit(5);
 
