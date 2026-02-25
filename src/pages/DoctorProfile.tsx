@@ -105,14 +105,16 @@ export default function DoctorProfile() {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("medical_officers")
         .update({
           phone_office: editForm.phone_office || null,
           phone_mobile: editForm.phone_mobile_0 ? [editForm.phone_mobile_0] : null,
         })
-        .eq("id", doctorId);
+        .eq("id", doctorId)
+        .select();
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("Update failed — your account may not be linked to a doctor profile. Please contact admin.");
     },
     onSuccess: () => {
       toast.success("Profile updated successfully", {
