@@ -591,6 +591,7 @@ export type Database = {
           leave_start_date: string | null
           referral_date: string | null
           referral_hospital: string
+          referral_type: string[] | null
           referring_doctor_id: string | null
           rest_days: number | null
           return_submitted_at: string | null
@@ -625,6 +626,7 @@ export type Database = {
           leave_start_date?: string | null
           referral_date?: string | null
           referral_hospital: string
+          referral_type?: string[] | null
           referring_doctor_id?: string | null
           rest_days?: number | null
           return_submitted_at?: string | null
@@ -659,6 +661,7 @@ export type Database = {
           leave_start_date?: string | null
           referral_date?: string | null
           referral_hospital?: string
+          referral_type?: string[] | null
           referring_doctor_id?: string | null
           rest_days?: number | null
           return_submitted_at?: string | null
