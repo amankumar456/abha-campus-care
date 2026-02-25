@@ -22,6 +22,7 @@ import LeaveStatusTimeline from "@/components/medical-leave/LeaveStatusTimeline"
 import ReferralDetailsCard from "@/components/medical-leave/ReferralDetailsCard";
 import DoctorClearanceCard from "@/components/medical-leave/DoctorClearanceCard";
 import PastLeaveDetailDialog from "@/components/medical-leave/PastLeaveDetailDialog";
+import MedicalLeaveStudentsOverview from "@/components/medical-leave/MedicalLeaveStudentsOverview";
 import { format } from "date-fns";
 
 type MedicalLeaveStatus = "doctor_referred" | "student_form_pending" | "on_leave" | "return_pending" | "returned" | "cancelled";
@@ -94,7 +95,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const MedicalLeave = () => {
-  const { user, isDoctor, isStudent, isMentor, isAdmin, loading: roleLoading } = useUserRole();
+  const { user, isDoctor, isStudent, isMentor, isAdmin, loading: roleLoading, doctorId } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("requests");
   const [showLeaveForm, setShowLeaveForm] = useState(false);
@@ -563,6 +564,7 @@ const MedicalLeave = () => {
 
         {/* Doctor View */}
         {isDoctor && (
+          <>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="referral" className="flex items-center gap-2">
@@ -675,6 +677,10 @@ const MedicalLeave = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Medical Leave Students Overview with real data */}
+          <MedicalLeaveStudentsOverview doctorId={doctorId} />
+          </>
         )}
 
         {/* Mentor/Admin View */}
