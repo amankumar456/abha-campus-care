@@ -8,14 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, Calendar, AlertTriangle, Activity, Plus, Search, FileText, Download, Eye,
-  CalendarCheck, Heart, ClipboardList, Pill, Stethoscope, Clock, ArrowRight, User
+  CalendarCheck, Heart, ClipboardList, Pill, Stethoscope, Clock, ArrowRight, User,
+  XCircle, RefreshCw
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
+import { format, isPast } from 'date-fns';
+import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HealthRecordsSection from '@/components/health/HealthRecordsSection';
 import StudentMedicalLeaveSection from '@/components/medical-leave/StudentMedicalLeaveSection';
+import RescheduleDialog from '@/components/appointments/RescheduleDialog';
+import AddToCalendarDropdown from '@/components/appointments/AddToCalendarDropdown';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface DashboardStats {
   totalStudents: number;
@@ -105,6 +120,21 @@ const HealthDashboard = () => {
   // Real data states for mentor view
   const [mentorRecentVisits, setMentorRecentVisits] = useState<MentorVisit[]>([]);
   const [studentsNeedingAttention, setStudentsNeedingAttention] = useState<AttentionStudent[]>([]);
+  const [rescheduleApt, setRescheduleApt] = useState<StudentAppointment | null>(null);
+
+  const handleCancelAppointment = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+      if (error) throw error;
+      toast.success("Appointment cancelled");
+      setStudentAppointments(prev => prev.filter(a => a.id !== id));
+    } catch (err: any) {
+      toast.error("Failed to cancel", { description: err.message });
+    }
+  };
 
   useEffect(() => {
     if (!roleLoading && !user) {
@@ -800,26 +830,71 @@ const HealthDashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {studentAppointments.map((apt) => (
-                      <div key={apt.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Stethoscope className="h-5 w-5 text-primary" />
+                    {studentAppointments.map((apt) => {
+                      const canAct = !isPast(new Date(`${apt.appointment_date}T23:59:59`));
+                      return (
+                      <div key={apt.id} className="p-3 rounded-lg border hover:bg-muted/30 transition-colors space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Stethoscope className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{apt.doctor_name || 'Doctor'}</p>
+                              <p className="text-xs text-muted-foreground">{apt.reason || 'General Consultation'}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-sm">{apt.doctor_name || 'Doctor'}</p>
-                            <p className="text-xs text-muted-foreground">{apt.reason || 'General Consultation'}</p>
+                          <div className="text-right">
+                            <p className="font-medium text-sm">{format(new Date(apt.appointment_date), 'MMM d')}</p>
+                            <p className="text-xs text-muted-foreground">{formatTime(apt.appointment_time)}</p>
+                            <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1 text-xs">
+                              {apt.status}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium text-sm">{format(new Date(apt.appointment_date), 'MMM d')}</p>
-                          <p className="text-xs text-muted-foreground">{formatTime(apt.appointment_time)}</p>
-                          <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'} className="mt-1 text-xs">
-                            {apt.status}
-                          </Badge>
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2 pt-2 border-t">
+                          {canAct && (
+                            <Button size="sm" variant="outline" onClick={() => setRescheduleApt(apt)}>
+                              <RefreshCw className="w-3 h-3 mr-1" /> Reschedule
+                            </Button>
+                          )}
+                          {canAct && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                  <XCircle className="w-3 h-3 mr-1" /> Cancel
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Cancel Appointment?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Cancel your appointment with {apt.doctor_name} on {format(new Date(apt.appointment_date), 'MMM d')} at {formatTime(apt.appointment_time)}?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleCancelAppointment(apt.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Yes, Cancel
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                          <AddToCalendarDropdown
+                            appointmentDate={apt.appointment_date}
+                            appointmentTime={apt.appointment_time}
+                            doctorName={apt.doctor_name || 'Doctor'}
+                            reason={apt.reason}
+                          />
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -1296,6 +1371,24 @@ const HealthDashboard = () => {
         <HealthRecordsSection />
       </div>
       <Footer />
+
+      {/* Reschedule Dialog */}
+      {rescheduleApt && (
+        <RescheduleDialog
+          open={!!rescheduleApt}
+          onOpenChange={(open) => {
+            if (!open) {
+              setRescheduleApt(null);
+              // Refresh appointments
+              fetchStudentAppointments();
+            }
+          }}
+          appointmentId={rescheduleApt.id}
+          currentDate={rescheduleApt.appointment_date}
+          currentTime={rescheduleApt.appointment_time}
+          doctorName={rescheduleApt.doctor_name || 'Doctor'}
+        />
+      )}
     </div>
   );
 };
