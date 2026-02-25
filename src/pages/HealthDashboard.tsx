@@ -100,6 +100,7 @@ const HealthDashboard = () => {
   // Real data states for student view
   const [studentAppointments, setStudentAppointments] = useState<StudentAppointment[]>([]);
   const [studentVisits, setStudentVisits] = useState<StudentVisit[]>([]);
+  const [studentPrescriptions, setStudentPrescriptions] = useState<any[]>([]);
 
   // Real data states for mentor view
   const [mentorRecentVisits, setMentorRecentVisits] = useState<MentorVisit[]>([]);
@@ -122,6 +123,7 @@ const HealthDashboard = () => {
         fetchStudentProfile();
         fetchStudentAppointments();
         fetchStudentVisits();
+        fetchStudentPrescriptions();
       }
     }
   }, [roleLoading, user, isDoctor, isMentor, mentorId]);
@@ -224,6 +226,59 @@ const HealthDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching student visits:', error);
+    }
+  };
+
+  const fetchStudentPrescriptions = async () => {
+    if (!user) return;
+    try {
+      const { data: student } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!student) return;
+
+      const { data } = await supabase
+        .from('prescriptions')
+        .select(`
+          id,
+          diagnosis,
+          notes,
+          created_at,
+          appointment_id,
+          doctor_id,
+          prescription_items (
+            medicine_name,
+            dosage,
+            frequency,
+            duration
+          )
+        `)
+        .eq('student_id', student.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (data) {
+        const doctorIds = data.filter(p => p.doctor_id).map(p => p.doctor_id!);
+        let doctorMap: Record<string, string> = {};
+        if (doctorIds.length > 0) {
+          const { data: docs } = await supabase.from('medical_officers').select('id, name').in('id', doctorIds);
+          docs?.forEach(d => { doctorMap[d.id] = d.name; });
+        }
+
+        setStudentPrescriptions(data.map(p => ({
+          id: p.id,
+          diagnosis: p.diagnosis,
+          notes: p.notes,
+          created_at: p.created_at,
+          doctor_name: p.doctor_id ? doctorMap[p.doctor_id] || 'Doctor' : 'Doctor',
+          medicines: p.prescription_items || [],
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching student prescriptions:', error);
     }
   };
 
@@ -744,6 +799,62 @@ const HealthDashboard = () => {
             </Card>
           </div>
 
+          {/* Prescription Records */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Pill className="h-5 w-5 text-primary" />
+                    Health Records
+                  </CardTitle>
+                  <CardDescription>Your prescription records</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/student/profile?tab=prescriptions')}>
+                  View All <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {studentPrescriptions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Pill className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">No prescriptions yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {studentPrescriptions.map((rx) => (
+                    <div
+                      key={rx.id}
+                      className="p-3 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => navigate('/student/profile?tab=prescriptions')}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{rx.diagnosis || 'General Prescription'}</p>
+                          <p className="text-xs text-muted-foreground">{rx.doctor_name}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{format(new Date(rx.created_at), 'MMM d, yyyy')}</p>
+                      </div>
+                      {rx.medicines.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {rx.medicines.slice(0, 3).map((med: any, i: number) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {med.medicine_name}
+                            </Badge>
+                          ))}
+                          {rx.medicines.length > 3 && (
+                            <Badge variant="outline" className="text-xs">+{rx.medicines.length - 3} more</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Medical Leave Section */}
           {user && <StudentMedicalLeaveSection userId={user.id} />}
 
@@ -773,9 +884,9 @@ const HealthDashboard = () => {
                   </Link>
                 </Button>
                 <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
-                  <Link to="/student/profile">
-                    <User className="h-5 w-5" />
-                    My Profile
+                  <Link to="/student/profile?tab=prescriptions">
+                    <Pill className="h-5 w-5" />
+                    Prescriptions
                   </Link>
                 </Button>
               </div>
