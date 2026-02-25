@@ -101,6 +101,16 @@ export default function StudentProfilePage() {
   const defaultSubTab = searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'visits';
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [recordsSubTab, setRecordsSubTab] = useState(defaultSubTab);
+
+  // Sync tab state when URL params change (e.g. navigating from header)
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'settings') setActiveTab('settings');
+    else if (tab === 'prescriptions' || tab === 'records') {
+      setActiveTab('records');
+      setRecordsSubTab(tab === 'prescriptions' ? 'prescriptions' : 'visits');
+    } else setActiveTab('profile');
+  }, [searchParams]);
   const { user, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
 

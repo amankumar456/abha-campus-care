@@ -21,7 +21,7 @@ const NAVIGATION_ITEMS = [
   { label: "Medical Team", path: "/medical-team", keywords: ["doctors", "staff", "medical", "team", "officers"] },
   { label: "Book Appointment", path: "/appointments", keywords: ["book", "appointment", "schedule", "visit"] },
   { label: "My Appointments", path: "/my-appointments", keywords: ["my", "appointments", "scheduled", "upcoming"] },
-  { label: "Health Records", path: "/health-dashboard", keywords: ["health", "records", "history", "dashboard"] },
+  { label: "Health Records", path: "/student/profile?tab=records", keywords: ["health", "records", "history", "dashboard", "visits", "prescriptions"] },
   { label: "Sign In", path: "/auth", keywords: ["sign", "login", "auth", "account"] },
   { label: "Admin Portal", path: "/admin", keywords: ["admin", "portal", "management"] },
   { label: "Doctor Portal", path: "/doctor/register", keywords: ["doctor", "portal", "register"] },
@@ -175,7 +175,7 @@ const Header = () => {
               <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                 Appointments
               </Link>
-              <Link to="/health-dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+              <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                 Health Records
               </Link>
               
@@ -355,7 +355,7 @@ const Header = () => {
               <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                 My Appointments
               </Link>
-              <Link to="/health-dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+              <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                 Health Records
               </Link>
               <div className="flex flex-col gap-2 pt-2">
