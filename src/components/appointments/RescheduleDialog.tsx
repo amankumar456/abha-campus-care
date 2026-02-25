@@ -80,6 +80,8 @@ export default function RescheduleDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["upcoming-appointments-home"] });
+      queryClient.invalidateQueries({ queryKey: ["student-appointments"] });
       toast({
         title: "Appointment Rescheduled",
         description: `Your appointment has been rescheduled to ${format(

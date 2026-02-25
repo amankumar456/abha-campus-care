@@ -185,15 +185,17 @@ export default function MyAppointments() {
     return filtered;
   };
 
+  // For upcoming: show all non-cancelled, non-completed appointments where the DATE is today or future
   const upcomingAppointments = filterAndSortAppointments(
     appointments?.filter(
-      a => a.status !== 'cancelled' && a.status !== 'completed' && !isPast(new Date(`${a.appointment_date}T${a.appointment_time}`))
+      a => a.status !== 'cancelled' && a.status !== 'completed' && !isPast(new Date(`${a.appointment_date}T23:59:59`))
     ) || []
   );
 
+  // For past: completed OR the date has fully passed (end of day)
   const pastAppointments = filterAndSortAppointments(
     appointments?.filter(
-      a => a.status === 'completed' || (a.status !== 'cancelled' && isPast(new Date(`${a.appointment_date}T${a.appointment_time}`)))
+      a => a.status === 'completed' || (a.status !== 'cancelled' && isPast(new Date(`${a.appointment_date}T23:59:59`)))
     ) || []
   );
 
