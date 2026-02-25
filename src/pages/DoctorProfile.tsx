@@ -316,18 +316,27 @@ export default function DoctorProfile() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-4 border rounded-lg">
+                    <button
+                      onClick={() => navigate("/doctor/dashboard")}
+                      className="text-center p-4 border rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-colors cursor-pointer"
+                    >
                       <p className="text-2xl font-bold">{appointmentStats?.todayCount || 0}</p>
                       <p className="text-xs text-muted-foreground">Appointments</p>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
+                    </button>
+                    <button
+                      onClick={() => navigate("/doctor/dashboard")}
+                      className="text-center p-4 border rounded-lg hover:bg-amber-50 hover:border-amber-200 dark:hover:bg-amber-900/10 transition-colors cursor-pointer"
+                    >
                       <p className="text-2xl font-bold text-amber-500 dark:text-amber-400">{appointmentStats?.pendingCount || 0}</p>
                       <p className="text-xs text-muted-foreground">Pending</p>
-                    </div>
-                    <div className="text-center p-4 border rounded-lg">
+                    </button>
+                    <button
+                      onClick={() => navigate("/doctor/dashboard")}
+                      className="text-center p-4 border rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-colors cursor-pointer"
+                    >
                       <p className="text-2xl font-bold">{appointmentStats?.totalPatients || 0}</p>
                       <p className="text-xs text-muted-foreground">Patients</p>
-                    </div>
+                    </button>
                   </div>
                 </CardContent>
               </Card>
