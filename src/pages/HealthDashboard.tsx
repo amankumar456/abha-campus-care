@@ -2,17 +2,19 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Users, Calendar, AlertTriangle, Activity, Plus, Search, FileText, Download, Eye,
   CalendarCheck, Heart, ClipboardList, Pill, Stethoscope, Clock, ArrowRight, User,
-  XCircle, RefreshCw
+  XCircle, RefreshCw, ChevronDown, ChevronRight, Building2, ShieldCheck, Bed
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { format, isPast } from 'date-fns';
+import { format, isPast, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -121,6 +123,162 @@ const HealthDashboard = () => {
   const [mentorRecentVisits, setMentorRecentVisits] = useState<MentorVisit[]>([]);
   const [studentsNeedingAttention, setStudentsNeedingAttention] = useState<AttentionStudent[]>([]);
   const [rescheduleApt, setRescheduleApt] = useState<StudentAppointment | null>(null);
+  const [expandedVisits, setExpandedVisits] = useState<Set<string>>(new Set());
+  const [expandedAttention, setExpandedAttention] = useState<Set<string>>(new Set());
+  const [expandedLeave, setExpandedLeave] = useState<Set<string>>(new Set());
+
+  // Fetch medical leave students (real data) for doctor view
+  const { data: medicalLeaveStudents = [] } = useQuery({
+    queryKey: ['health-dashboard-medical-leave'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('medical_leave_requests')
+        .select(`
+          id,
+          status,
+          referral_hospital,
+          illness_description,
+          health_priority,
+          leave_start_date,
+          expected_return_date,
+          actual_return_date,
+          doctor_clearance,
+          doctor_notes,
+          expected_duration,
+          rest_days,
+          accompanist_name,
+          accompanist_type,
+          accompanist_contact,
+          students!medical_leave_requests_student_id_fkey (
+            full_name,
+            roll_number,
+            email,
+            phone,
+            program,
+            branch,
+            batch
+          ),
+          medical_officers!medical_leave_requests_referring_doctor_id_fkey (
+            name
+          )
+        `)
+        .in('status', ['doctor_referred', 'student_form_pending', 'on_leave', 'return_pending'])
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: isDoctor || isMentor,
+  });
+
+  // Fetch enhanced recent visits for doctor view (with diagnosis, prescription, doctor info)
+  const { data: doctorRecentVisits = [] } = useQuery({
+    queryKey: ['health-dashboard-recent-visits-enhanced'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('health_visits')
+        .select(`
+          id,
+          visit_date,
+          reason_category,
+          reason_subcategory,
+          reason_notes,
+          diagnosis,
+          prescription,
+          follow_up_required,
+          follow_up_date,
+          students!health_visits_student_id_fkey (
+            full_name,
+            roll_number,
+            email,
+            phone,
+            program,
+            branch,
+            batch
+          ),
+          medical_officers!health_visits_doctor_id_fkey (
+            name,
+            designation
+          )
+        `)
+        .order('visit_date', { ascending: false })
+        .limit(10);
+      return data || [];
+    },
+    enabled: isDoctor && !isMentor,
+  });
+
+  // Fetch frequent visitors with their recent visit details for doctor view
+  const { data: doctorAttentionStudents = [] } = useQuery({
+    queryKey: ['health-dashboard-attention-students'],
+    queryFn: async () => {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const { data: allVisits } = await supabase
+        .from('health_visits')
+        .select(`
+          id,
+          student_id,
+          visit_date,
+          reason_category,
+          reason_notes,
+          diagnosis,
+          students!health_visits_student_id_fkey (
+            full_name,
+            roll_number,
+            email,
+            phone,
+            batch,
+            branch
+          )
+        `)
+        .gte('visit_date', threeMonthsAgo.toISOString())
+        .order('visit_date', { ascending: false });
+
+      if (!allVisits) return [];
+
+      const byStudent = new Map<string, { student: any; visits: any[]; reasons: string[] }>();
+      allVisits.forEach((v: any) => {
+        if (!v.students) return;
+        const existing = byStudent.get(v.student_id);
+        if (existing) {
+          existing.visits.push(v);
+          existing.reasons.push(v.reason_category);
+        } else {
+          byStudent.set(v.student_id, {
+            student: v.students,
+            visits: [v],
+            reasons: [v.reason_category],
+          });
+        }
+      });
+
+      return Array.from(byStudent.entries())
+        .filter(([_, d]) => d.visits.length >= 3)
+        .map(([studentId, d]) => {
+          const reasonCounts: Record<string, number> = {};
+          d.reasons.forEach(r => { reasonCounts[r] = (reasonCounts[r] || 0) + 1; });
+          const primaryReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'other';
+          return {
+            student_id: studentId,
+            ...d.student,
+            visit_count: d.visits.length,
+            primary_concern: primaryReason,
+            last_visit: d.visits[0].visit_date,
+            recent_visits: d.visits.slice(0, 5),
+            risk_level: d.visits.length >= 5 ? 'high' : d.visits.length >= 3 ? 'medium' : 'low' as 'high' | 'medium' | 'low',
+          };
+        })
+        .sort((a, b) => b.visit_count - a.visit_count);
+    },
+    enabled: isDoctor && !isMentor,
+  });
+
+  const toggleExpanded = (set: Set<string>, setFn: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) => {
+    const next = new Set(set);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setFn(next);
+  };
 
   const handleCancelAppointment = async (id: string) => {
     try {
@@ -1058,7 +1216,7 @@ const HealthDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Health Dashboard</h1>
             <p className="text-muted-foreground mt-1">
-              {isDoctor ? 'Doctor Portal' : 'Mentor Portal'} - Student Health Records
+              Overall Student Health Records &amp; Analytics
             </p>
           </div>
           <div className="flex gap-3">
@@ -1092,9 +1250,7 @@ const HealthDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalStudents || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {isMentor ? 'Assigned to you' : 'In the system'}
-              </p>
+              <p className="text-xs text-muted-foreground">In the system</p>
             </CardContent>
           </Card>
 
@@ -1122,18 +1278,18 @@ const HealthDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Frequent Visitors</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">On Medical Leave</CardTitle>
+              <Bed className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.frequentVisitors.length || 0}</div>
-              <p className="text-xs text-muted-foreground">3+ visits in 3 months</p>
+              <div className="text-2xl font-bold">{medicalLeaveStudents.filter((s: any) => s.status === 'on_leave').length}</div>
+              <p className="text-xs text-muted-foreground">Currently on leave</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Visits */}
+          {/* Recent Visits - with expandable rows */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1143,7 +1299,7 @@ const HealthDashboard = () => {
               <CardDescription>Latest health centre visits{isMentor ? ' by your mentees' : ''}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {isMentor ? (
                   mentorRecentVisits.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
@@ -1152,109 +1308,85 @@ const HealthDashboard = () => {
                     </div>
                   ) : (
                     mentorRecentVisits.map((visit) => (
-                      <div
-                        key={visit.id}
-                        className="p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <p className="font-semibold text-foreground">{visit.student_name}</p>
-                            <p className="text-sm text-muted-foreground">{visit.student_roll}</p>
-                          </div>
-                          <div className="text-right">
-                            <Badge 
-                              variant="secondary"
-                              className={
-                                visit.reason_category === 'mental_wellness' 
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' 
-                                  : visit.reason_category === 'medical_illness'
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                  : visit.reason_category === 'injury'
-                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                              }
-                            >
-                              {formatReasonCategory(visit.reason_category)}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(visit.visit_date), 'MMM d, yyyy • h:mm a')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {(visit.reason_notes || visit.diagnosis || visit.prescription) && (
-                          <div className="bg-muted/30 rounded-md p-3 space-y-2 text-sm">
-                            {visit.reason_notes && (
+                      <Collapsible key={visit.id} open={expandedVisits.has(visit.id)} onOpenChange={() => toggleExpanded(expandedVisits, setExpandedVisits, visit.id)}>
+                        <CollapsibleTrigger asChild>
+                          <div className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              {expandedVisits.has(visit.id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                               <div>
-                                <span className="text-muted-foreground">Complaint:</span>
-                                <span className="ml-2 text-foreground">{visit.reason_notes}</span>
+                                <p className="font-medium text-sm">{visit.student_name}</p>
+                                <p className="text-xs text-muted-foreground">{visit.student_roll}</p>
                               </div>
-                            )}
-                            {visit.diagnosis && (
-                              <div>
-                                <span className="text-muted-foreground">Diagnosis:</span>
-                                <span className="ml-2 text-foreground">{visit.diagnosis}</span>
-                              </div>
-                            )}
-                            {visit.prescription && (
-                              <div>
-                                <span className="text-muted-foreground">Prescription:</span>
-                                <span className="ml-2 text-foreground">{visit.prescription}</span>
-                              </div>
-                            )}
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary" className="text-xs">{formatReasonCategory(visit.reason_category)}</Badge>
+                              <p className="text-xs text-muted-foreground mt-1">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                            </div>
                           </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                          <div className="flex items-center gap-4 text-xs">
-                            {visit.student_email && (
-                              <a href={`mailto:${visit.student_email}`} className="text-primary hover:underline flex items-center gap-1">
-                                Email
-                              </a>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-7 mr-3 mb-2 p-3 rounded-md bg-muted/30 border-l-2 border-primary/30 space-y-2 text-sm">
+                            {visit.reason_notes && <div><span className="text-muted-foreground">Complaint:</span> <span>{visit.reason_notes}</span></div>}
+                            {visit.diagnosis && <div><span className="text-muted-foreground">Diagnosis:</span> <span>{visit.diagnosis}</span></div>}
+                            {visit.prescription && <div><span className="text-muted-foreground">Prescription:</span> <span>{visit.prescription}</span></div>}
+                            {visit.follow_up_required && (
+                              <Badge variant="outline" className="text-amber-600 border-amber-300">
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                Follow-up: {visit.follow_up_date ? format(new Date(visit.follow_up_date), 'MMM d') : 'TBD'}
+                              </Badge>
                             )}
-                            {visit.student_phone && (
-                              <a href={`tel:${visit.student_phone}`} className="text-primary hover:underline flex items-center gap-1">
-                                Call
-                              </a>
-                            )}
+                            <div className="flex gap-3 pt-1">
+                              {visit.student_email && <a href={`mailto:${visit.student_email}`} className="text-xs text-primary hover:underline">Email</a>}
+                              {visit.student_phone && <a href={`tel:${visit.student_phone}`} className="text-xs text-primary hover:underline">Call</a>}
+                            </div>
                           </div>
-                          {visit.follow_up_required ? (
-                            <Badge variant="outline" className="text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-600">
-                              <AlertTriangle className="w-3 h-3 mr-1" />
-                              Follow-up: {visit.follow_up_date ? format(new Date(visit.follow_up_date), 'MMM d') : 'TBD'}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-green-600 border-green-300 dark:text-green-400 dark:border-green-600">
-                              Completed
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))
                   )
                 ) : (
-                  recentVisits.length === 0 ? (
+                  doctorRecentVisits.length === 0 ? (
                     <p className="text-muted-foreground text-center py-4">No recent visits</p>
                   ) : (
-                    recentVisits.map((visit) => (
-                      <div
-                        key={visit.id}
-                        className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/student-profile/${visit.students?.roll_number}`)}
-                      >
-                        <div>
-                          <p className="font-medium">{visit.students?.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{visit.students?.roll_number}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="secondary">
-                            {formatReasonCategory(visit.reason_category)}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(new Date(visit.visit_date), 'MMM d, yyyy')}
-                          </p>
-                        </div>
-                      </div>
+                    doctorRecentVisits.map((visit: any) => (
+                      <Collapsible key={visit.id} open={expandedVisits.has(visit.id)} onOpenChange={() => toggleExpanded(expandedVisits, setExpandedVisits, visit.id)}>
+                        <CollapsibleTrigger asChild>
+                          <div className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              {expandedVisits.has(visit.id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                              <div>
+                                <p className="font-medium text-sm">{visit.students?.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{visit.students?.roll_number}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary" className="text-xs">{formatReasonCategory(visit.reason_category)}</Badge>
+                              <p className="text-xs text-muted-foreground mt-1">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                            </div>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-7 mr-3 mb-2 p-3 rounded-md bg-muted/30 border-l-2 border-primary/30 space-y-2 text-sm">
+                            {visit.reason_notes && <div><span className="text-muted-foreground">Complaint:</span> <span>{visit.reason_notes}</span></div>}
+                            {visit.diagnosis && <div><span className="text-muted-foreground">Diagnosis:</span> <span>{visit.diagnosis}</span></div>}
+                            {visit.prescription && <div><span className="text-muted-foreground">Prescription:</span> <span>{visit.prescription}</span></div>}
+                            {visit.medical_officers?.name && <div><span className="text-muted-foreground">Doctor:</span> <span>Dr. {visit.medical_officers.name}</span></div>}
+                            {visit.follow_up_required && (
+                              <Badge variant="outline" className="text-amber-600 border-amber-300">
+                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                Follow-up: {visit.follow_up_date ? format(new Date(visit.follow_up_date), 'MMM d') : 'TBD'}
+                              </Badge>
+                            )}
+                            <div className="flex gap-3 pt-1">
+                              {visit.students?.roll_number && (
+                                <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/student-profile/${visit.students.roll_number}`)}>
+                                  View Full Profile →
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))
                   )
                 )}
@@ -1262,17 +1394,17 @@ const HealthDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Students Needing Attention */}
+          {/* Students Needing Attention - with expandable rows */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 Students Needing Attention
               </CardTitle>
-              <CardDescription>Students requiring your attention based on health patterns</CardDescription>
+              <CardDescription>Students with frequent visits (3+ in 3 months)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {isMentor ? (
                   studentsNeedingAttention.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
@@ -1281,84 +1413,81 @@ const HealthDashboard = () => {
                     </div>
                   ) : (
                     studentsNeedingAttention.map((student) => (
-                      <div
-                        key={student.student_id}
-                        className={`p-4 rounded-lg border-l-4 ${
-                          student.risk_level === 'high' 
-                            ? 'border-l-red-500 bg-red-50/50 dark:bg-red-900/10' 
-                            : student.risk_level === 'medium'
-                            ? 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-900/10'
-                            : 'border-l-green-500 bg-green-50/50 dark:bg-green-900/10'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-foreground">{student.full_name}</p>
-                              <Badge 
-                                variant={student.risk_level === 'high' ? 'destructive' : student.risk_level === 'medium' ? 'secondary' : 'outline'}
-                                className="text-xs"
-                              >
-                                {student.risk_level === 'high' ? 'High Priority' : student.risk_level === 'medium' ? 'Medium' : 'Low'}
-                              </Badge>
+                      <Collapsible key={student.student_id} open={expandedAttention.has(student.student_id)} onOpenChange={() => toggleExpanded(expandedAttention, setExpandedAttention, student.student_id)}>
+                        <CollapsibleTrigger asChild>
+                          <div className={`flex items-center justify-between p-3 rounded-lg border-l-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            student.risk_level === 'high' ? 'border-l-destructive bg-destructive/5' : student.risk_level === 'medium' ? 'border-l-amber-500 bg-amber-500/5' : 'border-l-muted-foreground'
+                          }`}>
+                            <div className="flex items-center gap-3">
+                              {expandedAttention.has(student.student_id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                              <div>
+                                <p className="font-medium text-sm">{student.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{student.roll_number} · {student.batch}</p>
+                              </div>
                             </div>
-                            <p className="text-sm text-muted-foreground">{student.roll_number} • {student.batch}</p>
-                          </div>
-                          <Badge variant="destructive" className="text-xs">
-                            {student.visit_count} visits
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-1.5 text-sm mb-3">
-                          {student.branch && (
                             <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Branch:</span>
-                              <span className="text-foreground">{student.branch}</span>
+                              <Badge variant="outline" className="text-xs">{student.primary_concern}</Badge>
+                              <Badge variant="destructive" className="text-xs">{student.visit_count} visits</Badge>
                             </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Primary Concern:</span>
-                            <Badge variant="outline" className="text-xs">{student.primary_concern}</Badge>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Last Visit:</span>
-                            <span className="text-foreground">{format(new Date(student.last_visit), 'MMM d, yyyy')}</span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-7 mr-3 mb-2 p-3 rounded-md bg-muted/30 border-l-2 border-primary/30 space-y-2 text-sm">
+                            {student.branch && <div><span className="text-muted-foreground">Branch:</span> <span>{student.branch}</span></div>}
+                            <div><span className="text-muted-foreground">Last Visit:</span> <span>{format(new Date(student.last_visit), 'MMM d, yyyy')}</span></div>
+                            <div className="flex gap-3 pt-1">
+                              {student.email && <a href={`mailto:${student.email}`} className="text-xs text-primary hover:underline">{student.email}</a>}
+                              {student.phone && <a href={`tel:${student.phone}`} className="text-xs text-primary hover:underline">{student.phone}</a>}
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 mt-3 pt-3 border-t text-xs">
-                          {student.email && (
-                            <a href={`mailto:${student.email}`} className="text-primary hover:underline">
-                              {student.email}
-                            </a>
-                          )}
-                          {student.phone && (
-                            <a href={`tel:${student.phone}`} className="text-primary hover:underline">
-                              {student.phone}
-                            </a>
-                          )}
-                        </div>
-                      </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))
                   )
                 ) : (
-                  stats?.frequentVisitors.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">No alerts</p>
+                  doctorAttentionStudents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ShieldCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No students with frequent visits</p>
+                    </div>
                   ) : (
-                    stats?.frequentVisitors.slice(0, 5).map((student) => (
-                      <div
-                        key={student.student_id}
-                        className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => navigate(`/student-profile/${student.roll_number}`)}
-                      >
-                        <div>
-                          <p className="font-medium">{student.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{student.roll_number}</p>
-                        </div>
-                        <Badge variant="destructive">
-                          {student.visit_count} visits
-                        </Badge>
-                      </div>
+                    doctorAttentionStudents.map((student: any) => (
+                      <Collapsible key={student.student_id} open={expandedAttention.has(student.student_id)} onOpenChange={() => toggleExpanded(expandedAttention, setExpandedAttention, student.student_id)}>
+                        <CollapsibleTrigger asChild>
+                          <div className={`flex items-center justify-between p-3 rounded-lg border-l-4 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            student.risk_level === 'high' ? 'border-l-destructive bg-destructive/5' : student.risk_level === 'medium' ? 'border-l-amber-500 bg-amber-500/5' : 'border-l-muted-foreground'
+                          }`}>
+                            <div className="flex items-center gap-3">
+                              {expandedAttention.has(student.student_id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                              <div>
+                                <p className="font-medium text-sm">{student.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{student.roll_number} · {student.batch}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">{formatReasonCategory(student.primary_concern)}</Badge>
+                              <Badge variant="destructive" className="text-xs">{student.visit_count} visits</Badge>
+                            </div>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="ml-7 mr-3 mb-2 p-3 rounded-md bg-muted/30 border-l-2 border-primary/30 space-y-3 text-sm">
+                            {student.branch && <div><span className="text-muted-foreground">Branch:</span> <span>{student.branch}</span></div>}
+                            <div className="space-y-1.5">
+                              <p className="text-xs font-medium text-muted-foreground">Recent Visit History:</p>
+                              {student.recent_visits.map((v: any, i: number) => (
+                                <div key={v.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-background border">
+                                  <span>{format(new Date(v.visit_date), 'MMM d, yyyy')}</span>
+                                  <Badge variant="outline" className="text-xs">{formatReasonCategory(v.reason_category)}</Badge>
+                                </div>
+                              ))}
+                            </div>
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/student-profile/${student.roll_number}`)}>
+                              View Full Profile →
+                            </Button>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))
                   )
                 )}
@@ -1366,6 +1495,112 @@ const HealthDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Students on Medical Leave */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
+              Students on Medical Leave
+            </CardTitle>
+            <CardDescription>Active medical leave cases — click to expand details</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {medicalLeaveStudents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ShieldCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No active medical leave cases</p>
+                </div>
+              ) : (
+                medicalLeaveStudents.map((leave: any) => {
+                  const student = leave.students;
+                  const doctor = leave.medical_officers;
+                  const daysUntilReturn = leave.expected_return_date
+                    ? differenceInDays(new Date(leave.expected_return_date), new Date())
+                    : null;
+                  const statusColor: Record<string, string> = {
+                    doctor_referred: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+                    student_form_pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+                    on_leave: 'bg-destructive/10 text-destructive',
+                    return_pending: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                  };
+                  const statusLabel: Record<string, string> = {
+                    doctor_referred: 'Doctor Referred',
+                    student_form_pending: 'Form Pending',
+                    on_leave: 'On Leave',
+                    return_pending: 'Return Pending',
+                  };
+
+                  return (
+                    <Collapsible key={leave.id} open={expandedLeave.has(leave.id)} onOpenChange={() => toggleExpanded(expandedLeave, setExpandedLeave, leave.id)}>
+                      <CollapsibleTrigger asChild>
+                        <div className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${
+                          leave.health_priority === 'high' ? 'border-l-4 border-l-destructive' : leave.health_priority === 'medium' ? 'border-l-4 border-l-amber-500' : ''
+                        }`}>
+                          <div className="flex items-center gap-3">
+                            {expandedLeave.has(leave.id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                            <div>
+                              <p className="font-medium text-sm">{student?.full_name || 'Unknown'}</p>
+                              <p className="text-xs text-muted-foreground">{student?.roll_number} · {student?.branch || student?.program}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`text-xs ${statusColor[leave.status] || ''}`}>
+                              {statusLabel[leave.status] || leave.status}
+                            </Badge>
+                            {daysUntilReturn !== null && leave.status === 'on_leave' && (
+                              <Badge variant="outline" className={`text-xs ${daysUntilReturn <= 1 ? 'border-destructive text-destructive' : ''}`}>
+                                {daysUntilReturn <= 0 ? 'Overdue' : `${daysUntilReturn}d left`}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="ml-7 mr-3 mb-2 p-3 rounded-md bg-muted/30 border-l-2 border-primary/30 space-y-2 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div><span className="text-muted-foreground">Hospital:</span> <span>{leave.referral_hospital}</span></div>
+                            <div><span className="text-muted-foreground">Duration:</span> <span>{leave.expected_duration}</span></div>
+                            {leave.leave_start_date && <div><span className="text-muted-foreground">Leave Start:</span> <span>{format(new Date(leave.leave_start_date), 'MMM d, yyyy')}</span></div>}
+                            {leave.expected_return_date && <div><span className="text-muted-foreground">Expected Return:</span> <span>{format(new Date(leave.expected_return_date), 'MMM d, yyyy')}</span></div>}
+                            {doctor?.name && <div><span className="text-muted-foreground">Referring Doctor:</span> <span>Dr. {doctor.name}</span></div>}
+                            {leave.health_priority && <div><span className="text-muted-foreground">Priority:</span> <Badge variant={leave.health_priority === 'high' ? 'destructive' : 'secondary'} className="text-xs ml-1">{leave.health_priority}</Badge></div>}
+                          </div>
+                          {leave.illness_description && (
+                            <div className="pt-1 border-t">
+                              <span className="text-muted-foreground">Illness:</span> <span>{leave.illness_description}</span>
+                            </div>
+                          )}
+                          {leave.doctor_notes && (
+                            <div>
+                              <span className="text-muted-foreground">Doctor Notes:</span> <span>{leave.doctor_notes}</span>
+                            </div>
+                          )}
+                          {leave.accompanist_name && (
+                            <div>
+                              <span className="text-muted-foreground">Accompanist:</span> <span>{leave.accompanist_name} ({leave.accompanist_type})</span>
+                              {leave.accompanist_contact && <span className="ml-2">· {leave.accompanist_contact}</span>}
+                            </div>
+                          )}
+                          <div className="flex gap-3 pt-1">
+                            {student?.email && <a href={`mailto:${student.email}`} className="text-xs text-primary hover:underline">Email Student</a>}
+                            {student?.phone && <a href={`tel:${student.phone}`} className="text-xs text-primary hover:underline">Call Student</a>}
+                            {student?.roll_number && (
+                              <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => navigate(`/student-profile/${student.roll_number}`)}>
+                                View Profile →
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Health Records Section */}
         <HealthRecordsSection />
@@ -1379,7 +1614,6 @@ const HealthDashboard = () => {
           onOpenChange={(open) => {
             if (!open) {
               setRescheduleApt(null);
-              // Refresh appointments
               fetchStudentAppointments();
             }
           }}
