@@ -98,7 +98,9 @@ export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : (searchParams.get('tab') === 'prescriptions' || searchParams.get('tab') === 'records') ? 'records' : 'profile';
+  const defaultSubTab = searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'visits';
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [recordsSubTab, setRecordsSubTab] = useState(defaultSubTab);
   const { user, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
 
@@ -632,131 +634,157 @@ export default function StudentProfilePage() {
 
           {/* ── HEALTH RECORDS TAB ── */}
           <TabsContent value="records" className="mt-4 space-y-4">
-            {/* Visit History */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ClipboardList className="w-4 h-4 text-primary" />
-                  Visit History
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {visitHistory.length} visit{visitHistory.length !== 1 ? 's' : ''} on record
-                </p>
-              </CardHeader>
-              <CardContent>
-                {visitHistory.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">No visit history yet</p>
-                    <p className="text-sm">Your health centre visits will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {visitHistory.map((visit) => (
-                      <div key={visit.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
-                        <div>
-                          <p className="font-medium text-sm">
-                            {visit.reason_notes || visit.reason_category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{visit.doctor_name}</p>
-                          {visit.diagnosis && (
-                            <p className="text-xs text-muted-foreground mt-0.5">Diagnosis: {visit.diagnosis}</p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-xs text-muted-foreground">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
-                          {visit.follow_up_required && (
-                            <Badge variant="secondary" className="text-xs mt-1">Follow-up</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Sub-tabs for Visit History and Prescriptions */}
+            <div className="flex gap-2 p-1 bg-muted/50 rounded-lg w-fit">
+              <Button
+                variant={recordsSubTab === 'visits' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('visits')}
+                className="flex items-center gap-2"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Visit History ({visitHistory.length})
+              </Button>
+              <Button
+                variant={recordsSubTab === 'prescriptions' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('prescriptions')}
+                className="flex items-center gap-2"
+              >
+                <Pill className="w-4 h-4" />
+                Prescriptions ({prescriptions.length})
+              </Button>
+            </div>
 
-            {/* Prescriptions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Pill className="w-4 h-4 text-primary" />
-                  Prescription History
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {prescriptions.length} prescription{prescriptions.length !== 1 ? 's' : ''} on record
-                </p>
-              </CardHeader>
-              <CardContent>
-                {prescriptions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Pill className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">No prescriptions yet</p>
-                    <p className="text-sm">Prescriptions from your health centre visits will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {prescriptions.map((rx) => (
-                      <div key={rx.id} className="rounded-lg border p-4 space-y-3">
-                        <div className="flex items-center justify-between">
+            {/* Visit History Sub-tab */}
+            {recordsSubTab === 'visits' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4 text-primary" />
+                    Visit History
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {visitHistory.length} visit{visitHistory.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {visitHistory.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No visit history yet</p>
+                      <p className="text-sm">Your health centre visits will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {visitHistory.map((visit) => (
+                        <div key={visit.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
                           <div>
-                            <p className="font-medium text-foreground">
-                              {format(new Date(rx.created_at), 'PPP')}
+                            <p className="font-medium text-sm">
+                              {visit.reason_notes || visit.reason_category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </p>
-                            {rx.diagnosis && (
-                              <p className="text-sm text-muted-foreground mt-0.5">
-                                <strong>Diagnosis:</strong> {rx.diagnosis}
-                              </p>
+                            <p className="text-xs text-muted-foreground">{visit.doctor_name}</p>
+                            {visit.diagnosis && (
+                              <p className="text-xs text-muted-foreground mt-0.5">Diagnosis: {visit.diagnosis}</p>
                             )}
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePrintStudentPrescription(rx)}
-                          >
-                            <Printer className="w-3 h-3 mr-1" />
-                            Print
-                          </Button>
-                        </div>
-                        {rx.prescription_items && rx.prescription_items.length > 0 && (
-                          <div className="rounded-md border overflow-hidden">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="bg-muted/50">
-                                  <th className="text-left p-2 font-medium">#</th>
-                                  <th className="text-left p-2 font-medium">Medicine</th>
-                                  <th className="text-left p-2 font-medium">Dosage</th>
-                                  <th className="text-left p-2 font-medium">Frequency</th>
-                                  <th className="text-left p-2 font-medium">Duration</th>
-                                  <th className="text-left p-2 font-medium">Timing</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {rx.prescription_items.map((item, i) => (
-                                  <tr key={item.id} className="border-t">
-                                    <td className="p-2 text-muted-foreground">{i + 1}</td>
-                                    <td className="p-2 font-medium">{item.medicine_name}</td>
-                                    <td className="p-2">{item.dosage}</td>
-                                    <td className="p-2">{item.frequency}</td>
-                                    <td className="p-2">{item.duration}</td>
-                                    <td className="p-2">{MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '—'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs text-muted-foreground">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                            {visit.follow_up_required && (
+                              <Badge variant="secondary" className="text-xs mt-1">Follow-up</Badge>
+                            )}
                           </div>
-                        )}
-                        {rx.notes && (
-                          <p className="text-sm text-muted-foreground bg-muted/30 rounded p-2">
-                            <strong>Notes:</strong> {rx.notes}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Prescriptions Sub-tab */}
+            {recordsSubTab === 'prescriptions' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Pill className="w-4 h-4 text-primary" />
+                    Prescription History
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {prescriptions.length} prescription{prescriptions.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {prescriptions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Pill className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No prescriptions yet</p>
+                      <p className="text-sm">Prescriptions from your health centre visits will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {prescriptions.map((rx) => (
+                        <div key={rx.id} className="rounded-lg border p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {format(new Date(rx.created_at), 'PPP')}
+                              </p>
+                              {rx.diagnosis && (
+                                <p className="text-sm text-muted-foreground mt-0.5">
+                                  <strong>Diagnosis:</strong> {rx.diagnosis}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePrintStudentPrescription(rx)}
+                            >
+                              <Printer className="w-3 h-3 mr-1" />
+                              Print
+                            </Button>
+                          </div>
+                          {rx.prescription_items && rx.prescription_items.length > 0 && (
+                            <div className="rounded-md border overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="bg-muted/50">
+                                    <th className="text-left p-2 font-medium">#</th>
+                                    <th className="text-left p-2 font-medium">Medicine</th>
+                                    <th className="text-left p-2 font-medium">Dosage</th>
+                                    <th className="text-left p-2 font-medium">Frequency</th>
+                                    <th className="text-left p-2 font-medium">Duration</th>
+                                    <th className="text-left p-2 font-medium">Timing</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rx.prescription_items.map((item, i) => (
+                                    <tr key={item.id} className="border-t">
+                                      <td className="p-2 text-muted-foreground">{i + 1}</td>
+                                      <td className="p-2 font-medium">{item.medicine_name}</td>
+                                      <td className="p-2">{item.dosage}</td>
+                                      <td className="p-2">{item.frequency}</td>
+                                      <td className="p-2">{item.duration}</td>
+                                      <td className="p-2">{MEAL_LABELS[item.meal_timing || ''] || item.meal_timing || '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                          {rx.notes && (
+                            <p className="text-sm text-muted-foreground bg-muted/30 rounded p-2">
+                              <strong>Notes:</strong> {rx.notes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* ── SETTINGS TAB ── */}
