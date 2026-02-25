@@ -86,7 +86,8 @@ const MEAL_LABELS: Record<string, string> = {
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : 'profile';
+  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'profile';
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const { user, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
 
@@ -300,7 +301,10 @@ export default function StudentProfilePage() {
                   <p className="text-2xl font-bold text-foreground">{healthStats.thisMonthVisits}</p>
                   <p className="text-xs text-muted-foreground">This Month</p>
                 </div>
-                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px]">
+                <div
+                  className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px] cursor-pointer hover:bg-primary/10 transition-colors"
+                  onClick={() => setActiveTab('prescriptions')}
+                >
                   <p className="text-2xl font-bold text-foreground">{prescriptions.length}</p>
                   <p className="text-xs text-muted-foreground">Prescriptions</p>
                 </div>
@@ -318,7 +322,7 @@ export default function StudentProfilePage() {
         </Card>
 
         {/* Tabs */}
-        <Tabs defaultValue={defaultTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
