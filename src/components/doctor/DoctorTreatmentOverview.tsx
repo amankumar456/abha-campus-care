@@ -349,8 +349,18 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
                             <span className="flex items-center gap-1"><Hospital className="w-3.5 h-3.5" />{item.referral_hospital}</span>
                             <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(parseISO(item.created_at), "dd MMM, hh:mm a")}</span>
                           </div>
-                          {item.illness_description && <p className="text-sm text-muted-foreground line-clamp-1">{item.illness_description}</p>}
-                          {item.doctor_notes && <p className="text-xs text-muted-foreground/70 line-clamp-1">Notes: {item.doctor_notes}</p>}
+                          {(item.illness_description || item.doctor_notes) && (
+                            <div className="flex items-start gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg bg-orange-500/5 border border-orange-200/50 dark:border-orange-900/20">
+                              <FileText className="w-3.5 h-3.5 text-orange-600 mt-0.5 shrink-0" />
+                              <div className="text-sm">
+                                <span className="font-medium text-orange-700 dark:text-orange-300">Purpose: </span>
+                                <span className="text-foreground">{item.illness_description || item.doctor_notes}</span>
+                              </div>
+                            </div>
+                          )}
+                          {item.doctor_notes && item.illness_description && (
+                            <p className="text-xs text-muted-foreground/70 line-clamp-1">Doctor's notes: {item.doctor_notes}</p>
+                          )}
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
                           {getStatusBadge(item.status)}
