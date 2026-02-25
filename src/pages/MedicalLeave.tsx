@@ -96,7 +96,7 @@ const getStatusBadge = (status: string) => {
 const MedicalLeave = () => {
   const { user, isDoctor, isStudent, isMentor, isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("status");
+  const [activeTab, setActiveTab] = useState("requests");
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showLeaveLetter, setShowLeaveLetter] = useState(false);
@@ -237,16 +237,16 @@ const MedicalLeave = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Medical Leave Management</h1>
             <p className="text-muted-foreground mt-1">
-              {isStudent && "Track and manage your off-campus medical leave"}
               {isDoctor && "Refer students for external treatment and track leave requests"}
-              {isMentor && "Monitor your mentees' medical leave status"}
-              {isAdmin && "Oversee all medical leave requests"}
+              {!isDoctor && isStudent && "Track and manage your off-campus medical leave"}
+              {!isDoctor && !isStudent && isMentor && "Monitor your mentees' medical leave status"}
+              {isAdmin && !isDoctor && "Oversee all medical leave requests"}
             </p>
           </div>
         </div>
 
-        {/* Student View */}
-        {isStudent && (
+        {/* Student View - only show for pure students, not doctors */}
+        {isStudent && !isDoctor && (
           <div className="space-y-6">
             {/* Show Leave Letter */}
             {showLeaveLetter && studentLeaveRequest && studentProfile && (
