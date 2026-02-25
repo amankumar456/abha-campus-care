@@ -165,47 +165,53 @@ export default function MyAppointments() {
     }
   });
 
-  const filterAndSortAppointments = (appointmentList: Appointment[]) => {
-    let filtered = appointmentList.filter(a => {
+  const filterAppointments = (appointmentList: Appointment[]) => {
+    return appointmentList.filter(a => {
       const doctorName = a.medical_officers?.name || a.visiting_doctors?.name || '';
       return doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
              (a.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
     });
+  };
 
+  const sortAppointments = (filtered: Appointment[], direction: 'asc' | 'desc') => {
+    const sorted = [...filtered];
     if (sortBy === 'date') {
-      filtered.sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
+      sorted.sort((a, b) => {
+        const dateA = new Date(`${a.appointment_date}T${a.appointment_time}`).getTime();
+        const dateB = new Date(`${b.appointment_date}T${b.appointment_time}`).getTime();
+        return direction === 'asc' ? dateA - dateB : dateB - dateA;
+      });
     } else if (sortBy === 'doctor') {
-      filtered.sort((a, b) => {
+      sorted.sort((a, b) => {
         const nameA = a.medical_officers?.name || a.visiting_doctors?.name || '';
         const nameB = b.medical_officers?.name || b.visiting_doctors?.name || '';
         return nameA.localeCompare(nameB);
       });
     }
-
-    return filtered;
+    return sorted;
   };
 
-  // For upcoming: show all non-cancelled, non-completed appointments where the DATE is today or future
-  const upcomingAppointments = filterAndSortAppointments(
+  // Upcoming: nearest date first (ascending)
+  const upcomingAppointments = sortAppointments(filterAppointments(
     appointments?.filter(
       a => a.status !== 'cancelled' && a.status !== 'completed' && !isPast(new Date(`${a.appointment_date}T23:59:59`))
     ) || []
-  );
+  ), 'asc');
 
-  // For past: completed OR the date has fully passed (end of day)
-  const pastAppointments = filterAndSortAppointments(
+  // Past: most recent first (descending)
+  const pastAppointments = sortAppointments(filterAppointments(
     appointments?.filter(
       a => a.status === 'completed' || (a.status !== 'cancelled' && isPast(new Date(`${a.appointment_date}T23:59:59`)))
     ) || []
-  );
+  ), 'desc');
 
-  const cancelledAppointments = filterAndSortAppointments(
+  const cancelledAppointments = sortAppointments(filterAppointments(
     appointments?.filter(a => a.status === 'cancelled') || []
-  );
+  ), 'desc');
 
-  const followUpAppointments = filterAndSortAppointments(
+  const followUpAppointments = sortAppointments(filterAppointments(
     appointments?.filter(a => a.reason?.toLowerCase().includes('follow') && a.status !== 'cancelled') || []
-  );
+  ), 'asc');
 
   if (!user) {
     return (
