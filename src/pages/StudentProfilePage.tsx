@@ -291,14 +291,18 @@ export default function StudentProfilePage() {
                 <p className="text-muted-foreground text-sm mt-2">Roll No: <span className="font-semibold text-foreground">{student?.roll_number}</span></p>
               </div>
               {/* Health Stats */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[80px]">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px]">
                   <p className="text-2xl font-bold text-foreground">{healthStats.totalVisits}</p>
                   <p className="text-xs text-muted-foreground">Total Visits</p>
                 </div>
-                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[80px]">
+                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px]">
                   <p className="text-2xl font-bold text-foreground">{healthStats.thisMonthVisits}</p>
                   <p className="text-xs text-muted-foreground">This Month</p>
+                </div>
+                <div className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px]">
+                  <p className="text-2xl font-bold text-foreground">{prescriptions.length}</p>
+                  <p className="text-xs text-muted-foreground">Prescriptions</p>
                 </div>
                 {healthStats.pendingFollowups > 0 && (
                   <div className="col-span-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-center">
