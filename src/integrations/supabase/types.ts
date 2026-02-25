@@ -1160,6 +1160,7 @@ export type Database = {
           mentor_id: string | null
           mentor_name: string | null
           phone: string | null
+          photo_url: string | null
           program: string
           roll_number: string
           updated_at: string
@@ -1178,6 +1179,7 @@ export type Database = {
           mentor_id?: string | null
           mentor_name?: string | null
           phone?: string | null
+          photo_url?: string | null
           program: string
           roll_number: string
           updated_at?: string
@@ -1196,6 +1198,7 @@ export type Database = {
           mentor_id?: string | null
           mentor_name?: string | null
           phone?: string | null
+          photo_url?: string | null
           program?: string
           roll_number?: string
           updated_at?: string
