@@ -358,6 +358,8 @@ const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, student
             studentProgram={studentProgram}
             studentBranch={studentBranch || undefined}
             emergencyContacts={emergencyContacts}
+            illnessDescription={referralData?.illnessDescription}
+            doctorNotes={referralData?.doctorNotes}
           />
           {showReferralLetter && referralData && studentName && studentRollNumber && (
             <PrintableReferralLetter
