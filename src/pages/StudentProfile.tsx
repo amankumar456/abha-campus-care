@@ -24,6 +24,7 @@ interface Student {
   year_of_study: string | null;
   mentor_name: string | null;
   mentor_email: string | null;
+  photo_url: string | null;
   mentors: {
     name: string;
     department: string;
@@ -120,7 +121,7 @@ const StudentProfile = () => {
         .from('students')
         .select(`
           id, roll_number, full_name, program, branch, batch, email, phone, year_of_study,
-          mentor_name, mentor_email,
+          mentor_name, mentor_email, photo_url,
           mentors ( name, department )
         `)
         .eq('roll_number', rollNumber)
@@ -294,8 +295,12 @@ const StudentProfile = () => {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-8 w-8 text-primary" />
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {student?.photo_url ? (
+                    <img src={student.photo_url} alt={student.full_name} className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-8 w-8 text-primary" />
+                  )}
                 </div>
                 <div>
                   <CardTitle className="text-2xl">{student?.full_name}</CardTitle>

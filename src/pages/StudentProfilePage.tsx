@@ -17,7 +17,7 @@ import {
 import {
   User, Mail, Phone, GraduationCap, Building2, Calendar, Users,
   Activity, AlertCircle, Settings, Bell, Shield, Heart,
-  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList
+  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList, Camera, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,7 @@ interface StudentData {
   mentor_name: string | null;
   mentor_email: string | null;
   mentor_contact: string | null;
+  photo_url: string | null;
   mentors: { name: string; email: string | null; phone: string | null; department: string } | null;
 }
 
@@ -127,6 +128,7 @@ export default function StudentProfilePage() {
   const [editEmail, setEditEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Settings state
   const [notifAppointments, setNotifAppointments] = useState(true);
@@ -150,7 +152,7 @@ export default function StudentProfilePage() {
         .from('students')
         .select(`
           id, full_name, roll_number, email, phone, program, branch, batch, year_of_study,
-          mentor_name, mentor_email, mentor_contact,
+          mentor_name, mentor_email, mentor_contact, photo_url,
           mentors ( name, email, phone, department )
         `)
         .eq('user_id', user!.id)
@@ -295,6 +297,52 @@ export default function StudentProfilePage() {
     await printDocument({ title: `Prescription — ${student?.full_name}`, bodyHtml, documentId: prescriptionId, documentType: 'PRESCRIPTION' });
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !student || !user) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Invalid file', description: 'Please upload an image file.', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'Please upload an image under 2MB.', variant: 'destructive' });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/profile.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(filePath);
+
+      const photoUrl = `${publicUrl}?t=${Date.now()}`;
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ photo_url: photoUrl })
+        .eq('id', student.id);
+
+      if (updateError) throw updateError;
+
+      setStudent(prev => prev ? { ...prev, photo_url: photoUrl } : null);
+      toast({ title: '✅ Photo Updated', description: 'Your profile photo has been uploaded successfully.' });
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Upload Failed', description: err.message || 'Could not upload photo.', variant: 'destructive' });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const profileFields = student ? [
     { name: 'fullName', label: 'Full Name', filled: !!student.full_name, required: true },
     { name: 'rollNumber', label: 'Roll Number', filled: !!student.roll_number, required: true },
@@ -345,8 +393,28 @@ export default function StudentProfilePage() {
         <Card className="bg-gradient-to-br from-primary/5 via-primary/8 to-primary/12 border-primary/20">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-start gap-6">
-              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <GraduationCap className="w-10 h-10 text-primary" />
+              <div className="relative group">
+                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-primary/30">
+                  {student?.photo_url ? (
+                    <img src={student.photo_url} alt={student.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <GraduationCap className="w-10 h-10 text-primary" />
+                  )}
+                </div>
+                <label className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  {uploadingPhoto ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-white" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                    disabled={uploadingPhoto}
+                  />
+                </label>
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-foreground">{student?.full_name || 'Student'}</h2>
