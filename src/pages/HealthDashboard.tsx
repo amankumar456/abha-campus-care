@@ -206,7 +206,7 @@ const HealthDashboard = () => {
         `)
         .eq('student_id', student.id)
         .order('visit_date', { ascending: false })
-        .limit(5);
+        .limit(6);
 
       let visits: StudentVisit[] = [];
 
@@ -245,7 +245,7 @@ const HealthDashboard = () => {
           .eq('patient_id', user.id)
           .eq('status', 'completed')
           .order('appointment_date', { ascending: false })
-          .limit(5);
+          .limit(6);
 
         if (completedAppts) {
           const moIds = completedAppts.filter(a => a.medical_officer_id).map(a => a.medical_officer_id!);
@@ -828,11 +828,18 @@ const HealthDashboard = () => {
             {/* Recent Visit History */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5 text-primary" />
-                  Recent Visit History
-                </CardTitle>
-                <CardDescription>Your past health centre visits</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardList className="h-5 w-5 text-primary" />
+                      Recent Visit History
+                    </CardTitle>
+                    <CardDescription>Your past health centre visits</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/student/profile?tab=prescriptions">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {studentVisits.length === 0 ? (
