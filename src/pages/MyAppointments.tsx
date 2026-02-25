@@ -238,7 +238,7 @@ export default function MyAppointments() {
     );
   }
 
-  const renderAppointmentCard = (appointment: Appointment, showCancel = true) => {
+  const renderAppointmentCard = (appointment: Appointment, showCancel = true, showCalendar = true) => {
     const doctorName = appointment.medical_officers?.name || appointment.visiting_doctors?.name;
     const doctorInfo = appointment.medical_officers?.designation || appointment.visiting_doctors?.specialization;
     const appointmentDate = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
@@ -354,12 +354,14 @@ export default function MyAppointments() {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <AddToCalendarDropdown
-              appointmentDate={appointment.appointment_date}
-              appointmentTime={appointment.appointment_time}
-              doctorName={doctorName || "Doctor"}
-              reason={appointment.reason}
-            />
+            {showCalendar && (
+              <AddToCalendarDropdown
+                appointmentDate={appointment.appointment_date}
+                appointmentTime={appointment.appointment_time}
+                doctorName={doctorName || "Doctor"}
+                reason={appointment.reason}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -478,7 +480,7 @@ export default function MyAppointments() {
                     </Card>
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                      {pastAppointments.map(appointment => renderAppointmentCard(appointment, false))}
+                      {pastAppointments.map(appointment => renderAppointmentCard(appointment, false, false))}
                     </div>
                   )}
                 </TabsContent>
@@ -506,7 +508,7 @@ export default function MyAppointments() {
                     </Card>
                   ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                      {cancelledAppointments.map(appointment => renderAppointmentCard(appointment, false))}
+                      {cancelledAppointments.map(appointment => renderAppointmentCard(appointment, false, false))}
                     </div>
                   )}
                 </TabsContent>
