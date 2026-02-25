@@ -461,7 +461,7 @@ const referralFormSchema = z.object({
   referralHospital: z.string().min(2, "Hospital name is required"),
   expectedDuration: z.string().min(1, "Expected duration is required"),
   illnessDescription: z.string().min(3, "Please describe the illness/condition"),
-  leaveDays: z.coerce.number().min(1, "At least 1 day required").max(90, "Maximum 90 days"),
+  leaveDays: z.coerce.number().min(0, "Enter 0 or more days").max(90, "Maximum 90 days"),
   healthPriority: z.enum(["low", "medium", "high"]),
   doctorNotes: z.string().optional(),
   // Academic Coordination fields
@@ -491,6 +491,8 @@ interface ApprovedLeaveInfo {
   expectedDuration: string;
   createdAt: string;
   status: string;
+  referralType: string[];
+  testDetails: string | null;
 }
 
 const DoctorReferralForm = () => {
@@ -501,6 +503,8 @@ const DoctorReferralForm = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [approvedLeave, setApprovedLeave] = useState<ApprovedLeaveInfo | null>(null);
   const [leaveCheckDone, setLeaveCheckDone] = useState(false);
+  const [referredForTreatment, setReferredForTreatment] = useState(false);
+  const [referredForTest, setReferredForTest] = useState(false);
 
   const form = useForm<ReferralFormData>({
     resolver: zodResolver(referralFormSchema),
@@ -540,6 +544,8 @@ const DoctorReferralForm = () => {
       setFoundStudent(null);
       setApprovedLeave(null);
       setLeaveCheckDone(false);
+      setReferredForTreatment(false);
+      setReferredForTest(false);
 
     try {
       const { data, error } = await supabase
@@ -603,7 +609,7 @@ const DoctorReferralForm = () => {
         .from("medical_leave_requests")
         .select(`
           id, doctor_notes, rest_days, referral_hospital, health_priority, 
-          expected_duration, created_at, status,
+          expected_duration, created_at, status, referral_type,
           medical_officers:referring_doctor_id(name)
         `)
         .eq("student_id", data.id)
@@ -616,6 +622,13 @@ const DoctorReferralForm = () => {
 
       if (leaveData) {
         const doctorInfo = leaveData.medical_officers as any;
+        const refTypes = (leaveData.referral_type as string[]) || [];
+        
+        // Extract test details from doctor_notes if present
+        const notes = leaveData.doctor_notes || "";
+        const testMatch = notes.match(/Test\/Checkup:\s*(.+?)(?:\s*\||$)/);
+        const testDetails = testMatch ? testMatch[1].trim() : null;
+        
         setApprovedLeave({
           id: leaveData.id,
           doctorName: doctorInfo?.name || "A doctor",
@@ -626,11 +639,18 @@ const DoctorReferralForm = () => {
           expectedDuration: leaveData.expected_duration,
           createdAt: leaveData.created_at,
           status: leaveData.status,
+          referralType: refTypes,
+          testDetails,
         });
+        
+        // Auto-fill referral type toggles from leave approval
+        setReferredForTreatment(refTypes.includes("treatment"));
+        setReferredForTest(refTypes.includes("test_checkup"));
+        
         // Auto-fill form fields from existing approval
         form.setValue("referralHospital", leaveData.referral_hospital || "");
         form.setValue("healthPriority", (leaveData.health_priority as any) || "medium");
-        form.setValue("leaveDays", leaveData.rest_days || 3);
+        form.setValue("leaveDays", leaveData.rest_days || 0);
         form.setValue("illnessDescription", leaveData.doctor_notes || "");
         form.setValue("expectedDuration", leaveData.expected_duration || "");
       }
@@ -655,6 +675,11 @@ const DoctorReferralForm = () => {
       const leaveStartDate = new Date();
       const expectedReturnDate = new Date(Date.now() + data.leaveDays * 24 * 60 * 60 * 1000);
 
+      // Build referral type array
+      const referralTypes: string[] = [];
+      if (referredForTreatment) referralTypes.push("treatment");
+      if (referredForTest) referralTypes.push("test_checkup");
+
       // Get doctor name for notification
       const { data: doctorData } = await supabase
         .from("medical_officers")
@@ -674,6 +699,7 @@ const DoctorReferralForm = () => {
         expected_return_date: expectedReturnDate.toISOString().split('T')[0],
         rest_days: data.leaveDays,
         status: "student_form_pending",
+        referral_type: referralTypes,
       }).select("id").maybeSingle();
 
       if (error) throw error;
@@ -697,6 +723,10 @@ const DoctorReferralForm = () => {
       });
       form.reset();
       setFoundStudent(null);
+      setReferredForTreatment(false);
+      setReferredForTest(false);
+      setApprovedLeave(null);
+      setLeaveCheckDone(false);
       queryClient.invalidateQueries({ queryKey: ["medical-leave-requests"] });
     },
     onError: (error) => {
@@ -710,6 +740,10 @@ const DoctorReferralForm = () => {
   const onSubmit = (data: ReferralFormData) => {
     if (!foundStudent) {
       toast.error("Please verify student first");
+      return;
+    }
+    if (!referredForTreatment && !referredForTest) {
+      toast.error("Please select at least one referral purpose (Treatment or Test/Checkup)");
       return;
     }
     referralMutation.mutate(data);
@@ -773,6 +807,8 @@ const DoctorReferralForm = () => {
                             setSearchError(null);
                             setApprovedLeave(null);
                             setLeaveCheckDone(false);
+                            setReferredForTreatment(false);
+                            setReferredForTest(false);
                           }}
                         />
                       </FormControl>
@@ -801,6 +837,8 @@ const DoctorReferralForm = () => {
                             setSearchError(null);
                             setApprovedLeave(null);
                             setLeaveCheckDone(false);
+                            setReferredForTreatment(false);
+                            setReferredForTest(false);
                           }}
                         />
                       </FormControl>
@@ -886,6 +924,16 @@ const DoctorReferralForm = () => {
                   {" "}Rest days: <strong>{approvedLeave.restDays ?? "N/A"}</strong>.
                   {approvedLeave.referralHospital && <> Referral hospital: <strong>{approvedLeave.referralHospital}</strong>.</>}
                 </p>
+                {approvedLeave.referralType.length > 0 && (
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Referral type: <strong>
+                      {approvedLeave.referralType.includes("treatment") ? "Treatment" : ""}
+                      {approvedLeave.referralType.length === 2 ? " & " : ""}
+                      {approvedLeave.referralType.includes("test_checkup") ? "Test/Checkup" : ""}
+                    </strong>
+                    {approvedLeave.testDetails && <> — Tests: <em>{approvedLeave.testDetails}</em></>}
+                  </p>
+                )}
                 <p className="text-xs text-green-600 dark:text-green-400">
                   ✅ Workflow verified — you may now proceed with the off-campus referral details below. Form fields have been auto-filled from the leave approval.
                 </p>
@@ -991,6 +1039,79 @@ const DoctorReferralForm = () => {
                     </FormItem>
                   )}
 
+                  {/* Referral Type Selection */}
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <Stethoscope className="h-4 w-4" />
+                      Referral Purpose
+                    </Label>
+                    <p className="text-sm text-muted-foreground -mt-1">
+                      Select the purpose of this off-campus referral. Both can be selected.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setReferredForTreatment(!referredForTreatment)}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${
+                          referredForTreatment 
+                            ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                            : "border-border hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                            referredForTreatment ? "border-primary bg-primary" : "border-muted-foreground/40"
+                          }`}>
+                            {referredForTreatment && <span className="text-primary-foreground text-xs">✓</span>}
+                          </div>
+                          <span className="font-medium text-sm">Referred for Treatment</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 ml-6">
+                          Student needs medical treatment at an outside hospital
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setReferredForTest(!referredForTest)}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${
+                          referredForTest 
+                            ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                            : "border-border hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                            referredForTest ? "border-primary bg-primary" : "border-muted-foreground/40"
+                          }`}>
+                            {referredForTest && <span className="text-primary-foreground text-xs">✓</span>}
+                          </div>
+                          <span className="font-medium text-sm">Referred for Test / Checkup</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 ml-6">
+                          Student needs diagnostic tests or checkup at an outside facility
+                        </p>
+                      </button>
+                    </div>
+
+                    {/* Show test details fetched from leave approval when test/checkup is selected */}
+                    {referredForTest && approvedLeave?.testDetails && (
+                      <Alert className="bg-primary/5 border-primary/20">
+                        <FileText className="h-4 w-4" />
+                        <AlertDescription className="text-sm">
+                          <strong>Tests suggested by doctor:</strong> {approvedLeave.testDetails}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!referredForTreatment && !referredForTest && (
+                      <p className="text-sm text-destructive flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        Please select at least one referral purpose
+                      </p>
+                    )}
+                  </div>
+
                   {/* Medical Leave Details Section */}
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-base font-semibold flex items-center gap-2">
@@ -1033,14 +1154,16 @@ const DoctorReferralForm = () => {
                             <FormControl>
                               <Input 
                                 type="number" 
-                                min={1} 
+                                min={0} 
                                 max={90} 
-                                placeholder="Number of days"
+                                placeholder={referredForTest && !referredForTreatment ? "0 for test/checkup only" : "Number of days"}
                                 {...field}
                               />
                             </FormControl>
                             <FormDescription className="text-xs">
-                              Recommended rest period (1-90 days)
+                              {referredForTest && !referredForTreatment 
+                                ? "Enter 0 if only going for test/checkup (no rest needed)" 
+                                : "Recommended rest period (1-90 days)"}
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -1122,14 +1245,19 @@ const DoctorReferralForm = () => {
                   />
                   </div>
 
-                  {/* Academic Coordination Section */}
+                  {/* Academic Coordination Section - Optional for test/checkup only */}
                   <div className="space-y-4 pt-4 border-t">
                     <Label className="text-base font-semibold flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       Academic Coordination
+                      {!referredForTreatment && referredForTest && (
+                        <Badge variant="secondary" className="text-xs">Optional for Test/Checkup</Badge>
+                      )}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Official email IDs for academic notifications and leave approval coordination
+                      {!referredForTreatment && referredForTest 
+                        ? "Optional for test/checkup referrals. Fill if academic coordination is needed."
+                        : "Official email IDs for academic notifications and leave approval coordination"}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1251,7 +1379,7 @@ const DoctorReferralForm = () => {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={referralMutation.isPending}
+                  disabled={referralMutation.isPending || (!referredForTreatment && !referredForTest)}
                 >
                   {referralMutation.isPending ? (
                     "Submitting Referral..."
