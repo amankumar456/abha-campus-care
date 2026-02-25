@@ -837,7 +837,7 @@ const HealthDashboard = () => {
                     <CardDescription>Your past health centre visits</CardDescription>
                   </div>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/student/profile?tab=prescriptions">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
+                    <Link to="/student/profile?tab=records">View All <ArrowRight className="h-4 w-4 ml-1" /></Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -885,7 +885,7 @@ const HealthDashboard = () => {
                   </CardTitle>
                   <CardDescription>Your prescription records</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/student/profile?tab=prescriptions')}>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/student/profile?tab=records')}>
                   View All <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -902,7 +902,7 @@ const HealthDashboard = () => {
                     <div
                       key={rx.id}
                       className="p-3 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => navigate('/student/profile?tab=prescriptions')}
+                      onClick={() => navigate('/student/profile?tab=records')}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -959,7 +959,7 @@ const HealthDashboard = () => {
                   </Link>
                 </Button>
                 <Button variant="outline" className="h-20 flex flex-col items-center justify-center gap-1.5 text-sm" asChild>
-                  <Link to="/student/profile?tab=prescriptions">
+                  <Link to="/student/profile?tab=records">
                     <Pill className="h-5 w-5" />
                     Prescriptions
                   </Link>

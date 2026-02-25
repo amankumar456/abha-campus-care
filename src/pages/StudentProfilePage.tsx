@@ -17,7 +17,7 @@ import {
 import {
   User, Mail, Phone, GraduationCap, Building2, Calendar, Users,
   Activity, AlertCircle, Settings, Bell, Shield, Heart,
-  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer
+  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +75,17 @@ interface StudentPrescription {
   prescription_items: PrescriptionItem[];
 }
 
+interface VisitHistoryItem {
+  id: string;
+  visit_date: string;
+  reason_category: string;
+  reason_notes: string | null;
+  diagnosis: string | null;
+  prescription: string | null;
+  follow_up_required: boolean | null;
+  doctor_name: string;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
@@ -86,7 +97,7 @@ const MEAL_LABELS: Record<string, string> = {
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'profile';
+  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : (searchParams.get('tab') === 'prescriptions' || searchParams.get('tab') === 'records') ? 'records' : 'profile';
   const [activeTab, setActiveTab] = useState(defaultTab);
   const { user, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
@@ -95,6 +106,7 @@ export default function StudentProfilePage() {
   const [healthProfile, setHealthProfile] = useState<StudentHealthProfile | null>(null);
   const [healthStats, setHealthStats] = useState({ totalVisits: 0, thisMonthVisits: 0, pendingFollowups: 0, lastVisitDate: null as string | null });
   const [prescriptions, setPrescriptions] = useState<StudentPrescription[]>([]);
+  const [visitHistory, setVisitHistory] = useState<VisitHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit state
@@ -139,7 +151,7 @@ export default function StudentProfilePage() {
 
         const [profileRes, visitsRes, prescriptionsRes, completedApptsRes] = await Promise.all([
           supabase.from('student_profiles').select('*').eq('student_id', studentData.id).maybeSingle(),
-          supabase.from('health_visits').select('id, visit_date, follow_up_required').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
+          supabase.from('health_visits').select('id, visit_date, follow_up_required, reason_category, reason_notes, diagnosis, prescription, doctor_id').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
           supabase.from('prescriptions')
             .select(`id, created_at, diagnosis, notes, prescription_items ( id, medicine_name, dosage, frequency, duration, instructions, meal_timing )`)
             .eq('student_id', studentData.id)
@@ -155,14 +167,62 @@ export default function StudentProfilePage() {
 
         const visits = visitsRes.data || [];
         const completedAppts = completedApptsRes.data || [];
+
+        // Build visit history with doctor names
+        const doctorIds = visits.filter((v: any) => v.doctor_id).map((v: any) => v.doctor_id);
+        let doctorMap: Record<string, string> = {};
+        if (doctorIds.length > 0) {
+          const { data: docs } = await supabase.from('medical_officers').select('id, name').in('id', doctorIds);
+          docs?.forEach(d => { doctorMap[d.id] = d.name; });
+        }
+
+        // Combine health_visits and completed appointments into visit history
+        const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
+          id: v.id,
+          visit_date: v.visit_date,
+          reason_category: v.reason_category,
+          reason_notes: v.reason_notes,
+          diagnosis: v.diagnosis,
+          prescription: v.prescription,
+          follow_up_required: v.follow_up_required,
+          doctor_name: v.doctor_id ? doctorMap[v.doctor_id] || 'Doctor' : 'Health Centre',
+        }));
+
+        // Also add completed appointments that aren't already covered
+        if (completedAppts.length > 0) {
+          const { data: completedFull } = await supabase
+            .from('appointments')
+            .select('id, appointment_date, reason, medical_officers(name)')
+            .eq('patient_id', user!.id)
+            .eq('status', 'completed')
+            .order('appointment_date', { ascending: false });
+          
+          (completedFull || []).forEach((a: any) => {
+            visitHistoryItems.push({
+              id: a.id,
+              visit_date: a.appointment_date,
+              reason_category: 'routine_checkup',
+              reason_notes: a.reason,
+              diagnosis: null,
+              prescription: null,
+              follow_up_required: false,
+              doctor_name: a.medical_officers?.name || 'Doctor',
+            });
+          });
+        }
+
+        // Sort by date descending
+        visitHistoryItems.sort((a, b) => new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime());
+        setVisitHistory(visitHistoryItems);
+
         const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         const totalVisits = visits.length + completedAppts.length;
-        const thisMonthVisits = visits.filter(v => new Date(v.visit_date) >= firstDayOfMonth).length +
-          completedAppts.filter(a => new Date(a.appointment_date) >= firstDayOfMonth).length;
+        const thisMonthVisits = visits.filter((v: any) => new Date(v.visit_date) >= firstDayOfMonth).length +
+          completedAppts.filter((a: any) => new Date(a.appointment_date) >= firstDayOfMonth).length;
         setHealthStats({
           totalVisits,
           thisMonthVisits,
-          pendingFollowups: visits.filter(v => v.follow_up_required).length,
+          pendingFollowups: visits.filter((v: any) => v.follow_up_required).length,
           lastVisitDate: visits[0]?.visit_date ? format(new Date(visits[0].visit_date), 'MMM d, yyyy') :
             completedAppts[0]?.appointment_date ? format(new Date(completedAppts[0].appointment_date), 'MMM d, yyyy') : null,
         });
@@ -303,7 +363,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div
                   className="p-3 rounded-lg bg-background/60 border text-center min-w-[70px] cursor-pointer hover:bg-primary/10 transition-colors"
-                  onClick={() => setActiveTab('prescriptions')}
+                  onClick={() => setActiveTab('records')}
                 >
                   <p className="text-2xl font-bold text-foreground">{prescriptions.length}</p>
                   <p className="text-xs text-muted-foreground">Prescriptions</p>
@@ -328,9 +388,9 @@ export default function StudentProfilePage() {
               <User className="w-4 h-4" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="prescriptions" className="flex items-center gap-2">
-              <Pill className="w-4 h-4" />
-              Prescriptions
+            <TabsTrigger value="records" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Health Records
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -570,8 +630,53 @@ export default function StudentProfilePage() {
             )}
           </TabsContent>
 
-          {/* ── PRESCRIPTIONS TAB ── */}
-          <TabsContent value="prescriptions" className="mt-4 space-y-4">
+          {/* ── HEALTH RECORDS TAB ── */}
+          <TabsContent value="records" className="mt-4 space-y-4">
+            {/* Visit History */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-primary" />
+                  Visit History
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {visitHistory.length} visit{visitHistory.length !== 1 ? 's' : ''} on record
+                </p>
+              </CardHeader>
+              <CardContent>
+                {visitHistory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">No visit history yet</p>
+                    <p className="text-sm">Your health centre visits will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {visitHistory.map((visit) => (
+                      <div key={visit.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {visit.reason_notes || visit.reason_category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{visit.doctor_name}</p>
+                          {visit.diagnosis && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Diagnosis: {visit.diagnosis}</p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xs text-muted-foreground">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</p>
+                          {visit.follow_up_required && (
+                            <Badge variant="secondary" className="text-xs mt-1">Follow-up</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Prescriptions */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
