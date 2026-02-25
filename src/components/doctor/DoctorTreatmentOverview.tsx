@@ -66,20 +66,29 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
     enabled: !!doctorId,
   });
 
-  // Fetch on-campus visits + prescriptions
+  // Fetch on-campus treatments (students with prescriptions generated)
   const { data: onCampusData, isLoading: onCampusLoading } = useQuery({
     queryKey: ["treatment-on-campus", doctorId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("health_visits")
+        .from("prescriptions")
         .select(`
-          id, visit_date, reason_category, reason_subcategory, reason_notes,
-          diagnosis, prescription, follow_up_required, follow_up_date, created_at,
-          students!health_visits_student_id_fkey (full_name, roll_number, program, branch)
+          id, diagnosis, notes, created_at, student_id,
+          appointments!prescriptions_appointment_id_fkey (appointment_date, appointment_time, reason, health_priority),
+          prescription_items (medicine_name, dosage, frequency, duration, meal_timing)
         `)
         .eq("doctor_id", doctorId)
-        .order("visit_date", { ascending: false });
-      return data || [];
+        .order("created_at", { ascending: false });
+
+      // Fetch student details separately
+      if (!data || data.length === 0) return [];
+      const studentIds = [...new Set(data.map(d => d.student_id))];
+      const { data: students } = await supabase
+        .from("students")
+        .select("id, full_name, roll_number, program, branch")
+        .in("id", studentIds);
+      const studentMap = new Map((students || []).map(s => [s.id, s]));
+      return data.map(d => ({ ...d, student: studentMap.get(d.student_id) || null }));
     },
     enabled: !!doctorId,
   });
@@ -120,10 +129,10 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
 
   const filteredOnCampus = useMemo(() => {
     return (onCampusData || []).filter(item => {
-      const dateMatch = filterByDateRange(item.visit_date);
+      const dateMatch = filterByDateRange(item.created_at);
       const searchMatch = !searchQuery ||
-        (item.students as any)?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.students as any)?.roll_number?.toLowerCase().includes(searchQuery.toLowerCase());
+        item.student?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.student?.roll_number?.toLowerCase().includes(searchQuery.toLowerCase());
       return dateMatch && searchMatch;
     });
   }, [onCampusData, dateRange, searchQuery]);
@@ -133,8 +142,8 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
   const yesterdayOffCampus = (offCampusData || []).filter(i => format(parseISO(i.created_at), "yyyy-MM-dd") === yesterdayStr).length;
   const todayTests = (testsData || []).filter(i => isToday(parseISO(i.created_at))).length;
   const yesterdayTests = (testsData || []).filter(i => format(parseISO(i.created_at), "yyyy-MM-dd") === yesterdayStr).length;
-  const todayOnCampus = (onCampusData || []).filter(i => isToday(parseISO(i.visit_date))).length;
-  const yesterdayOnCampus = (onCampusData || []).filter(i => format(parseISO(i.visit_date), "yyyy-MM-dd") === yesterdayStr).length;
+  const todayOnCampus = (onCampusData || []).filter(i => isToday(parseISO(i.created_at))).length;
+  const yesterdayOnCampus = (onCampusData || []).filter(i => format(parseISO(i.created_at), "yyyy-MM-dd") === yesterdayStr).length;
 
   const getTrend = (today: number, yesterday: number) => {
     if (today > yesterday) return { icon: TrendingUp, label: `+${today - yesterday} vs yesterday`, color: "text-amber-500" };
@@ -419,11 +428,14 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
             {/* On-Campus List */}
             {activeCard === "on-campus" && (
               filteredOnCampus.length === 0 ? (
-                <EmptyState label="No on-campus treatment records found" />
+                <EmptyState label="No on-campus prescriptions found" />
               ) : (
                 <div className="space-y-3">
                   {filteredOnCampus.map(item => {
-                    const student = item.students as any;
+                    const student = item.student;
+                    const apt = item.appointments as any;
+                    const medicines = (item.prescription_items as any[]) || [];
+                    const medicineList = medicines.map(m => m.medicine_name).join(", ");
                     return (
                       <div key={item.id} className="flex items-start gap-4 p-4 rounded-xl border bg-card hover:bg-accent/30 transition-colors">
                         <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
@@ -433,28 +445,27 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-foreground">{student?.full_name}</span>
                             <span className="text-xs text-muted-foreground">{student?.roll_number}</span>
-                            <Badge variant="outline" className="text-xs">{getReasonLabel(item.reason_category)}</Badge>
+                            {student?.program && <Badge variant="outline" className="text-xs">{student.program}{student.branch ? ` - ${student.branch}` : ""}</Badge>}
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(parseISO(item.visit_date), "dd MMM, hh:mm a")}</span>
-                            {item.follow_up_required && (
-                              <Badge variant="secondary" className="text-xs">Follow-up Required</Badge>
-                            )}
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(parseISO(item.created_at), "dd MMM, hh:mm a")}</span>
+                            {apt?.reason && <span className="text-xs">{apt.reason}</span>}
                           </div>
                           {item.diagnosis && (
                             <p className="text-sm text-muted-foreground"><span className="font-medium">Diagnosis:</span> {item.diagnosis}</p>
                           )}
-                          {item.prescription && (
+                          {medicineList && (
                             <div className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-300">
                               <Pill className="w-3.5 h-3.5" />
-                              <span className="line-clamp-1">{item.prescription}</span>
+                              <span className="line-clamp-1">{medicineList}</span>
                             </div>
                           )}
-                          {item.reason_notes && <p className="text-xs text-muted-foreground/70 line-clamp-1">{item.reason_notes}</p>}
+                          {item.notes && <p className="text-xs text-muted-foreground/70 line-clamp-1">{item.notes}</p>}
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
-                          {item.follow_up_date && (
-                            <span className="text-xs text-muted-foreground">Follow-up: {format(parseISO(item.follow_up_date), "dd MMM")}</span>
+                          <Badge variant="secondary" className="text-xs">Prescribed</Badge>
+                          {medicines.length > 0 && (
+                            <span className="text-xs text-muted-foreground">{medicines.length} medicine{medicines.length !== 1 ? "s" : ""}</span>
                           )}
                         </div>
                       </div>
