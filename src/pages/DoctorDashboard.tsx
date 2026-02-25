@@ -92,10 +92,10 @@ export default function DoctorDashboard() {
   });
 
   const stats = [
-    { label: "Today's Appointments", value: String(appointmentStats?.todayCount || 0), icon: Calendar, color: "text-primary" },
-    { label: "Pending Approvals", value: String(appointmentStats?.pendingCount || 0), icon: FileCheck, color: "text-amber-500" },
-    { label: "Active Patients", value: String(appointmentStats?.totalPatients || 0), icon: Users, color: "text-secondary" },
-    { label: "High Priority", value: String(appointmentStats?.urgentAlerts || 0), icon: AlertTriangle, color: "text-destructive" },
+    { label: "Today's Appointments", value: String(appointmentStats?.todayCount || 0), icon: Calendar, color: "text-primary", action: () => { /* scroll to appointments section below */ const el = document.getElementById('doctor-appointments-section'); el?.scrollIntoView({ behavior: 'smooth' }); } },
+    { label: "Pending Approvals", value: String(appointmentStats?.pendingCount || 0), icon: FileCheck, color: "text-amber-500", action: () => { const el = document.getElementById('doctor-appointments-section'); el?.scrollIntoView({ behavior: 'smooth' }); } },
+    { label: "Active Patients", value: String(appointmentStats?.totalPatients || 0), icon: Users, color: "text-secondary", action: () => setDashboardSubTab("health-dashboard") },
+    { label: "High Priority", value: String(appointmentStats?.urgentAlerts || 0), icon: AlertTriangle, color: "text-destructive", action: () => navigate("/medical-leave") },
   ];
 
   useEffect(() => {
@@ -277,7 +277,11 @@ export default function DoctorDashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   {stats.map((stat) => (
-                    <Card key={stat.label} className="border">
+                    <Card
+                      key={stat.label}
+                      className="border cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
+                      onClick={stat.action}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -296,7 +300,7 @@ export default function DoctorDashboard() {
                 {/* Main Dashboard Grid */}
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Left Column - Appointments */}
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2" id="doctor-appointments-section">
                     {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
                   </div>
 
