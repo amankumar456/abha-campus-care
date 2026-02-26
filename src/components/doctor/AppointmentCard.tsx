@@ -21,7 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Clock, User, FileText, AlertTriangle, CheckCircle, XCircle, Eye, Edit2, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import MedicalLeaveDialog from "./MedicalLeaveDialog";
 import PrescriptionDialog from "./PrescriptionDialog";
@@ -99,6 +100,8 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
   const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [denialReason, setDenialReason] = useState("");
   const [showViewPrescription, setShowViewPrescription] = useState(false);
+  const [showUpdateReason, setShowUpdateReason] = useState(false);
+  const [updatedReason, setUpdatedReason] = useState(appointment.reason || "");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -239,6 +242,22 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
     },
   });
 
+  const updateReasonMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ reason })
+        .eq("id", appointment.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Visit reason updated");
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+      setShowUpdateReason(false);
+    },
+    onError: () => toast.error("Failed to update reason"),
+  });
+
   const handleApprove = () => {
     approveAppointmentMutation.mutate();
   };
@@ -278,10 +297,47 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
                   {student?.branch && ` • ${student.branch}`}
                 </p>
                 {appointment.reason && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {appointment.reason}
-                  </p>
+                  <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                    <FileText className="w-3 h-3 shrink-0" />
+                    <span>{appointment.reason}</span>
+                    {(appointment.reason === 'Other' || appointment.reason.startsWith('Other:')) && 
+                     appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-5 w-5 ml-1" 
+                        onClick={() => setShowUpdateReason(true)}
+                      >
+                        <Edit2 className="w-3 h-3 text-primary" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {showUpdateReason && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <Input
+                      placeholder="Enter actual visit reason..."
+                      value={updatedReason}
+                      onChange={(e) => setUpdatedReason(e.target.value)}
+                      className="h-8 text-sm flex-1"
+                    />
+                    <Button 
+                      size="sm" 
+                      className="h-8"
+                      disabled={updateReasonMutation.isPending || !updatedReason.trim()}
+                      onClick={() => updateReasonMutation.mutate(updatedReason.trim())}
+                    >
+                      {updateReasonMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8"
+                      onClick={() => { setShowUpdateReason(false); setUpdatedReason(appointment.reason || ""); }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 )}
                 {/* Show denial reason if denied */}
                 {appointment.status === "cancelled" && appointment.denial_reason && (
