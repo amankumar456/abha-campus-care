@@ -74,19 +74,32 @@ export default function Auth() {
 
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await redirectBasedOnRole(session.user);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          // Clear corrupted/stale session to unblock login
+          console.warn('Stale session detected, signing out to clear:', error.message);
+          await supabase.auth.signOut();
+          return;
+        }
+        if (session) {
+          await redirectBasedOnRole(session.user);
+        }
+      } catch (err) {
+        // Network error during session check — clear stale tokens
+        console.warn('Network error checking session, clearing local state');
+        await supabase.auth.signOut();
       }
     };
 
-    checkSessionAndRedirect();
-
+    // Set up listener BEFORE checking session (best practice)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session && event === 'SIGNED_IN') {
         await redirectBasedOnRole(session.user);
       }
     });
+
+    checkSessionAndRedirect();
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -215,21 +228,50 @@ export default function Auth() {
     if (!validateForm(false)) return;
 
     setIsLoading(true);
+
+    try {
+      // Clear any stale session before attempting login
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession) {
+        // If there's an existing session, try to use it
+        try {
+          await redirectBasedOnRole(existingSession.user);
+          setIsLoading(false);
+          return;
+        } catch {
+          // Session is stale, sign out first
+          await supabase.auth.signOut();
+        }
+      }
+    } catch {
+      // Network error checking session — sign out to clear stale tokens
+      try { await supabase.auth.signOut(); } catch { /* ignore */ }
+    }
     
     const { error, data } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim().toLowerCase(),
       password,
     });
 
     if (error) {
       setIsLoading(false);
-      toast({
-        title: "Sign In Failed",
-        description: error.message === "Invalid login credentials" 
-          ? "Invalid email or password. Please try again."
-          : error.message,
-        variant: "destructive",
-      });
+      
+      // Handle network errors specifically
+      if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to reach the server. Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sign In Failed",
+          description: error.message === "Invalid login credentials" 
+            ? "Invalid email or password. Please try again."
+            : error.message,
+          variant: "destructive",
+        });
+      }
       return;
     }
 
