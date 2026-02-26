@@ -75,13 +75,21 @@ export const useUserRole = (): UseUserRoleReturn => {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn('Session fetch error, clearing stale session:', error.message);
+        supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRoles(session.user.id);
       } else {
         setLoading(false);
       }
+    }).catch(() => {
+      setLoading(false);
     });
   }, []);
 
