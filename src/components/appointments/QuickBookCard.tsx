@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Thermometer, Stethoscope, Brain, Activity, Syringe, HelpCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, Thermometer, Stethoscope, Brain, Activity, Syringe, HelpCircle, CheckCircle, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
@@ -38,6 +39,8 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
   const [booking, setBooking] = useState(false);
   const [bookedReason, setBookedReason] = useState<string | null>(null);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
+  const [showOtherInput, setShowOtherInput] = useState(false);
+  const [otherReason, setOtherReason] = useState("");
 
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');
@@ -69,6 +72,16 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
       return;
     }
 
+    // If "Other" is selected, show the input first
+    if (reasonId === 'other' && !showOtherInput) {
+      setShowOtherInput(true);
+      return;
+    }
+
+    const finalReason = reasonId === 'other' 
+      ? (otherReason.trim() ? `Other: ${otherReason.trim()}` : 'Other') 
+      : reasonLabel;
+
     setBooking(true);
     setBookedReason(reasonId);
 
@@ -81,7 +94,7 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
           doctor_type: 'medical_officer',
           appointment_date: todayStr,
           appointment_time: currentTime,
-          reason: reasonLabel,
+          reason: finalReason,
           status: 'pending',
           health_priority: 'medium',
         });
@@ -102,6 +115,8 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
       toast.error("Failed to book appointment", { description: err.message });
     } finally {
       setBooking(false);
+      setShowOtherInput(false);
+      setOtherReason("");
       setTimeout(() => setBookedReason(null), 2000);
     }
   };
@@ -183,6 +198,41 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
               </Button>
             ))}
           </div>
+
+          {/* Other reason input */}
+          {showOtherInput && (
+            <div className="mt-3 p-3 rounded-lg border bg-muted/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Describe your reason</Label>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={() => { setShowOtherInput(false); setOtherReason(""); }}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+              <Input
+                placeholder="e.g., Skin rash, headache, etc. (optional)"
+                value={otherReason}
+                onChange={(e) => setOtherReason(e.target.value)}
+                className="text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank and the doctor will update the reason during your visit.
+              </p>
+              <Button
+                size="sm"
+                className="w-full"
+                disabled={booking || !selectedDoctor}
+                onClick={() => handleQuickBook('other', 'Other')}
+              >
+                {booking ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                Book Appointment
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
