@@ -136,7 +136,7 @@ const StudentProfile = () => {
       setStudent(studentData as Student);
 
       // Fetch all data in parallel
-      const [visitsRes, profileRes, prescriptionsRes] = await Promise.all([
+      const [visitsRes, profileRes, prescriptionsRes, completedApptsRes] = await Promise.all([
         supabase
           .from('health_visits')
           .select(`
@@ -160,9 +160,64 @@ const StudentProfile = () => {
           `)
           .eq('student_id', studentData.id)
           .order('created_at', { ascending: false }),
+        supabase
+          .from('appointments')
+          .select(`
+            id, appointment_date, appointment_time, reason, status,
+            medical_officers:medical_officer_id ( name, designation )
+          `)
+          .eq('status', 'completed')
+          .order('appointment_date', { ascending: false }),
       ]);
 
-      setVisits((visitsRes.data as HealthVisit[]) || []);
+      // Build combined visits: health_visits + completed appointments
+      const healthVisits = (visitsRes.data as HealthVisit[]) || [];
+      const completedAppts = completedApptsRes.data || [];
+      
+      // Get student's user_id to filter appointments by patient_id
+      const { data: studentUser } = await supabase
+        .from('students')
+        .select('user_id')
+        .eq('id', studentData.id)
+        .maybeSingle();
+
+      // Add completed appointments as visit entries (those not already covered by health_visits)
+      const healthVisitIds = new Set(healthVisits.map(v => v.id));
+      const apptVisits: HealthVisit[] = [];
+      
+      if (studentUser?.user_id) {
+        // Re-fetch completed appointments filtered by this student's user_id
+        const { data: studentAppts } = await supabase
+          .from('appointments')
+          .select(`
+            id, appointment_date, appointment_time, reason, status,
+            medical_officers:medical_officer_id ( name, designation )
+          `)
+          .eq('patient_id', studentUser.user_id)
+          .eq('status', 'completed')
+          .order('appointment_date', { ascending: false });
+
+        (studentAppts || []).forEach((a: any) => {
+          apptVisits.push({
+            id: a.id,
+            visit_date: a.appointment_date,
+            reason_category: 'routine_checkup',
+            reason_subcategory: null,
+            reason_notes: a.reason || null,
+            diagnosis: null,
+            prescription: null,
+            follow_up_required: false,
+            follow_up_date: null,
+            medical_officers: a.medical_officers ? { name: a.medical_officers.name, designation: a.medical_officers.designation } : null,
+          });
+        });
+      }
+
+      const allVisits = [...healthVisits, ...apptVisits].sort(
+        (a, b) => new Date(b.visit_date).getTime() - new Date(a.visit_date).getTime()
+      );
+
+      setVisits(allVisits);
       setProfile(profileRes.data as StudentProfileData | null);
       setPrescriptions((prescriptionsRes.data as unknown as Prescription[]) || []);
     } catch (error) {

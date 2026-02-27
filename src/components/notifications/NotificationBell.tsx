@@ -131,6 +131,8 @@ const NotificationBell = () => {
         return 'border-l-indigo-500 bg-indigo-50 dark:bg-indigo-950/20';
       case 'referral_returned':
         return 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20';
+      case 'prescription':
+        return 'border-l-rose-500 bg-rose-50 dark:bg-rose-950/20';
       default:
         return 'border-l-primary bg-primary/5';
     }
@@ -141,6 +143,8 @@ const NotificationBell = () => {
       case 'approved': return <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />;
       case 'rejected': return <XCircle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />;
       case 'rescheduled': return <Calendar className="h-3.5 w-3.5 text-yellow-600 flex-shrink-0" />;
+      case 'prescription':
+        return <Stethoscope className="h-3.5 w-3.5 text-rose-600 flex-shrink-0" />;
       case 'medical_leave_referral':
       case 'medical_leave_on_leave':
       case 'medical_leave_returned':
@@ -155,6 +159,7 @@ const NotificationBell = () => {
   };
 
   const getActionLabel = (type: string) => {
+    if (type === 'prescription') return 'View Prescription';
     if (type.startsWith('medical_leave_') || type.startsWith('mentee_leave_') || type.startsWith('referral_')) {
       return 'Open Medical Leave';
     }
@@ -221,7 +226,9 @@ const NotificationBell = () => {
                         markAsReadMutation.mutate(notification.id);
                       }
                       setOpen(false);
-                      if (isMedicalLeave) {
+                      if (notification.type === 'prescription') {
+                        navigate("/student/profile?tab=prescriptions");
+                      } else if (isMedicalLeave) {
                         navigate("/medical-leave");
                       } else if (notification.type === 'approved' || notification.type === 'rejected') {
                         navigate("/my-appointments");
