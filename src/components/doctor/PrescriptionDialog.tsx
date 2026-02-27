@@ -137,13 +137,25 @@ export default function PrescriptionDialog({
         (m) => m.medicine_name.trim() && m.dosage.trim()
       );
 
+      // Resolve actual students.id from patient_id (which may be user_id)
+      let resolvedStudentId = patientId;
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("id, user_id, roll_number")
+        .or(`id.eq.${patientId},user_id.eq.${patientId}`)
+        .maybeSingle();
+
+      if (studentRow) {
+        resolvedStudentId = studentRow.id;
+      }
+
       // Create prescription record
       const { data: prescription, error: prescError } = await supabase
         .from("prescriptions")
         .insert({
           appointment_id: appointmentId,
           doctor_id: doctorId,
-          student_id: patientId,
+          student_id: resolvedStudentId,
           diagnosis: diagnosis.trim() || null,
           notes: notes.trim() || null,
         })
@@ -180,13 +192,7 @@ export default function PrescriptionDialog({
       if (aptError) throw aptError;
 
       // Send prescription notification to student
-      // Get the student's user_id from the students table
-      const { data: studentRow } = await supabase
-        .from("students")
-        .select("user_id, roll_number")
-        .eq("id", patientId)
-        .maybeSingle();
-
+      // Use already-resolved studentRow from above
       if (studentRow?.user_id) {
         const medicineList = validMedicines.length > 0
           ? validMedicines.map(m => m.medicine_name).join(", ")
