@@ -178,6 +178,29 @@ export default function PrescriptionDialog({
         .eq("id", appointmentId);
 
       if (aptError) throw aptError;
+
+      // Send prescription notification to student
+      // Get the student's user_id from the students table
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("user_id, roll_number")
+        .eq("id", patientId)
+        .maybeSingle();
+
+      if (studentRow?.user_id) {
+        const medicineList = validMedicines.length > 0
+          ? validMedicines.map(m => m.medicine_name).join(", ")
+          : "No medicines";
+        const diagnosisText = diagnosis.trim() ? `Diagnosis: ${diagnosis.trim()}. ` : "";
+
+        await supabase.from("notifications").insert({
+          user_id: studentRow.user_id,
+          title: "💊 New Prescription Issued",
+          message: `${diagnosisText}Medicines: ${medicineList}. Click to view your prescription details.`,
+          type: "prescription",
+          related_appointment_id: appointmentId,
+        });
+      }
     },
     onSuccess: () => {
       toast.success("Prescription saved & appointment completed!");
