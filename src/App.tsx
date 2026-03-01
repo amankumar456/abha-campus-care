@@ -22,6 +22,9 @@ import AdminPanel from "./pages/AdminPanel";
 import MentorDashboard from "./pages/MentorDashboard";
 import MentorProfile from "./pages/MentorProfile";
 import MedicalLeave from "./pages/MedicalLeave";
+import PharmacyDashboard from "./pages/PharmacyDashboard";
+import LabOfficerDashboard from "./pages/LabOfficerDashboard";
+import MedicalStaffDashboard from "./pages/MedicalStaffDashboard";
 import NotFound from "./pages/NotFound";
 import BackNavigation from "./components/BackNavigation";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -87,6 +90,17 @@ const App = () => (
           } />
           <Route path="/medical-leave" element={
             <ProtectedRoute><MedicalLeave /></ProtectedRoute>
+          } />
+          
+          {/* Staff Dashboards */}
+          <Route path="/pharmacy/dashboard" element={
+            <ProtectedRoute><PharmacyDashboard /></ProtectedRoute>
+          } />
+          <Route path="/lab/dashboard" element={
+            <ProtectedRoute><LabOfficerDashboard /></ProtectedRoute>
+          } />
+          <Route path="/staff/dashboard" element={
+            <ProtectedRoute><MedicalStaffDashboard /></ProtectedRoute>
           } />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

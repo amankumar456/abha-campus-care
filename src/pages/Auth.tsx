@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone, FlaskConical, Pill, ShieldCheck, Building } from "lucide-react";
 import { z } from "zod";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { 
@@ -21,8 +21,8 @@ import {
 } from "@/lib/security/validation";
 import { DEPARTMENTS, YEARS_OF_STUDY, PROGRAMMES } from "@/lib/validations/student-registration";
 
-type UserType = "student" | "doctor" | "mentor";
-type AuthView = "select" | "signin" | "signup" | "forgot";
+type UserType = "student" | "doctor" | "mentor" | "lab_officer" | "pharmacy" | "medical_staff";
+type AuthView = "select" | "signin" | "signup" | "forgot" | "staff_select";
 
 interface StudentFormData {
   rollNumber: string;
@@ -105,10 +105,8 @@ export default function Auth() {
   }, [navigate]);
 
   const redirectBasedOnRole = async (authUser: any) => {
-    // Check user type from metadata
     const userType = authUser?.user_metadata?.user_type;
     
-    // Check if user has doctor role in database
     const { data: roles } = await supabase
       .from('user_roles')
       .select('role')
@@ -117,9 +115,18 @@ export default function Auth() {
     const isDoctor = roles?.some(r => r.role === 'doctor');
     const isMentor = roles?.some(r => r.role === 'mentor');
     const isAdmin = roles?.some(r => r.role === 'admin');
+    const isPharmacy = roles?.some(r => r.role === 'pharmacy');
+    const isLabOfficer = roles?.some(r => r.role === 'lab_officer');
+    const isMedicalStaff = roles?.some(r => r.role === 'medical_staff');
 
     if (isAdmin) {
       navigate('/admin');
+    } else if (isPharmacy || userType === 'pharmacy') {
+      navigate('/pharmacy/dashboard');
+    } else if (isLabOfficer || userType === 'lab_officer') {
+      navigate('/lab/dashboard');
+    } else if (isMedicalStaff || userType === 'medical_staff') {
+      navigate('/staff/dashboard');
     } else if (isDoctor || userType === 'doctor') {
       navigate('/doctor/dashboard');
     } else if (isMentor || userType === 'mentor') {
@@ -149,6 +156,15 @@ export default function Auth() {
   const handleBack = () => {
     if (authView === "forgot") {
       setAuthView("signin");
+    } else if (authView === "staff_select") {
+      setAuthView("select");
+    } else if (authView === "signin" || authView === "signup") {
+      if (userType === "lab_officer" || userType === "pharmacy" || userType === "medical_staff") {
+        setAuthView("staff_select");
+      } else {
+        setAuthView("select");
+      }
+      setUserType(null);
     } else {
       setAuthView("select");
       setUserType(null);
@@ -352,12 +368,12 @@ export default function Auth() {
     
     if (data.user) {
       // Auto-assign role based on user type selection
-      const roleToAssign = userType as "student" | "doctor" | "mentor";
+      const roleToAssign = userType as string;
       
       try {
         await supabase.from('user_roles').insert({
           user_id: data.user.id,
-          role: roleToAssign
+          role: roleToAssign as any
         });
         toast({
           title: "Account Created",
@@ -415,7 +431,13 @@ export default function Auth() {
           title: "Account Created!",
           description: "Welcome to the Health Portal. Your profile has been set up.",
         });
-        navigate("/health-dashboard");
+        // Redirect based on role
+        if (userType === "pharmacy") navigate("/pharmacy/dashboard");
+        else if (userType === "lab_officer") navigate("/lab/dashboard");
+        else if (userType === "medical_staff") navigate("/staff/dashboard");
+        else if (userType === "doctor") navigate("/doctor/dashboard");
+        else if (userType === "mentor") navigate("/mentor/dashboard");
+        else navigate("/health-dashboard");
       }
     } else {
       setIsLoading(false);
@@ -504,7 +526,7 @@ export default function Auth() {
               >
                 <Stethoscope className="w-8 h-8 text-secondary" />
                 <div className="text-center">
-                  <p className="font-semibold">Doctor / Medical Staff</p>
+                  <p className="font-semibold">Doctor</p>
                   <p className="text-xs text-muted-foreground">Medical Officers & Visiting Doctors</p>
                 </div>
               </Button>
@@ -518,6 +540,89 @@ export default function Auth() {
                 <div className="text-center">
                   <p className="font-semibold">Faculty Mentor</p>
                   <p className="text-xs text-muted-foreground">Faculty Advisors & Student Mentors</p>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-orange-600 hover:bg-orange-50 transition-all"
+                onClick={() => setAuthView("staff_select")}
+              >
+                <Building className="w-8 h-8 text-orange-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Medical Staff</p>
+                  <p className="text-xs text-muted-foreground">Lab Officer, Pharmacy & Support Staff</p>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  // Staff sub-role selection
+  if (authView === "staff_select") {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <Card className="w-full max-w-lg relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="absolute left-4 top-4 z-10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <CardHeader className="text-center pt-12">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+                <Building className="w-8 h-8 text-orange-600" />
+              </div>
+              <CardTitle className="text-2xl">Medical Staff Login</CardTitle>
+              <CardDescription>
+                Select your department to continue
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                className="w-full h-20 flex flex-col items-center justify-center gap-2 border-2 hover:border-blue-600 hover:bg-blue-50 transition-all"
+                onClick={() => selectUserType("lab_officer")}
+              >
+                <FlaskConical className="w-7 h-7 text-blue-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Lab Medical Officer</p>
+                  <p className="text-xs text-muted-foreground">Diagnostic Lab & Reports</p>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full h-20 flex flex-col items-center justify-center gap-2 border-2 hover:border-purple-600 hover:bg-purple-50 transition-all"
+                onClick={() => selectUserType("pharmacy")}
+              >
+                <Pill className="w-7 h-7 text-purple-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Pharmacy</p>
+                  <p className="text-xs text-muted-foreground">Medicine Dispensing</p>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full h-20 flex flex-col items-center justify-center gap-2 border-2 hover:border-orange-600 hover:bg-orange-50 transition-all"
+                onClick={() => selectUserType("medical_staff")}
+              >
+                <ShieldCheck className="w-7 h-7 text-orange-600" />
+                <div className="text-center">
+                  <p className="font-semibold">Medical Staff</p>
+                  <p className="text-xs text-muted-foreground">Leave & Certificate Issuance</p>
                 </div>
               </Button>
             </CardContent>
@@ -606,24 +711,46 @@ export default function Auth() {
           </Button>
           <CardHeader className="text-center pt-12">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              userType === "doctor" ? "bg-secondary/10" : userType === "mentor" ? "bg-green-100" : "bg-primary/10"
+              userType === "doctor" ? "bg-secondary/10" 
+              : userType === "mentor" ? "bg-green-100" 
+              : userType === "pharmacy" ? "bg-purple-100"
+              : userType === "lab_officer" ? "bg-blue-100"
+              : userType === "medical_staff" ? "bg-orange-100"
+              : "bg-primary/10"
             }`}>
               {userType === "doctor" ? (
                 <Stethoscope className="w-8 h-8 text-secondary" />
               ) : userType === "mentor" ? (
                 <Users className="w-8 h-8 text-green-600" />
+              ) : userType === "pharmacy" ? (
+                <Pill className="w-8 h-8 text-purple-600" />
+              ) : userType === "lab_officer" ? (
+                <FlaskConical className="w-8 h-8 text-blue-600" />
+              ) : userType === "medical_staff" ? (
+                <ShieldCheck className="w-8 h-8 text-orange-600" />
               ) : (
                 <GraduationCap className="w-8 h-8 text-primary" />
               )}
             </div>
             <CardTitle className="text-2xl">
-              {userType === "doctor" ? "Doctor Portal" : userType === "mentor" ? "Mentor Portal" : "Student Portal"}
+              {userType === "doctor" ? "Doctor Portal" 
+              : userType === "mentor" ? "Mentor Portal" 
+              : userType === "pharmacy" ? "Pharmacy Portal"
+              : userType === "lab_officer" ? "Lab Officer Portal"
+              : userType === "medical_staff" ? "Medical Staff Portal"
+              : "Student Portal"}
             </CardTitle>
             <CardDescription>
               {userType === "doctor" 
                 ? "Sign in to access medical dashboard and patient records"
                 : userType === "mentor"
                 ? "Sign in to view mentee health information and reports"
+                : userType === "pharmacy"
+                ? "Sign in to manage medicine dispensing"
+                : userType === "lab_officer"
+                ? "Sign in to manage lab tests and reports"
+                : userType === "medical_staff"
+                ? "Sign in to issue medical leave and certificates"
                 : "Sign in to book appointments and access health services"
               }
             </CardDescription>
