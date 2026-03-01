@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
-export type AppRole = 'doctor' | 'mentor' | 'student' | 'admin';
+export type AppRole = 'doctor' | 'mentor' | 'student' | 'admin' | 'lab_officer' | 'pharmacy' | 'medical_staff';
 
 interface UseUserRoleReturn {
   user: User | null;
@@ -11,6 +11,9 @@ interface UseUserRoleReturn {
   isMentor: boolean;
   isStudent: boolean;
   isAdmin: boolean;
+  isPharmacy: boolean;
+  isLabOfficer: boolean;
+  isMedicalStaff: boolean;
   loading: boolean;
   mentorId: string | null;
   doctorId: string | null;
@@ -100,6 +103,9 @@ export const useUserRole = (): UseUserRoleReturn => {
     isMentor: roles.includes('mentor'),
     isStudent: roles.includes('student'),
     isAdmin: roles.includes('admin'),
+    isPharmacy: roles.includes('pharmacy'),
+    isLabOfficer: roles.includes('lab_officer'),
+    isMedicalStaff: roles.includes('medical_staff'),
     loading,
     mentorId,
     doctorId

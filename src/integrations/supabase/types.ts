@@ -426,6 +426,80 @@ export type Database = {
           },
         ]
       }
+      lab_reports: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          id: string
+          notes: string | null
+          prescription_id: string | null
+          report_file_name: string | null
+          report_file_url: string | null
+          status: string
+          student_id: string
+          test_name: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          notes?: string | null
+          prescription_id?: string | null
+          report_file_name?: string | null
+          report_file_url?: string | null
+          status?: string
+          student_id: string
+          test_name: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          notes?: string | null
+          prescription_id?: string | null
+          report_file_name?: string | null
+          report_file_url?: string | null
+          status?: string
+          student_id?: string
+          test_name?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_reports_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_reports_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_approval_workflow: {
         Row: {
           bypass_reason: string | null
@@ -830,6 +904,64 @@ export type Database = {
             columns: ["related_appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_dispensing: {
+        Row: {
+          created_at: string
+          dispensed_at: string | null
+          dispensed_by: string
+          id: string
+          notes: string | null
+          prescription_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dispensed_at?: string | null
+          dispensed_by: string
+          id?: string
+          notes?: string | null
+          prescription_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dispensed_at?: string | null
+          dispensed_by?: string
+          id?: string
+          notes?: string | null
+          prescription_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_dispensing_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_dispensing_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_dispensing_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_doctor_view"
             referencedColumns: ["id"]
           },
         ]
