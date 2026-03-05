@@ -248,21 +248,11 @@ export default function Auth() {
     setIsLoading(true);
     signingInManuallyRef.current = true;
 
+    // Sign out any existing session first to avoid conflicts
     try {
-      // Clear any stale session before attempting login
-      const { data: { session: existingSession } } = await supabase.auth.getSession();
-      if (existingSession) {
-        try {
-          await redirectBasedOnRole(existingSession.user);
-          setIsLoading(false);
-           signingInManuallyRef.current = false;
-          return;
-        } catch {
-          await supabase.auth.signOut();
-        }
-      }
+      await supabase.auth.signOut();
     } catch {
-      try { await supabase.auth.signOut(); } catch { /* ignore */ }
+      // ignore
     }
     
     const { error, data } = await supabase.auth.signInWithPassword({
