@@ -246,7 +246,7 @@ export default function Auth() {
     if (!validateForm(false)) return;
 
     setIsLoading(true);
-    setSigningInManually(true);
+    signingInManuallyRef.current = true;
 
     try {
       // Clear any stale session before attempting login
@@ -255,7 +255,7 @@ export default function Auth() {
         try {
           await redirectBasedOnRole(existingSession.user);
           setIsLoading(false);
-          setSigningInManually(false);
+           signingInManuallyRef.current = false;
           return;
         } catch {
           await supabase.auth.signOut();
@@ -272,7 +272,7 @@ export default function Auth() {
 
     if (error) {
       setIsLoading(false);
-      setSigningInManually(false);
+      signingInManuallyRef.current = false;
       
       if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
         toast({
@@ -333,7 +333,7 @@ export default function Auth() {
     }
 
     setIsLoading(false);
-    setSigningInManually(false);
+    signingInManuallyRef.current = false;
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
