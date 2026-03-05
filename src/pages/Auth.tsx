@@ -72,9 +72,6 @@ export default function Auth() {
     phone: "",
   });
 
-  // Track whether a manual sign-in is in progress to prevent listener interference
-  const [signingInManually, setSigningInManually] = useState(false);
-
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
       try {
@@ -94,9 +91,7 @@ export default function Auth() {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Skip redirect if handleSignIn is managing the flow
-      if (signingInManually) return;
-      if (session && event === 'SIGNED_IN') {
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
         await redirectBasedOnRole(session.user);
       }
     });
@@ -104,7 +99,7 @@ export default function Auth() {
     checkSessionAndRedirect();
 
     return () => subscription.unsubscribe();
-  }, [navigate, signingInManually]);
+  }, [navigate]);
 
   const redirectBasedOnRole = async (authUser: any) => {
     const userType = authUser?.user_metadata?.user_type;
@@ -177,7 +172,6 @@ export default function Auth() {
   const validateForm = (isSignUp: boolean) => {
     const newErrors: FormErrors = {};
     
-    // Validate email
     try {
       emailSchema.parse(email);
     } catch (e) {
@@ -186,7 +180,6 @@ export default function Auth() {
       }
     }
 
-    // Password validation - strict for signup, lenient for signin
     if (authView !== "forgot") {
       try {
         if (isSignUp) {
@@ -201,7 +194,6 @@ export default function Auth() {
       }
     }
 
-    // Name validation for signup
     if (isSignUp) {
       try {
         nameSchema.parse(fullName);
@@ -211,7 +203,6 @@ export default function Auth() {
         }
       }
       
-      // Student-specific validation
       if (userType === "student") {
         if (!studentData.rollNumber.trim() || studentData.rollNumber.length < 5) {
           newErrors.rollNumber = "Roll number is required (min 5 characters)";
@@ -246,94 +237,81 @@ export default function Auth() {
     if (!validateForm(false)) return;
 
     setIsLoading(true);
-    setSigningInManually(true);
 
-    try {
-      // Clear any stale session before attempting login
-      const { data: { session: existingSession } } = await supabase.auth.getSession();
-      if (existingSession) {
-        try {
-          await redirectBasedOnRole(existingSession.user);
-          setIsLoading(false);
-          setSigningInManually(false);
-          return;
-        } catch {
-          await supabase.auth.signOut();
-        }
-      }
-    } catch {
-      try { await supabase.auth.signOut(); } catch { /* ignore */ }
-    }
-    
-    const { error, data } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-
-    if (error) {
+    // Add a safety timeout to prevent permanent stuck state
+    const safetyTimeout = setTimeout(() => {
       setIsLoading(false);
-      setSigningInManually(false);
-      
-      if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
-        toast({
-          title: "Connection Error",
-          description: "Unable to reach the server. Please check your internet connection and try again.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sign In Failed",
-          description: error.message === "Invalid login credentials" 
-            ? "Invalid email or password. Please try again."
-            : error.message,
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-
-    // Auto-assign role based on selected user type if not already assigned
-    if (data.user && userType) {
-      const { data: existingRoles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id);
-
-      const hasRole = existingRoles?.some(r => r.role === userType);
-      
-      if (!hasRole) {
-        try {
-          await supabase.from('user_roles').insert({
-            user_id: data.user.id,
-            role: userType
-          });
-          toast({
-            title: "Role Assigned",
-            description: `You have been assigned the ${userType.charAt(0).toUpperCase() + userType.slice(1)} role.`,
-          });
-        } catch (err) {
-          console.log('Role may already exist:', err);
-        }
-      } else {
-        toast({
-          title: "Welcome Back",
-          description: `Signed in as ${userType.charAt(0).toUpperCase() + userType.slice(1)}.`,
-        });
-      }
-
-      // Update user metadata with user_type
-      await supabase.auth.updateUser({
-        data: { user_type: userType }
+    }, 15000);
+    
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
-    }
 
-    // Navigate directly instead of relying on onAuthStateChange
-    if (data.user) {
-      await redirectBasedOnRole(data.user);
-    }
+      if (error) {
+        if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
+          toast({
+            title: "Connection Error",
+            description: "Unable to reach the server. Please check your internet connection and try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign In Failed",
+            description: error.message === "Invalid login credentials" 
+              ? "Invalid email or password. Please try again."
+              : error.message,
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
+        clearTimeout(safetyTimeout);
+        return;
+      }
 
-    setIsLoading(false);
-    setSigningInManually(false);
+      // Auto-assign role based on selected user type if not already assigned
+      if (data.user && userType) {
+        const { data: existingRoles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id);
+
+        const hasRole = existingRoles?.some(r => r.role === userType);
+        
+        if (!hasRole) {
+          try {
+            await supabase.from('user_roles').insert({
+              user_id: data.user.id,
+              role: userType
+            });
+          } catch (err) {
+            console.log('Role may already exist:', err);
+          }
+        }
+
+        // Update user metadata with user_type (don't await - let it happen async)
+        supabase.auth.updateUser({
+          data: { user_type: userType }
+        }).catch(() => {});
+      }
+
+      // The onAuthStateChange listener will handle redirect
+      // But also try directly as a fallback
+      if (data.user) {
+        await redirectBasedOnRole(data.user);
+      }
+    } catch (err) {
+      console.error('Sign in error:', err);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      clearTimeout(safetyTimeout);
+      setIsLoading(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
