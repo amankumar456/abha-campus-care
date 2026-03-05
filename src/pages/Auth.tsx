@@ -72,8 +72,8 @@ export default function Auth() {
     phone: "",
   });
 
-  // Track whether a manual sign-in is in progress to prevent listener interference
-  const [signingInManually, setSigningInManually] = useState(false);
+  // Use a ref to track manual sign-in (avoids stale closure in onAuthStateChange)
+  const signingInManuallyRef = useRef(false);
 
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
@@ -95,7 +95,7 @@ export default function Auth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       // Skip redirect if handleSignIn is managing the flow
-      if (signingInManually) return;
+      if (signingInManuallyRef.current) return;
       if (session && event === 'SIGNED_IN') {
         await redirectBasedOnRole(session.user);
       }
@@ -104,7 +104,7 @@ export default function Auth() {
     checkSessionAndRedirect();
 
     return () => subscription.unsubscribe();
-  }, [navigate, signingInManually]);
+  }, [navigate]);
 
   const redirectBasedOnRole = async (authUser: any) => {
     const userType = authUser?.user_metadata?.user_type;
