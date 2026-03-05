@@ -246,23 +246,22 @@ export default function Auth() {
     if (!validateForm(false)) return;
 
     setIsLoading(true);
+    setSigningInManually(true);
 
     try {
       // Clear any stale session before attempting login
       const { data: { session: existingSession } } = await supabase.auth.getSession();
       if (existingSession) {
-        // If there's an existing session, try to use it
         try {
           await redirectBasedOnRole(existingSession.user);
           setIsLoading(false);
+          setSigningInManually(false);
           return;
         } catch {
-          // Session is stale, sign out first
           await supabase.auth.signOut();
         }
       }
     } catch {
-      // Network error checking session — sign out to clear stale tokens
       try { await supabase.auth.signOut(); } catch { /* ignore */ }
     }
     
@@ -273,8 +272,8 @@ export default function Auth() {
 
     if (error) {
       setIsLoading(false);
+      setSigningInManually(false);
       
-      // Handle network errors specifically
       if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
         toast({
           title: "Connection Error",
@@ -303,7 +302,6 @@ export default function Auth() {
       const hasRole = existingRoles?.some(r => r.role === userType);
       
       if (!hasRole) {
-        // Assign the role based on the selected user type
         try {
           await supabase.from('user_roles').insert({
             user_id: data.user.id,
@@ -329,7 +327,13 @@ export default function Auth() {
       });
     }
 
+    // Navigate directly instead of relying on onAuthStateChange
+    if (data.user) {
+      await redirectBasedOnRole(data.user);
+    }
+
     setIsLoading(false);
+    setSigningInManually(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
