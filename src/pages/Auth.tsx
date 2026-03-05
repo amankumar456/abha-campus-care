@@ -247,13 +247,6 @@ export default function Auth() {
 
     setIsLoading(true);
     signingInManuallyRef.current = true;
-
-    // Sign out any existing session first to avoid conflicts
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    }
     
     const { error, data } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
