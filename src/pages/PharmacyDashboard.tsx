@@ -35,6 +35,7 @@ export default function PharmacyDashboard() {
   const [activeTab, setActiveTab] = useState("pending");
   const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionWithDetails | null>(null);
   const [dispensedHistory, setDispensedHistory] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPrescriptions = async () => {
     setLoading(true);
