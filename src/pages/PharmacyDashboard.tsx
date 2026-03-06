@@ -149,9 +149,19 @@ export default function PharmacyDashboard() {
     }
   };
 
-  const pendingPrescriptions = prescriptions.filter(p => p.dispensing_status === "pending");
-  const approvedPrescriptions = prescriptions.filter(p => p.dispensing_status === "approved");
-  const deniedPrescriptions = prescriptions.filter(p => p.dispensing_status === "denied");
+  const filterBySearch = (list: PrescriptionWithDetails[]) =>
+    list.filter(p => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        p.student?.full_name?.toLowerCase().includes(q) ||
+        p.student?.roll_number?.toLowerCase().includes(q)
+      );
+    });
+
+  const pendingPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "pending"));
+  const approvedPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "approved"));
+  const deniedPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "denied"));
 
   const PrescriptionCard = ({ p, showActions }: { p: PrescriptionWithDetails; showActions: boolean }) => (
     <Card className="hover:shadow-md transition-shadow">
