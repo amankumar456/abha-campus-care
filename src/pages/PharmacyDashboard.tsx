@@ -112,7 +112,6 @@ export default function PharmacyDashboard() {
 
     try {
       if (prescription.dispensing_id) {
-        // Update existing
         const { error } = await supabase
           .from("pharmacy_dispensing")
           .update({
@@ -123,7 +122,6 @@ export default function PharmacyDashboard() {
           .eq("id", prescription.dispensing_id);
         if (error) throw error;
       } else {
-        // Insert new
         const { error } = await supabase
           .from("pharmacy_dispensing")
           .insert({
@@ -134,6 +132,25 @@ export default function PharmacyDashboard() {
             dispensed_at: action === "approved" ? new Date().toISOString() : null,
           });
         if (error) throw error;
+      }
+
+      // Send notification to student
+      if (action === "approved") {
+        const { data: student } = await supabase
+          .from("students")
+          .select("user_id, full_name")
+          .eq("id", prescription.student_id)
+          .single();
+
+        if (student?.user_id) {
+          const medicineNames = prescription.items?.map(i => i.medicine_name).join(", ") || "your medicines";
+          await supabase.from("notifications").insert({
+            user_id: student.user_id,
+            title: "💊 Medicines Delivered",
+            message: `Your medicines (${medicineNames}) have been dispensed at the pharmacy. Please collect them from the Health Centre pharmacy counter.`,
+            type: "pharmacy",
+          });
+        }
       }
 
       toast({
