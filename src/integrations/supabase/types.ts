@@ -966,6 +966,54 @@ export type Database = {
           },
         ]
       }
+      pharmacy_inventory: {
+        Row: {
+          batch_number: string | null
+          category: string | null
+          created_at: string
+          expiry_date: string | null
+          generic_name: string | null
+          id: string
+          medicine_name: string
+          notes: string | null
+          quantity: number
+          reorder_level: number | null
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: string | null
+          category?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          generic_name?: string | null
+          id?: string
+          medicine_name: string
+          notes?: string | null
+          quantity?: number
+          reorder_level?: number | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string | null
+          category?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          generic_name?: string | null
+          id?: string
+          medicine_name?: string
+          notes?: string | null
+          quantity?: number
+          reorder_level?: number | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prescription_items: {
         Row: {
           created_at: string
