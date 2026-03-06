@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Pill, CheckCircle2, XCircle, Clock, Eye, User, Stethoscope, Calendar, FileText } from "lucide-react";
+import { Pill, CheckCircle2, XCircle, Clock, Eye, User, Stethoscope, Calendar, FileText, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 
 interface PrescriptionWithDetails {
