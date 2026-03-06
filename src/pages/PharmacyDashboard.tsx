@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Pill, CheckCircle2, XCircle, Clock, Eye, User, Stethoscope, Calendar, FileText } from "lucide-react";
+import { Pill, CheckCircle2, XCircle, Clock, Eye, User, Stethoscope, Calendar, FileText, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 
 interface PrescriptionWithDetails {
@@ -35,6 +36,7 @@ export default function PharmacyDashboard() {
   const [activeTab, setActiveTab] = useState("pending");
   const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionWithDetails | null>(null);
   const [dispensedHistory, setDispensedHistory] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchPrescriptions = async () => {
     setLoading(true);
@@ -147,9 +149,19 @@ export default function PharmacyDashboard() {
     }
   };
 
-  const pendingPrescriptions = prescriptions.filter(p => p.dispensing_status === "pending");
-  const approvedPrescriptions = prescriptions.filter(p => p.dispensing_status === "approved");
-  const deniedPrescriptions = prescriptions.filter(p => p.dispensing_status === "denied");
+  const filterBySearch = (list: PrescriptionWithDetails[]) =>
+    list.filter(p => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        p.student?.full_name?.toLowerCase().includes(q) ||
+        p.student?.roll_number?.toLowerCase().includes(q)
+      );
+    });
+
+  const pendingPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "pending"));
+  const approvedPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "approved"));
+  const deniedPrescriptions = filterBySearch(prescriptions.filter(p => p.dispensing_status === "denied"));
 
   const PrescriptionCard = ({ p, showActions }: { p: PrescriptionWithDetails; showActions: boolean }) => (
     <Card className="hover:shadow-md transition-shadow">
@@ -323,6 +335,16 @@ export default function PharmacyDashboard() {
               <p className="text-sm text-muted-foreground">Denied</p>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by student name or roll number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
