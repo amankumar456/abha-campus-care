@@ -262,6 +262,7 @@ export default function PrescriptionDialog({
     setDiagnosis("");
     setNotes("");
     setMedicines([createEmptyMedicine()]);
+    setLabTests([]);
   };
 
   const handlePrintPreview = async () => {
@@ -576,6 +577,47 @@ export default function PrescriptionDialog({
             >
               <Plus className="h-4 w-4" />
               Add Another Medicine
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* Lab Tests Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-sm font-medium">
+                <FlaskConical className="h-4 w-4 text-blue-600" />
+                Prescribe Lab Tests
+              </Label>
+              <Badge variant="secondary" className="text-xs">
+                {labTests.length} test{labTests.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+
+            {labTests.map((test, index) => (
+              <div key={test.id} className="rounded-lg border bg-blue-50/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Test #{index + 1}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeLabTest(test.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Test Name *</Label>
+                    <Input placeholder="e.g., CBC, Blood Sugar, X-Ray Chest" value={test.test_name} onChange={(e) => updateLabTest(test.id, "test_name", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Instructions / Notes</Label>
+                    <Input placeholder="e.g., Fasting required, left knee..." value={test.notes} onChange={(e) => updateLabTest(test.id, "notes", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <Button variant="outline" size="sm" onClick={addLabTest} className="w-full gap-1.5 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50">
+              <Plus className="h-4 w-4" />
+              Add Lab Test
             </Button>
           </div>
 
