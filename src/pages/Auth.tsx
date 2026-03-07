@@ -77,15 +77,13 @@ export default function Auth() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.warn('Stale session detected, signing out to clear:', error.message);
           await supabase.auth.signOut();
           return;
         }
         if (session) {
           await redirectBasedOnRole(session.user);
         }
-      } catch (err) {
-        console.warn('Network error checking session, clearing local state');
+      } catch {
         await supabase.auth.signOut();
       }
     };
@@ -104,33 +102,32 @@ export default function Auth() {
   const redirectBasedOnRole = async (authUser: any) => {
     const userType = authUser?.user_metadata?.user_type;
     
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', authUser.id);
+    // Try cached roles first for instant redirect
+    const { getCachedRoles } = await import('@/hooks/useUserRole');
+    let roleList = getCachedRoles(authUser.id);
     
-    const isDoctor = roles?.some(r => r.role === 'doctor');
-    const isMentor = roles?.some(r => r.role === 'mentor');
-    const isAdmin = roles?.some(r => r.role === 'admin');
-    const isPharmacy = roles?.some(r => r.role === 'pharmacy');
-    const isLabOfficer = roles?.some(r => r.role === 'lab_officer');
-    const isMedicalStaff = roles?.some(r => r.role === 'medical_staff');
-
-    if (isAdmin) {
-      navigate('/admin');
-    } else if (isPharmacy || userType === 'pharmacy') {
-      navigate('/pharmacy/dashboard');
-    } else if (isLabOfficer || userType === 'lab_officer') {
-      navigate('/lab/dashboard');
-    } else if (isMedicalStaff || userType === 'medical_staff') {
-      navigate('/staff/dashboard');
-    } else if (isDoctor || userType === 'doctor') {
-      navigate('/doctor/dashboard');
-    } else if (isMentor || userType === 'mentor') {
-      navigate('/mentor/dashboard');
-    } else {
-      navigate('/health-dashboard');
+    if (!roleList) {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id);
+      roleList = (roles || []).map(r => r.role as any);
     }
+
+    const isAdmin = roleList.includes('admin');
+    const isPharmacy = roleList.includes('pharmacy');
+    const isLabOfficer = roleList.includes('lab_officer');
+    const isMedicalStaff = roleList.includes('medical_staff');
+    const isDoctor = roleList.includes('doctor');
+    const isMentor = roleList.includes('mentor');
+
+    if (isAdmin) navigate('/admin');
+    else if (isPharmacy || userType === 'pharmacy') navigate('/pharmacy/dashboard');
+    else if (isLabOfficer || userType === 'lab_officer') navigate('/lab/dashboard');
+    else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/dashboard');
+    else if (isDoctor || userType === 'doctor') navigate('/doctor/dashboard');
+    else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
+    else navigate('/health-dashboard');
   };
 
   const resetForm = () => {
@@ -238,10 +235,7 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    // Add a safety timeout to prevent permanent stuck state
-    const safetyTimeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 15000);
+    const safetyTimeout = setTimeout(() => setIsLoading(false), 8000);
     
     try {
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -250,64 +244,40 @@ export default function Auth() {
       });
 
       if (error) {
-        if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
-          toast({
-            title: "Connection Error",
-            description: "Unable to reach the server. Please check your internet connection and try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign In Failed",
-            description: error.message === "Invalid login credentials" 
-              ? "Invalid email or password. Please try again."
-              : error.message,
-            variant: "destructive",
-          });
-        }
-        setIsLoading(false);
         clearTimeout(safetyTimeout);
+        setIsLoading(false);
+        const msg = error.message.includes("fetch")
+          ? "Unable to reach the server. Please check your internet connection."
+          : error.message === "Invalid login credentials"
+            ? "Invalid email or password. Please try again."
+            : error.message;
+        toast({ title: "Sign In Failed", description: msg, variant: "destructive" });
         return;
       }
 
-      // Auto-assign role based on selected user type if not already assigned
       if (data.user && userType) {
-        const { data: existingRoles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id);
+        // Fire role check + assignment, non-blocking
+        try {
+          const { data: existingRoles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id);
 
-        const hasRole = existingRoles?.some(r => r.role === userType);
-        
-        if (!hasRole) {
-          try {
-            await supabase.from('user_roles').insert({
-              user_id: data.user.id,
-              role: userType
-            });
-          } catch (err) {
-            console.log('Role may already exist:', err);
+          if (!existingRoles?.some(r => r.role === userType)) {
+            await supabase.from('user_roles').insert({ user_id: data.user.id, role: userType });
           }
-        }
+        } catch {}
 
-        // Update user metadata with user_type (don't await - let it happen async)
-        supabase.auth.updateUser({
-          data: { user_type: userType }
-        }).catch(() => {});
+        // Don't block on metadata update
+        supabase.auth.updateUser({ data: { user_type: userType } }).then(() => {});
       }
 
-      // The onAuthStateChange listener will handle redirect
-      // But also try directly as a fallback
+      // Redirect immediately
       if (data.user) {
         await redirectBasedOnRole(data.user);
       }
-    } catch (err) {
-      console.error('Sign in error:', err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Error", description: "An unexpected error occurred.", variant: "destructive" });
     } finally {
       clearTimeout(safetyTimeout);
       setIsLoading(false);
