@@ -13,6 +13,7 @@ import {
   FileText,
   CheckCircle2,
   Printer,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +115,19 @@ export default function PrescriptionDialog({
   const [diagnosis, setDiagnosis] = useState("");
   const [notes, setNotes] = useState("");
   const [medicines, setMedicines] = useState<MedicineItem[]>([createEmptyMedicine()]);
+  const [labTests, setLabTests] = useState<{ id: string; test_name: string; notes: string }[]>([]);
+
+  const addLabTest = () => {
+    setLabTests(prev => [...prev, { id: crypto.randomUUID(), test_name: "", notes: "" }]);
+  };
+
+  const removeLabTest = (id: string) => {
+    setLabTests(prev => prev.filter(t => t.id !== id));
+  };
+
+  const updateLabTest = (id: string, field: "test_name" | "notes", value: string) => {
+    setLabTests(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
+  };
 
   const addMedicine = () => {
     setMedicines((prev) => [...prev, createEmptyMedicine()]);
@@ -183,6 +197,26 @@ export default function PrescriptionDialog({
         if (itemsError) throw itemsError;
       }
 
+      // Insert lab test orders if any
+      const validLabTests = labTests.filter(t => t.test_name.trim());
+      if (validLabTests.length > 0) {
+        const labItems = validLabTests.map(t => ({
+          prescription_id: prescription.id,
+          student_id: resolvedStudentId,
+          doctor_id: doctorId,
+          test_name: t.test_name.trim(),
+          notes: t.notes.trim() || null,
+          uploaded_by: doctorId,
+          status: "pending",
+        }));
+
+        const { error: labError } = await supabase
+          .from("lab_reports")
+          .insert(labItems);
+
+        if (labError) throw labError;
+      }
+
       // Mark appointment as completed
       const { error: aptError } = await supabase
         .from("appointments")
@@ -192,17 +226,19 @@ export default function PrescriptionDialog({
       if (aptError) throw aptError;
 
       // Send prescription notification to student
-      // Use already-resolved studentRow from above
       if (studentRow?.user_id) {
         const medicineList = validMedicines.length > 0
           ? validMedicines.map(m => m.medicine_name).join(", ")
           : "No medicines";
+        const labTestList = validLabTests.length > 0
+          ? ` Lab Tests: ${validLabTests.map(t => t.test_name).join(", ")}.`
+          : "";
         const diagnosisText = diagnosis.trim() ? `Diagnosis: ${diagnosis.trim()}. ` : "";
 
         await supabase.from("notifications").insert({
           user_id: studentRow.user_id,
-          title: "💊 New Prescription Issued",
-          message: `${diagnosisText}Medicines: ${medicineList}. Click to view your prescription details.`,
+          title: validLabTests.length > 0 ? "🔬 Prescription & Lab Tests Issued" : "💊 New Prescription Issued",
+          message: `${diagnosisText}Medicines: ${medicineList}.${labTestList} Click to view your prescription details.`,
           type: "prescription",
           related_appointment_id: appointmentId,
         });
@@ -226,6 +262,7 @@ export default function PrescriptionDialog({
     setDiagnosis("");
     setNotes("");
     setMedicines([createEmptyMedicine()]);
+    setLabTests([]);
   };
 
   const handlePrintPreview = async () => {
@@ -540,6 +577,47 @@ export default function PrescriptionDialog({
             >
               <Plus className="h-4 w-4" />
               Add Another Medicine
+            </Button>
+          </div>
+
+          <Separator />
+
+          {/* Lab Tests Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-sm font-medium">
+                <FlaskConical className="h-4 w-4 text-blue-600" />
+                Prescribe Lab Tests
+              </Label>
+              <Badge variant="secondary" className="text-xs">
+                {labTests.length} test{labTests.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+
+            {labTests.map((test, index) => (
+              <div key={test.id} className="rounded-lg border bg-blue-50/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Test #{index + 1}</span>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeLabTest(test.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Test Name *</Label>
+                    <Input placeholder="e.g., CBC, Blood Sugar, X-Ray Chest" value={test.test_name} onChange={(e) => updateLabTest(test.id, "test_name", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Instructions / Notes</Label>
+                    <Input placeholder="e.g., Fasting required, left knee..." value={test.notes} onChange={(e) => updateLabTest(test.id, "notes", e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <Button variant="outline" size="sm" onClick={addLabTest} className="w-full gap-1.5 border-dashed border-blue-300 text-blue-600 hover:bg-blue-50">
+              <Plus className="h-4 w-4" />
+              Add Lab Test
             </Button>
           </div>
 
