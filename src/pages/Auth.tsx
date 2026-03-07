@@ -235,10 +235,7 @@ export default function Auth() {
 
     setIsLoading(true);
 
-    // Add a safety timeout to prevent permanent stuck state
-    const safetyTimeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 15000);
+    const safetyTimeout = setTimeout(() => setIsLoading(false), 8000);
     
     try {
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -247,64 +244,41 @@ export default function Auth() {
       });
 
       if (error) {
-        if (error.message === "Failed to fetch" || error.message.includes("fetch")) {
-          toast({
-            title: "Connection Error",
-            description: "Unable to reach the server. Please check your internet connection and try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign In Failed",
-            description: error.message === "Invalid login credentials" 
-              ? "Invalid email or password. Please try again."
-              : error.message,
-            variant: "destructive",
-          });
-        }
-        setIsLoading(false);
         clearTimeout(safetyTimeout);
+        setIsLoading(false);
+        const msg = error.message.includes("fetch")
+          ? "Unable to reach the server. Please check your internet connection."
+          : error.message === "Invalid login credentials"
+            ? "Invalid email or password. Please try again."
+            : error.message;
+        toast({ title: "Sign In Failed", description: msg, variant: "destructive" });
         return;
       }
 
-      // Auto-assign role based on selected user type if not already assigned
       if (data.user && userType) {
-        const { data: existingRoles } = await supabase
+        // Fire role assignment and metadata update in parallel, non-blocking
+        const rolePromise = supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', data.user.id);
+          .eq('user_id', data.user.id)
+          .then(({ data: existingRoles }) => {
+            if (!existingRoles?.some(r => r.role === userType)) {
+              return supabase.from('user_roles').insert({ user_id: data.user!.id, role: userType });
+            }
+          }).catch(() => {});
 
-        const hasRole = existingRoles?.some(r => r.role === userType);
+        // Don't block on metadata update
+        supabase.auth.updateUser({ data: { user_type: userType } }).catch(() => {});
         
-        if (!hasRole) {
-          try {
-            await supabase.from('user_roles').insert({
-              user_id: data.user.id,
-              role: userType
-            });
-          } catch (err) {
-            console.log('Role may already exist:', err);
-          }
-        }
-
-        // Update user metadata with user_type (don't await - let it happen async)
-        supabase.auth.updateUser({
-          data: { user_type: userType }
-        }).catch(() => {});
+        await rolePromise;
       }
 
-      // The onAuthStateChange listener will handle redirect
-      // But also try directly as a fallback
+      // Redirect immediately
       if (data.user) {
         await redirectBasedOnRole(data.user);
       }
-    } catch (err) {
-      console.error('Sign in error:', err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Error", description: "An unexpected error occurred.", variant: "destructive" });
     } finally {
       clearTimeout(safetyTimeout);
       setIsLoading(false);
