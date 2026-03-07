@@ -77,15 +77,13 @@ export default function Auth() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.warn('Stale session detected, signing out to clear:', error.message);
           await supabase.auth.signOut();
           return;
         }
         if (session) {
           await redirectBasedOnRole(session.user);
         }
-      } catch (err) {
-        console.warn('Network error checking session, clearing local state');
+      } catch {
         await supabase.auth.signOut();
       }
     };
@@ -104,33 +102,32 @@ export default function Auth() {
   const redirectBasedOnRole = async (authUser: any) => {
     const userType = authUser?.user_metadata?.user_type;
     
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', authUser.id);
+    // Try cached roles first for instant redirect
+    const { getCachedRoles } = await import('@/hooks/useUserRole');
+    let roleList = getCachedRoles(authUser.id);
     
-    const isDoctor = roles?.some(r => r.role === 'doctor');
-    const isMentor = roles?.some(r => r.role === 'mentor');
-    const isAdmin = roles?.some(r => r.role === 'admin');
-    const isPharmacy = roles?.some(r => r.role === 'pharmacy');
-    const isLabOfficer = roles?.some(r => r.role === 'lab_officer');
-    const isMedicalStaff = roles?.some(r => r.role === 'medical_staff');
-
-    if (isAdmin) {
-      navigate('/admin');
-    } else if (isPharmacy || userType === 'pharmacy') {
-      navigate('/pharmacy/dashboard');
-    } else if (isLabOfficer || userType === 'lab_officer') {
-      navigate('/lab/dashboard');
-    } else if (isMedicalStaff || userType === 'medical_staff') {
-      navigate('/staff/dashboard');
-    } else if (isDoctor || userType === 'doctor') {
-      navigate('/doctor/dashboard');
-    } else if (isMentor || userType === 'mentor') {
-      navigate('/mentor/dashboard');
-    } else {
-      navigate('/health-dashboard');
+    if (!roleList) {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id);
+      roleList = (roles || []).map(r => r.role as any);
     }
+
+    const isAdmin = roleList.includes('admin');
+    const isPharmacy = roleList.includes('pharmacy');
+    const isLabOfficer = roleList.includes('lab_officer');
+    const isMedicalStaff = roleList.includes('medical_staff');
+    const isDoctor = roleList.includes('doctor');
+    const isMentor = roleList.includes('mentor');
+
+    if (isAdmin) navigate('/admin');
+    else if (isPharmacy || userType === 'pharmacy') navigate('/pharmacy/dashboard');
+    else if (isLabOfficer || userType === 'lab_officer') navigate('/lab/dashboard');
+    else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/dashboard');
+    else if (isDoctor || userType === 'doctor') navigate('/doctor/dashboard');
+    else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
+    else navigate('/health-dashboard');
   };
 
   const resetForm = () => {
