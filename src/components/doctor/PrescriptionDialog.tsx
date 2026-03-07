@@ -13,6 +13,7 @@ import {
   FileText,
   CheckCircle2,
   Printer,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +115,19 @@ export default function PrescriptionDialog({
   const [diagnosis, setDiagnosis] = useState("");
   const [notes, setNotes] = useState("");
   const [medicines, setMedicines] = useState<MedicineItem[]>([createEmptyMedicine()]);
+  const [labTests, setLabTests] = useState<{ id: string; test_name: string; notes: string }[]>([]);
+
+  const addLabTest = () => {
+    setLabTests(prev => [...prev, { id: crypto.randomUUID(), test_name: "", notes: "" }]);
+  };
+
+  const removeLabTest = (id: string) => {
+    setLabTests(prev => prev.filter(t => t.id !== id));
+  };
+
+  const updateLabTest = (id: string, field: "test_name" | "notes", value: string) => {
+    setLabTests(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
+  };
 
   const addMedicine = () => {
     setMedicines((prev) => [...prev, createEmptyMedicine()]);
