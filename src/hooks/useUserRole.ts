@@ -1,8 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
 export type AppRole = 'doctor' | 'mentor' | 'student' | 'admin' | 'lab_officer' | 'pharmacy' | 'medical_staff';
+
+interface RoleCacheEntry {
+  roles: AppRole[];
+  mentorId: string | null;
+  doctorId: string | null;
+  timestamp: number;
+}
+
+// Global cache shared across all hook instances
+const roleCache = new Map<string, RoleCacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface UseUserRoleReturn {
   user: User | null;
@@ -17,6 +28,7 @@ interface UseUserRoleReturn {
   loading: boolean;
   mentorId: string | null;
   doctorId: string | null;
+  refreshRoles: () => void;
 }
 
 export const useUserRole = (): UseUserRoleReturn => {
@@ -25,51 +37,82 @@ export const useUserRole = (): UseUserRoleReturn => {
   const [mentorId, setMentorId] = useState<string | null>(null);
   const [doctorId, setDoctorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  const applyCache = useCallback((userId: string): boolean => {
+    const cached = roleCache.get(userId);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setRoles(cached.roles);
+      setMentorId(cached.mentorId);
+      setDoctorId(cached.doctorId);
+      setLoading(false);
+      return true;
+    }
+    return false;
+  }, []);
+
+  const fetchRoles = useCallback(async (userId: string, force = false) => {
+    if (fetchingRef.current) return;
+    
+    // Use cache if available and not forced
+    if (!force && applyCache(userId)) return;
+
+    fetchingRef.current = true;
+    try {
+      // Parallel fetch all role-related data in ONE batch
+      const [rolesRes, mentorRes, doctorRes] = await Promise.all([
+        supabase.from('user_roles').select('role').eq('user_id', userId),
+        supabase.from('mentors').select('id').eq('user_id', userId).maybeSingle(),
+        supabase.from('medical_officers').select('id').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      if (!mountedRef.current) return;
+
+      const fetchedRoles = (rolesRes.data || []).map(r => r.role as AppRole);
+      const fetchedMentorId = mentorRes.data?.id || null;
+      const fetchedDoctorId = doctorRes.data?.id || null;
+
+      // Update cache
+      roleCache.set(userId, {
+        roles: fetchedRoles,
+        mentorId: fetchedMentorId,
+        doctorId: fetchedDoctorId,
+        timestamp: Date.now(),
+      });
+
+      setRoles(fetchedRoles);
+      setMentorId(fetchedMentorId);
+      setDoctorId(fetchedDoctorId);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    } finally {
+      fetchingRef.current = false;
+      if (mountedRef.current) setLoading(false);
+    }
+  }, [applyCache]);
+
+  const refreshRoles = useCallback(() => {
+    if (user) {
+      roleCache.delete(user.id);
+      fetchRoles(user.id, true);
+    }
+  }, [user, fetchRoles]);
 
   useEffect(() => {
-    const fetchRoles = async (userId: string) => {
-      try {
-        const { data: rolesData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId);
+    mountedRef.current = true;
 
-        if (rolesData) {
-          setRoles(rolesData.map(r => r.role as AppRole));
+    // Set up auth listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+      if (newUser) {
+        // On sign in or token refresh, use cache or fetch
+        if (event === 'SIGNED_IN') {
+          fetchRoles(newUser.id);
+        } else if (event === 'TOKEN_REFRESHED') {
+          applyCache(newUser.id) || fetchRoles(newUser.id);
         }
-
-        // Check if user is linked to a mentor
-        const { data: mentorData } = await supabase
-          .from('mentors')
-          .select('id')
-          .eq('user_id', userId)
-          .single();
-
-        if (mentorData) {
-          setMentorId(mentorData.id);
-        }
-
-        // Check if user is linked to a doctor
-        const { data: doctorData } = await supabase
-          .from('medical_officers')
-          .select('id')
-          .eq('user_id', userId)
-          .single();
-
-        if (doctorData) {
-          setDoctorId(doctorData.id);
-        }
-      } catch (error) {
-        console.error('Error fetching roles:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => fetchRoles(session.user.id), 0);
       } else {
         setRoles([]);
         setMentorId(null);
@@ -78,23 +121,29 @@ export const useUserRole = (): UseUserRoleReturn => {
       }
     });
 
+    // Then check existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.warn('Session fetch error, clearing stale session:', error.message);
-        supabase.auth.signOut();
+        console.warn('Session error:', error.message);
         setLoading(false);
         return;
       }
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRoles(session.user.id);
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      if (sessionUser) {
+        fetchRoles(sessionUser.id);
       } else {
         setLoading(false);
       }
     }).catch(() => {
       setLoading(false);
     });
-  }, []);
+
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchRoles, applyCache]);
 
   return {
     user,
@@ -108,6 +157,17 @@ export const useUserRole = (): UseUserRoleReturn => {
     isMedicalStaff: roles.includes('medical_staff'),
     loading,
     mentorId,
-    doctorId
+    doctorId,
+    refreshRoles,
   };
+};
+
+// Export cache utilities for auth page to use
+export const clearRoleCache = () => roleCache.clear();
+export const getCachedRoles = (userId: string): AppRole[] | null => {
+  const cached = roleCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.roles;
+  }
+  return null;
 };
