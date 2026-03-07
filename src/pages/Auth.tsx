@@ -256,21 +256,20 @@ export default function Auth() {
       }
 
       if (data.user && userType) {
-        // Fire role assignment and metadata update in parallel, non-blocking
-        const rolePromise = supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .then(({ data: existingRoles }) => {
-            if (!existingRoles?.some(r => r.role === userType)) {
-              return supabase.from('user_roles').insert({ user_id: data.user!.id, role: userType });
-            }
-          }).catch(() => {});
+        // Fire role check + assignment, non-blocking
+        try {
+          const { data: existingRoles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id);
+
+          if (!existingRoles?.some(r => r.role === userType)) {
+            await supabase.from('user_roles').insert({ user_id: data.user.id, role: userType });
+          }
+        } catch {}
 
         // Don't block on metadata update
-        supabase.auth.updateUser({ data: { user_type: userType } }).catch(() => {});
-        
-        await rolePromise;
+        supabase.auth.updateUser({ data: { user_type: userType } }).then(() => {});
       }
 
       // Redirect immediately
