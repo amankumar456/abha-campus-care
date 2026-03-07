@@ -197,6 +197,26 @@ export default function PrescriptionDialog({
         if (itemsError) throw itemsError;
       }
 
+      // Insert lab test orders if any
+      const validLabTests = labTests.filter(t => t.test_name.trim());
+      if (validLabTests.length > 0) {
+        const labItems = validLabTests.map(t => ({
+          prescription_id: prescription.id,
+          student_id: resolvedStudentId,
+          doctor_id: doctorId,
+          test_name: t.test_name.trim(),
+          notes: t.notes.trim() || null,
+          uploaded_by: doctorId,
+          status: "pending",
+        }));
+
+        const { error: labError } = await supabase
+          .from("lab_reports")
+          .insert(labItems);
+
+        if (labError) throw labError;
+      }
+
       // Mark appointment as completed
       const { error: aptError } = await supabase
         .from("appointments")
@@ -206,17 +226,19 @@ export default function PrescriptionDialog({
       if (aptError) throw aptError;
 
       // Send prescription notification to student
-      // Use already-resolved studentRow from above
       if (studentRow?.user_id) {
         const medicineList = validMedicines.length > 0
           ? validMedicines.map(m => m.medicine_name).join(", ")
           : "No medicines";
+        const labTestList = validLabTests.length > 0
+          ? ` Lab Tests: ${validLabTests.map(t => t.test_name).join(", ")}.`
+          : "";
         const diagnosisText = diagnosis.trim() ? `Diagnosis: ${diagnosis.trim()}. ` : "";
 
         await supabase.from("notifications").insert({
           user_id: studentRow.user_id,
-          title: "💊 New Prescription Issued",
-          message: `${diagnosisText}Medicines: ${medicineList}. Click to view your prescription details.`,
+          title: validLabTests.length > 0 ? "🔬 Prescription & Lab Tests Issued" : "💊 New Prescription Issued",
+          message: `${diagnosisText}Medicines: ${medicineList}.${labTestList} Click to view your prescription details.`,
           type: "prescription",
           related_appointment_id: appointmentId,
         });
