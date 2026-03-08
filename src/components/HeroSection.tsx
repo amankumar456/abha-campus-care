@@ -1,6 +1,18 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/nitw-building.png";
 
 const HeroSection = () => {
+  const { data: stats } = useQuery({
+    queryKey: ["health-centre-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_health_centre_stats");
+      if (error) throw error;
+      return data as { active_students: number; completed_appointments: number; doctor_count: number };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   return (
     <section className="relative min-h-[600px] lg:min-h-[700px] flex items-center">
       {/* Background Image */}
@@ -50,16 +62,19 @@ const HeroSection = () => {
             </p>
           </div>
 
-
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/20 animate-fade-in" style={{ animationDelay: "0.6s" }}>
             <div>
-              <p className="text-3xl font-bold text-white">2,450+</p>
-              <p className="text-white/70 text-sm">Active Students</p>
+              <p className="text-3xl font-bold text-white">
+                {stats ? `${stats.active_students.toLocaleString()}+` : "—"}
+              </p>
+              <p className="text-white/70 text-sm">Registered Students</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-white">98%</p>
-              <p className="text-white/70 text-sm">Vaccination Rate</p>
+              <p className="text-3xl font-bold text-white">
+                {stats ? stats.doctor_count : "—"}
+              </p>
+              <p className="text-white/70 text-sm">Medical Officers</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-white">24/7</p>
