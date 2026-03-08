@@ -193,6 +193,15 @@ const Header = () => {
                     Medical Team
                   </Link>
                 </>
+              ) : isPharmacy ? (
+                <>
+                  <Link to="/pharmacy/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Pharmacy Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
