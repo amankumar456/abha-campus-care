@@ -149,6 +149,10 @@ const NotificationBell = () => {
       case 'rescheduled': return <Calendar className="h-3.5 w-3.5 text-yellow-600 flex-shrink-0" />;
       case 'prescription':
         return <Stethoscope className="h-3.5 w-3.5 text-rose-600 flex-shrink-0" />;
+      case 'certificate_issued':
+        return <CheckCircle2 className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />;
+      case 'lab_report':
+        return <Bell className="h-3.5 w-3.5 text-cyan-600 flex-shrink-0" />;
       case 'medical_leave_referral':
       case 'medical_leave_on_leave':
       case 'medical_leave_returned':
