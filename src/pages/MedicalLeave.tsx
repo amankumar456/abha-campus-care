@@ -95,7 +95,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const MedicalLeave = () => {
-  const { user, isDoctor, isStudent, isMentor, isAdmin, loading: roleLoading, doctorId } = useUserRole();
+  const { user, isDoctor, isStudent, isMentor, isAdmin, isMedicalStaff, loading: roleLoading, doctorId } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("requests");
   const [showLeaveForm, setShowLeaveForm] = useState(false);
