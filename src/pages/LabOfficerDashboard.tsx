@@ -199,7 +199,7 @@ export default function LabOfficerDashboard() {
 
   return (
     <div className="min-h-screen flex bg-[#f3f4f6]">
-      <LabSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <LabSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <main className="flex-1 overflow-y-auto">
         {/* Top bar */}
         <div className="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-10">
@@ -216,6 +216,15 @@ export default function LabOfficerDashboard() {
           {renderSection()}
         </div>
       </main>
+
+      <RegisterSampleDialog
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onRegistered={() => {
+          fetchLabReports();
+          setRegisterOpen(false);
+        }}
+      />
     </div>
   );
 }
