@@ -410,7 +410,67 @@ export default function StudentProfilePage() {
     }
   };
 
-  const profileFields = student ? [
+  const handlePrintReferralLetter = async (ref: ReferralLetter) => {
+    const docId = `REF-${ref.id.slice(0, 8).toUpperCase()}`;
+    const dateStr = format(new Date(ref.referral_date), 'PPP');
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml('MEDICAL REFERRAL LETTER')}
+      <div class="doc-title">
+        <h3>MEDICAL REFERRAL LETTER</h3>
+        <div class="cert-no">Referral No.: ${docId} | Date: ${dateStr}</div>
+      </div>
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${student?.full_name}</span>
+        <span><strong>Roll No:</strong> ${student?.roll_number}</span>
+      </div>
+      <div class="info-grid" style="margin-bottom:16px;">
+        <div class="info-item"><span class="info-label">Program:</span><span>${student?.program || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Branch:</span><span>${student?.branch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Batch:</span><span>${student?.batch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Year:</span><span>${student?.year_of_study || '—'}</span></div>
+      </div>
+      <div class="section">
+        <div class="section-title">Referral Details</div>
+        <div class="info-grid">
+          <div class="info-item"><span class="info-label">Referred Hospital:</span><span>${ref.referral_hospital}</span></div>
+          <div class="info-item"><span class="info-label">Expected Duration:</span><span>${ref.expected_duration}</span></div>
+          ${ref.leave_start_date ? `<div class="info-item"><span class="info-label">Leave Start:</span><span>${format(new Date(ref.leave_start_date), 'PPP')}</span></div>` : ''}
+          ${ref.expected_return_date ? `<div class="info-item"><span class="info-label">Expected Return:</span><span>${format(new Date(ref.expected_return_date), 'PPP')}</span></div>` : ''}
+          ${ref.health_priority ? `<div class="info-item"><span class="info-label">Priority:</span><span>${ref.health_priority.charAt(0).toUpperCase() + ref.health_priority.slice(1)}</span></div>` : ''}
+        </div>
+      </div>
+      ${ref.illness_description ? `<div class="section"><div class="section-title">Illness / Condition</div><div class="info-box" style="background:#f0f7ff;border-color:#cce0ff;">${ref.illness_description}</div></div>` : ''}
+      ${ref.doctor_notes ? `<div class="notes-box"><strong>Doctor's Notes:</strong> ${ref.doctor_notes}</div>` : ''}
+      ${ref.referral_type && ref.referral_type.length > 0 ? `<div class="section"><div class="section-title">Referral Type</div><p style="font-size:13px;">${ref.referral_type.join(', ')}</p></div>` : ''}
+      <div class="section" style="margin-top:16px;">
+        <div class="section-title">Instructions</div>
+        <ul style="font-size:11px;color:#444;padding-left:18px;line-height:1.8">
+          <li>Please carry this referral letter and your institute ID card to the hospital.</li>
+          <li>Report back to the Health Centre after treatment/consultation.</li>
+          <li>Submit discharge summary and medical reports upon return.</li>
+          <li>Contact Health Centre for any queries: 0870-2462022</li>
+        </ul>
+      </div>
+      <div class="signature-section">
+        <div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW Emblem" /><div class="emblem-label">NIT Warangal</div></div>
+        <div class="signature-box">
+          <div class="online-signature">Dr. ${ref.doctor_name}</div>
+          <div class="signature-line">
+            <strong>Dr. ${ref.doctor_name}</strong>
+            <div class="doctor-type">Medical Officer, NIT Warangal Health Centre</div>
+          </div>
+        </div>
+      </div>
+      <div class="doc-footer">
+        <p>This referral letter is valid for the specified duration only.</p>
+        <p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p>
+      </div>
+    `;
+
+    await printDocument({ title: `Referral Letter — ${student?.full_name}`, bodyHtml, documentId: docId, documentType: 'REFERRAL LETTER' });
+  };
+
     { name: 'fullName', label: 'Full Name', filled: !!student.full_name, required: true },
     { name: 'rollNumber', label: 'Roll Number', filled: !!student.roll_number, required: true },
     { name: 'email', label: 'Email', filled: !!student.email, required: true },
