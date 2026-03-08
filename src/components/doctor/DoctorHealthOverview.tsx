@@ -452,6 +452,9 @@ export default function DoctorHealthOverview() {
           )}
         </CardContent>
       </Card>
+
+      {/* Health Records & Documents */}
+      <HealthRecordsSection />
     </div>
   );
 }
