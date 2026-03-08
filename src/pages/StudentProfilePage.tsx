@@ -152,10 +152,23 @@ const MEAL_LABELS: Record<string, string> = {
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : (searchParams.get('tab') === 'prescriptions' || searchParams.get('tab') === 'records') ? 'records' : 'profile';
-  const defaultSubTab = searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'visits';
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  const [recordsSubTab, setRecordsSubTab] = useState(defaultSubTab);
+  const getDefaultTab = () => {
+    const tab = searchParams.get('tab');
+    if (tab === 'settings') return 'settings';
+    if (tab === 'prescriptions' || tab === 'records' || tab === 'certificates' || tab === 'labtests' || tab === 'referrals') return 'records';
+    return 'profile';
+  };
+  const getDefaultSubTab = () => {
+    const tab = searchParams.get('tab');
+    if (tab === 'prescriptions') return 'prescriptions';
+    if (tab === 'certificates') return 'certificates';
+    if (tab === 'labtests') return 'labtests';
+    if (tab === 'referrals') return 'referrals';
+    return 'visits';
+  };
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
+  const [recordsSubTab, setRecordsSubTab] = useState(getDefaultSubTab());
+  const [certCategory, setCertCategory] = useState<CertificateCategory>('all');
 
   // Sync tab state when URL params change (e.g. navigating from header)
   useEffect(() => {
