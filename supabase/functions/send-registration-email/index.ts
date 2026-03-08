@@ -12,7 +12,7 @@ const corsHeaders = {
 interface RegistrationEmailRequest {
   email: string;
   name: string;
-  userType: "student" | "doctor" | "mentor";
+  userType: "student" | "doctor" | "mentor" | "pharmacy" | "lab_officer" | "medical_staff";
   rollNumber?: string;
 }
 
