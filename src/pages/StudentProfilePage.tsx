@@ -88,6 +88,18 @@ interface VisitHistoryItem {
   doctor_name: string;
 }
 
+interface LabReport {
+  id: string;
+  test_name: string;
+  status: string;
+  notes: string | null;
+  report_file_url: string | null;
+  report_file_name: string | null;
+  created_at: string;
+  updated_at: string;
+  doctor_name: string;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
