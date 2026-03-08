@@ -433,7 +433,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
               <CardTitle className="text-xl flex items-center gap-2">
                 Medical Leave Students Details
                 <Badge variant="secondary" className="ml-2 text-xs">
-                  {all.length} Active
+                  {latestPerStudent.length} Active
                 </Badge>
               </CardTitle>
               <CardDescription>
