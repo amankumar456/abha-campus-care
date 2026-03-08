@@ -44,6 +44,8 @@ export default function LabOverview({
   totalToday, pending, completed, critical, recentUpdates,
   allReports, pendingReports, onNavigate, onRefresh
 }: LabOverviewProps) {
+  const { toast } = useToast();
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   // Test type distribution
   const testCounts = new Map<string, number>();
