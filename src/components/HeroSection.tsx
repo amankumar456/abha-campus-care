@@ -53,16 +53,6 @@ const HeroSection = () => {
             </p>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <Link to="/student/register">
-              <Button className="btn-hero-primary group w-full sm:w-auto">
-                <GraduationCap className="h-5 w-5" />
-                Student Registration
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/20 animate-fade-in" style={{ animationDelay: "0.6s" }}>
