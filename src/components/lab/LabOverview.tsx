@@ -297,8 +297,6 @@ export default function LabOverview({
           </CardContent>
         </Card>
       </div>
-
-      <RegisterSampleDialog open={registerOpen} onClose={() => setRegisterOpen(false)} onRegistered={onRefresh} />
     </div>
   );
 }
