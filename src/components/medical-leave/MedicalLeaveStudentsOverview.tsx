@@ -148,6 +148,19 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
 
   const all = leaveStudents || [];
 
+  // Deduplicate: show only latest leave request per student (by student id)
+  const latestPerStudent = (() => {
+    const map = new Map<string, MedicalLeaveStudent>();
+    // Data is already sorted by created_at desc from the query
+    for (const leave of all) {
+      const studentId = leave.student?.id;
+      if (studentId && !map.has(studentId)) {
+        map.set(studentId, leave);
+      }
+    }
+    return Array.from(map.values());
+  })();
+
   // Sort helper: closest return date to today first, nulls last
   const sortByReturnDate = (a: MedicalLeaveStudent, b: MedicalLeaveStudent) => {
     const today = new Date();
@@ -157,13 +170,13 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
   };
 
   // High priority: only active leave cases (exclude returned & cleared)
-  const highPriority = all
+  const highPriority = latestPerStudent
     .filter((s) => s.health_priority === "high" && s.status !== "returned" && s.doctor_clearance !== true)
     .sort(sortByReturnDate);
-  const mediumLow = all
+  const mediumLow = latestPerStudent
     .filter((s) => s.health_priority !== "high" && s.status !== "returned" && s.doctor_clearance !== true)
     .sort(sortByReturnDate);
-  const onLeave = all.filter((s) => s.status !== "returned" && s.doctor_clearance !== true).sort(sortByReturnDate);
+  const onLeave = latestPerStudent.filter((s) => s.status !== "returned" && s.doctor_clearance !== true).sort(sortByReturnDate);
 
   // Awaiting Clearance: students who have returned (status return_pending or actual_return_date set, or past expected_return_date) but not yet cleared
   const today = new Date();
