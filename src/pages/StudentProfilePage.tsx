@@ -100,6 +100,22 @@ interface LabReport {
   doctor_name: string;
 }
 
+interface ReferralLetter {
+  id: string;
+  referral_hospital: string;
+  illness_description: string | null;
+  doctor_notes: string | null;
+  expected_duration: string;
+  leave_start_date: string | null;
+  expected_return_date: string | null;
+  status: string;
+  health_priority: string | null;
+  referral_date: string;
+  referral_type: string[] | null;
+  doctor_name: string;
+  created_at: string;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
