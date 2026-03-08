@@ -456,17 +456,33 @@ export default function MedicalLeaveTab() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Students on leave requiring follow-up */}
-                  {referrals?.filter(r => r.status === "on_leave" || r.status === "returned").length === 0 ? (
-                    <div className="text-center py-12">
-                      <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-foreground">No pending follow-ups</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        All referred students have completed their treatment
-                      </p>
-                    </div>
-                  ) : (
-                    referrals?.filter(r => r.status === "on_leave" || r.status === "returned").map((request) => (
+                  {/* Deduplicate by student roll number, keep latest */}
+                  {(() => {
+                    const followUpItems = referrals?.filter(r => r.status === "on_leave" || r.status === "returned") || [];
+                    const uniqueByStudent = new Map<string, typeof followUpItems[0]>();
+                    for (const item of followUpItems) {
+                      const key = item.student?.roll_number || item.id;
+                      if (!uniqueByStudent.has(key) || new Date(item.created_at) > new Date(uniqueByStudent.get(key)!.created_at)) {
+                        uniqueByStudent.set(key, item);
+                      }
+                    }
+                    const dedupedItems = Array.from(uniqueByStudent.values()).sort((a, b) =>
+                      (a.student?.full_name || '').localeCompare(b.student?.full_name || '')
+                    );
+
+                    if (dedupedItems.length === 0) {
+                      return (
+                        <div className="text-center py-12">
+                          <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-foreground">No pending follow-ups</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            All referred students have completed their treatment
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return dedupedItems.map((request) => (
                       <Card key={request.id} className="border-l-4 border-l-primary">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-4">
@@ -503,8 +519,8 @@ export default function MedicalLeaveTab() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))
-                  )}
+                    ));
+                  })()}
                 </div>
               )}
             </CardContent>
