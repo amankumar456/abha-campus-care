@@ -109,7 +109,23 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
 
   const todayAppointments = filterAppointments("today");
   const upcomingAppointments = filterAppointments("upcoming");
-  const pastAppointments = filterAppointments("past");
+  // Deduplicate past appointments: show only the latest visit per student
+  const pastAppointmentsAll = filterAppointments("past");
+  const pastAppointments = (() => {
+    const latestByPatient = new Map<string, typeof pastAppointmentsAll[0]>();
+    // Sort descending by date+time first
+    const sorted = [...pastAppointmentsAll].sort((a, b) => {
+      const dateComp = b.appointment_date.localeCompare(a.appointment_date);
+      if (dateComp !== 0) return dateComp;
+      return b.appointment_time.localeCompare(a.appointment_time);
+    });
+    for (const apt of sorted) {
+      if (!latestByPatient.has(apt.patient_id)) {
+        latestByPatient.set(apt.patient_id, apt);
+      }
+    }
+    return Array.from(latestByPatient.values());
+  })();
 
   const highPriorityCount = appointments?.filter(
     (apt) => apt.health_priority === "high" && isToday(parseISO(apt.appointment_date))
