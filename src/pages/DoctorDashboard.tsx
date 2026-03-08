@@ -64,7 +64,7 @@ export default function DoctorDashboard() {
       const { data: todayApts } = await supabase
         .from("appointments")
         .select("id, health_priority")
-        .eq("medical_officer_id", doctorId)
+        
         .eq("appointment_date", today)
         .neq("status", "cancelled");
 
