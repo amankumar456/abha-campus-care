@@ -332,9 +332,9 @@ const AdminPanel = () => {
         {/* Header with Profile */}
         <div className="flex flex-col lg:flex-row items-start justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/')}>
+            <Button variant="ghost" onClick={() => navigate('/admin')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              Back to Home
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
