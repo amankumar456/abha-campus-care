@@ -27,6 +27,7 @@ const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const NewVisit = lazy(() => import("./pages/NewVisit"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const MentorDashboard = lazy(() => import("./pages/MentorDashboard"));
+const MentorHome = lazy(() => import("./pages/MentorHome"));
 const MentorProfile = lazy(() => import("./pages/MentorProfile"));
 const MedicalLeave = lazy(() => import("./pages/MedicalLeave"));
 const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
