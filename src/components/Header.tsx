@@ -123,7 +123,7 @@ const Header = () => {
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between min-h-[72px]">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-3 shrink-0">
+          <Link to={getHomePath()} className="flex items-center gap-3 shrink-0">
             <img 
               src={nitwLogo} 
               alt="NIT Warangal Logo" 
