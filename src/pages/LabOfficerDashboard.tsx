@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format, startOfDay, isAfter } from "date-fns";
-import { ArrowLeft, Home } from "lucide-react";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import LabSidebar from "@/components/lab/LabSidebar";
 import LabOverview from "@/components/lab/LabOverview";
