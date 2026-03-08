@@ -156,24 +156,6 @@ export default function LabProcessingQueue({
                       <Button size="sm" variant="default" onClick={() => setResultDialogReport(r)}>
                         Enter Results
                       </Button>
-                      <label className="cursor-pointer">
-                        <Input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          className="hidden"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) onUpload(r, file);
-                          }}
-                          disabled={uploadingId === r.id}
-                        />
-                        <Button variant="outline" size="sm" asChild disabled={uploadingId === r.id}>
-                          <span>
-                            <Upload className="w-3 h-3 mr-1" />
-                            {uploadingId === r.id ? "Uploading..." : "Upload File"}
-                          </span>
-                        </Button>
-                      </label>
                     </div>
                   </div>
                 </CardContent>
