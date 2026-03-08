@@ -309,6 +309,7 @@ export default function MentorDashboard() {
                       key={student.id}
                       student={student}
                       visitCount={studentVisitCounts[student.id] || 0}
+                      onViewProfile={() => navigate(`/student-profile/${student.roll_number}`)}
                     />
                   ))}
                 </div>
