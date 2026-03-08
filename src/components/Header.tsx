@@ -289,28 +289,16 @@ const Header = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
-                      {getUserType() === 'doctor' ? (
-                        <Stethoscope className="w-4 h-4" />
-                      ) : getUserType() === 'mentor' ? (
-                        <Users className="w-4 h-4" />
-                      ) : isAdmin ? (
-                        <Shield className="w-4 h-4" />
-                      ) : isLabOfficer ? (
-                        <Stethoscope className="w-4 h-4" />
-                      ) : isPharmacy ? (
-                        <Pill className="w-4 h-4" />
-                      ) : isMedicalStaff ? (
-                        <ShieldCheck className="w-4 h-4" />
-                      ) : (
-                        <GraduationCap className="w-4 h-4" />
-                      )}
+                      <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
+                        {getUserDisplayName().split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
                       <span className="max-w-[100px] truncate">{getUserDisplayName()}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{getUserDisplayName()}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-primary">
                         {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : isLabOfficer ? 'Lab Officer' : isPharmacy ? 'Pharmacy' : isMedicalStaff ? 'Medical Staff' : 'Student'}
                       </p>
                     </div>
