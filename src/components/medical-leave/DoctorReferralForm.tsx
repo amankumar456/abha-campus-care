@@ -856,6 +856,151 @@ const DoctorReferralForm = () => {
         </div>
       </CardHeader>
       <CardContent className="pt-6">
+        {/* Quick Student Lookup Section */}
+        <div className="mb-8 p-5 rounded-xl border border-border bg-muted/30">
+          <Label className="text-base font-semibold flex items-center gap-2 mb-1">
+            <Search className="h-4 w-4" />
+            Quick Student Lookup
+          </Label>
+          <p className="text-sm text-muted-foreground mb-4">
+            Enter a roll number to view the student's full details, profile photo, and medical info
+          </p>
+
+          <div className="flex gap-2 max-w-md">
+            <Input
+              placeholder="e.g., 25edi0012"
+              value={lookupRoll}
+              onChange={(e) => {
+                setLookupRoll(e.target.value);
+                setLookupStudent(null);
+                setLookupError(null);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), quickLookupStudent())}
+            />
+            <Button
+              type="button"
+              variant="default"
+              disabled={lookupLoading || !lookupRoll.trim()}
+              onClick={quickLookupStudent}
+            >
+              {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              <span className="ml-1.5">Lookup</span>
+            </Button>
+          </div>
+
+          {lookupError && (
+            <Alert variant="destructive" className="mt-3">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{lookupError}</AlertDescription>
+            </Alert>
+          )}
+
+          {lookupStudent && (
+            <div className="mt-4 p-4 rounded-lg bg-background border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span className="font-medium text-primary">Student Found</span>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="shrink-0">
+                  {lookupStudent.photo_url ? (
+                    <img
+                      src={lookupStudent.photo_url}
+                      alt={lookupStudent.full_name}
+                      className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/20">
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <button
+                    type="button"
+                    className="font-semibold text-primary hover:underline text-left text-lg"
+                    onClick={() => navigate(`/student-profile/${lookupStudent.roll_number}`)}
+                  >
+                    {lookupStudent.full_name}
+                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                      {lookupStudent.roll_number}
+                    </span>
+                    <span>{lookupStudent.program}{lookupStudent.branch ? ` — ${lookupStudent.branch}` : ''}</span>
+                    {lookupStudent.year_of_study && <span>Year: {lookupStudent.year_of_study}</span>}
+                    {lookupStudent.batch && <span>Batch: {lookupStudent.batch}</span>}
+                    {lookupStudent.email && (
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        {lookupStudent.email}
+                      </span>
+                    )}
+                    {lookupStudent.phone && (
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        {lookupStudent.phone}
+                      </span>
+                    )}
+                    {lookupStudent.mentor_name && (
+                      <span className="flex items-center gap-1.5 col-span-2">
+                        <Users className="h-3.5 w-3.5 shrink-0" />
+                        Mentor: {lookupStudent.mentor_name}
+                        {lookupStudent.mentor_contact ? ` (${lookupStudent.mentor_contact})` : ''}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Medical Info */}
+                  {((lookupStudent as any)._bloodGroup || (lookupStudent as any)._allergies || (lookupStudent as any)._medications) && (
+                    <div className="mt-2 pt-2 border-t border-border space-y-1 text-sm">
+                      <p className="font-medium text-foreground text-xs uppercase tracking-wide">Medical Info</p>
+                      {(lookupStudent as any)._bloodGroup && (
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          Blood Group: <Badge variant="outline" className="text-xs">{(lookupStudent as any)._bloodGroup}</Badge>
+                        </span>
+                      )}
+                      {(lookupStudent as any)._allergies && (
+                        <p className="text-muted-foreground">Allergies: {(lookupStudent as any)._allergies}</p>
+                      )}
+                      {(lookupStudent as any)._medications && (
+                        <p className="text-muted-foreground">Current Medications: {(lookupStudent as any)._medications}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Emergency Contacts */}
+                  {lookupStudent.emergencyContacts && (
+                    <div className="mt-2 pt-2 border-t border-border space-y-1 text-sm">
+                      <p className="font-medium text-foreground text-xs uppercase tracking-wide">Emergency Contacts</p>
+                      {lookupStudent.emergencyContacts.fatherName && (
+                        <p className="text-muted-foreground">Father: {lookupStudent.emergencyContacts.fatherName} {lookupStudent.emergencyContacts.fatherContact ? `(${lookupStudent.emergencyContacts.fatherContact})` : ''}</p>
+                      )}
+                      {lookupStudent.emergencyContacts.motherName && (
+                        <p className="text-muted-foreground">Mother: {lookupStudent.emergencyContacts.motherName} {lookupStudent.emergencyContacts.motherContact ? `(${lookupStudent.emergencyContacts.motherContact})` : ''}</p>
+                      )}
+                      {lookupStudent.emergencyContacts.emergencyContact && (
+                        <p className="text-muted-foreground">Emergency: {lookupStudent.emergencyContacts.emergencyContact} ({lookupStudent.emergencyContacts.emergencyRelationship || 'N/A'})</p>
+                      )}
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="px-0 h-auto mt-1"
+                    onClick={() => navigate(`/student-profile/${lookupStudent.roll_number}`)}
+                  >
+                    View Full Profile →
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Student Verification */}
