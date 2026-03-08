@@ -59,6 +59,35 @@ export default function LabProcessingQueue({
   const [registerOpen, setRegisterOpen] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
+  const handleApprovePhysicalTest = async (report: LabReport) => {
+    setApprovingId(report.id);
+    try {
+      const { error } = await supabase.from("lab_reports").update({
+        status: "completed",
+        notes: `Physical test completed (printed report). Approved on ${format(new Date(), "dd MMM yyyy, hh:mm a")}`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", report.id);
+      if (error) throw error;
+
+      const { data: student } = await supabase.from("students").select("user_id").eq("id", report.student_id).single();
+      if (student?.user_id) {
+        await supabase.from("notifications").insert({
+          user_id: student.user_id,
+          title: "🔬 Test Completed",
+          message: `Your ${report.test_name} has been completed. Please collect the printed report from the Health Centre.`,
+          type: "lab_report",
+        });
+      }
+
+      toast({ title: "✅ Test Approved", description: `${report.test_name} marked as completed for ${report.student?.full_name}` });
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   const testTypes = [...new Set(reports.map(r => r.test_name))];
 
   const filtered = reports.filter(r => {
