@@ -116,6 +116,25 @@ interface ReferralLetter {
   created_at: string;
 }
 
+interface MedicalCertificate {
+  id: string;
+  referral_hospital: string;
+  illness_description: string | null;
+  doctor_notes: string | null;
+  expected_duration: string;
+  leave_start_date: string | null;
+  expected_return_date: string | null;
+  actual_return_date: string | null;
+  status: string;
+  health_priority: string | null;
+  referral_date: string;
+  doctor_name: string;
+  doctor_designation: string;
+  doctor_qualification: string;
+  created_at: string;
+  approval_date: string | null;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
