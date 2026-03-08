@@ -10,9 +10,9 @@ import LabCompletedTests from "@/components/lab/LabCompletedTests";
 import LabNotifications from "@/components/lab/LabNotifications";
 import LabStudentRecords from "@/components/lab/LabStudentRecords";
 import LabAnalytics from "@/components/lab/LabAnalytics";
+import LabSettings from "@/components/lab/LabSettings";
 import RegisterSampleDialog from "@/components/lab/RegisterSampleDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings } from "lucide-react";
 
 interface LabReport {
   id: string;
