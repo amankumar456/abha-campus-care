@@ -1235,16 +1235,7 @@ export default function StudentProfilePage() {
                       {labReports.map((report) => (
                         <div
                           key={report.id}
-                          className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                            report.status === 'completed' && report.report_file_url
-                              ? 'cursor-pointer hover:bg-primary/5 hover:border-primary/30'
-                              : 'hover:bg-muted/30'
-                          }`}
-                          onClick={() => {
-                            if (report.status === 'completed' && report.report_file_url) {
-                              window.open(report.report_file_url, '_blank');
-                            }
-                          }}
+                          className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors"
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -1261,13 +1252,10 @@ export default function StudentProfilePage() {
                               <p className="text-xs text-muted-foreground">
                                 Prescribed by Dr. {report.doctor_name} · {format(new Date(report.created_at), 'MMM d, yyyy')}
                               </p>
-                              {report.notes && (
-                                <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>
-                              )}
                               {report.status === 'completed' && report.report_file_url && (
                                 <p className="text-xs text-primary mt-1 flex items-center gap-1">
                                   <FileText className="w-3 h-3" />
-                                  Click to view report (PDF)
+                                  PDF Report Available
                                 </p>
                               )}
                               {report.status !== 'completed' && (
@@ -1283,9 +1271,20 @@ export default function StudentProfilePage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.stopPropagation();
-                                  window.open(report.report_file_url!, '_blank');
+                                  try {
+                                    const path = report.report_file_url!;
+                                    if (path.startsWith('http')) {
+                                      window.open(path, '_blank');
+                                      return;
+                                    }
+                                    const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                    if (error) throw error;
+                                    window.open(data.signedUrl, '_blank');
+                                  } catch (err: any) {
+                                    toast({ title: 'Error', description: 'Could not open PDF: ' + (err.message || 'Unknown error'), variant: 'destructive' });
+                                  }
                                 }}
                               >
                                 <Download className="w-3 h-3 mr-1" />

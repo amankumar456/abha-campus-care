@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Printer, Save, User, FlaskConical } from "lucide-react";
+import { Printer, Save, User, FlaskConical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
+import { generateLabReportPdf } from "@/lib/print/generateLabReportPdf";
 
 interface LabReport {
   id: string;
@@ -117,6 +118,7 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
   const handleSaveResults = async () => {
     setSaving(true);
     try {
+      // Build structured result text for notes field
       const resultText = params.map(p => {
         const val = results[p.name] || "-";
         const flag = getFlagForValue(val, p.refRange);
@@ -125,8 +127,42 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
 
       const fullNotes = `LAB RESULTS:\n${resultText}\n\nTechnician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
 
+      // Generate PDF
+      const pdfParams = params.map(p => ({
+        name: p.name,
+        value: results[p.name] || "-",
+        unit: p.unit,
+        refRange: p.refRange,
+        flag: getFlagForValue(results[p.name] || "", p.refRange),
+      }));
+
+      const pdfBlob = generateLabReportPdf({
+        reportId: report.id,
+        testName: report.test_name,
+        studentName: report.student?.full_name || "N/A",
+        rollNumber: report.student?.roll_number || "N/A",
+        program: report.student?.program || "N/A",
+        branch: report.student?.branch || "N/A",
+        doctorName: report.doctor?.name || "N/A",
+        testDate: report.created_at,
+        parameters: pdfParams,
+        techNotes: techNotes || "",
+        sampleOk,
+      });
+
+      // Upload PDF to storage
+      const pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("lab-reports")
+        .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+
+      // Update the lab report record
       const { error } = await supabase.from("lab_reports").update({
         notes: fullNotes,
+        report_file_url: pdfFileName,
+        report_file_name: `${report.test_name}_Report.pdf`,
         status: "completed",
         updated_at: new Date().toISOString(),
       }).eq("id", report.id);
@@ -139,12 +175,12 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
         await supabase.from("notifications").insert({
           user_id: student.user_id,
           title: "🔬 Lab Report Ready",
-          message: `Your ${report.test_name} results are ready. Please check your health records.`,
+          message: `Your ${report.test_name} report PDF is ready. Please check your health records.`,
           type: "lab_report",
         });
       }
 
-      toast({ title: "✅ Results Saved", description: `${report.test_name} results saved for ${report.student?.full_name}` });
+      toast({ title: "✅ Results Saved & PDF Generated", description: `${report.test_name} report PDF uploaded for ${report.student?.full_name}` });
       onRefresh();
       onClose();
     } catch (err: any) {

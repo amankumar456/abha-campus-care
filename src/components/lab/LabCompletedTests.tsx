@@ -139,15 +139,16 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setViewReport(r)}>
-                      <Eye className="w-3 h-3 mr-1" />View Results
-                    </Button>
-                    {r.report_file_url && (
+                    {r.report_file_url ? (
                       <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
-                        <Download className="w-3 h-3 mr-1" />View File
+                        <Eye className="w-3 h-3 mr-1" />View PDF
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => setViewReport(r)}>
+                        <Eye className="w-3 h-3 mr-1" />View Results
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => handlePrint(r)}>
+                    <Button variant="ghost" size="sm" onClick={() => r.report_file_url ? handleViewFile(r) : handlePrint(r)}>
                       <Printer className="w-3 h-3 mr-1" />Print
                     </Button>
                   </div>
@@ -188,8 +189,8 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
             )}
             <div className="flex gap-2 justify-end">
               {viewReport.report_file_url && (
-                <Button variant="outline" size="sm" onClick={() => handleViewFile(viewReport)}>
-                  <Download className="w-4 h-4 mr-1" />View File
+                <Button variant="default" size="sm" onClick={() => handleViewFile(viewReport)}>
+                  <Eye className="w-4 h-4 mr-1" />Open PDF Report
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => handlePrint(viewReport)}>
