@@ -283,9 +283,17 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
           <div className="flex items-start justify-between gap-4">
             {/* Patient Info */}
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-6 h-6 text-primary" />
-              </div>
+              {student?.photo_url ? (
+                <img
+                  src={student.photo_url}
+                  alt={student.full_name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                  <ImageOff className="w-5 h-5 text-muted-foreground/50" />
+                </div>
+              )}
               <div className="flex-1">
                 <p 
                   className="font-semibold text-foreground cursor-pointer hover:text-primary hover:underline transition-colors"
