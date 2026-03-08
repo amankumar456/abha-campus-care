@@ -974,7 +974,7 @@ const StudentProfile = () => {
                           )}
 
                           {/* Grant Clearance action for doctors */}
-                          {isDoctor && doctorId && !isCleared && (leave.status === 'returned' || leave.status === 'on_leave' || leave.status === 'return_pending') && (
+                          {isDoctor && doctorId && !isCleared && (leave.status === 'returned' || leave.status === 'on_leave' || leave.status === 'return_pending' || leave.status === 'student_form_pending' || leave.status === 'doctor_referred') && (
                             <Dialog open={clearanceDialogOpen === leave.id} onOpenChange={(open) => {
                               setClearanceDialogOpen(open ? leave.id : null);
                               if (!open) { setFitConfirmed(false); setClearanceNotes(''); }
