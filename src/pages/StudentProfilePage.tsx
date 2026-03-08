@@ -277,9 +277,40 @@ export default function StudentProfilePage() {
             referral_date: r.referral_date || r.created_at,
             doctor_name: r.referring_doctor_id ? doctorMap[r.referring_doctor_id] || 'Doctor' : 'Health Centre',
           })));
+
+
+          // Build certificates from medical leave requests with doctor details
+          const certDoctorIds = [...new Set(referralData.filter(r => r.referring_doctor_id || r.approved_by_doctor_id).flatMap(r => [r.referring_doctor_id, r.approved_by_doctor_id].filter(Boolean) as string[]))];
+          let certDoctorDetails: Record<string, { name: string; designation: string; qualification: string }> = {};
+          if (certDoctorIds.length > 0) {
+            const { data: certDocs } = await supabase.from('medical_officers').select('id, name, designation, qualification').in('id', certDoctorIds);
+            certDocs?.forEach(d => { certDoctorDetails[d.id] = { name: d.name, designation: d.designation, qualification: d.qualification }; });
+          }
+          setCertificates(referralData.map(r => {
+            const docId = r.approved_by_doctor_id || r.referring_doctor_id;
+            const doc = docId ? certDoctorDetails[docId] : null;
+            return {
+              id: r.id,
+              referral_hospital: r.referral_hospital,
+              illness_description: r.illness_description,
+              doctor_notes: r.doctor_notes,
+              expected_duration: r.expected_duration,
+              leave_start_date: r.leave_start_date,
+              expected_return_date: r.expected_return_date,
+              actual_return_date: r.actual_return_date,
+              status: r.status,
+              health_priority: r.health_priority,
+              referral_date: r.referral_date || r.created_at,
+              doctor_name: doc?.name || 'Medical Officer',
+              doctor_designation: doc?.designation || 'Medical Officer',
+              doctor_qualification: doc?.qualification || 'MBBS',
+              created_at: r.created_at,
+              approval_date: r.approval_date,
+            };
+          }));
         }
 
-        const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
+
           id: v.id,
           visit_date: v.visit_date,
           reason_category: v.reason_category,
