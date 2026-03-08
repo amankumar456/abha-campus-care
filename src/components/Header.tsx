@@ -37,7 +37,7 @@ const Header = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isDoctor, isMentor, isAdmin, loading: roleLoading } = useUserRole();
+  const { user, isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff, loading: roleLoading } = useUserRole();
 
   useEffect(() => {
     if (!roleLoading) {
