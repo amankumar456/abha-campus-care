@@ -187,35 +187,48 @@ export default function ScheduleFollowupDialog({ trigger, doctorId }: ScheduleFo
           {/* Patient Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Select Patient *</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or roll number..."
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
-              {allPatients.slice(0, 6).map((patient) => (
-                <Card
-                  key={patient.id}
-                  className={cn(
-                    "cursor-pointer transition-all hover:border-primary",
-                    selectedPatient === patient.id && "border-primary bg-primary/5"
-                  )}
-                  onClick={() => setSelectedPatient(patient.id)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{patient.name}</p>
-                        <p className="text-xs text-muted-foreground">{patient.rollNumber}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{patient.condition}</p>
+              {filteredPatients.length === 0 ? (
+                <p className="text-sm text-muted-foreground col-span-2 text-center py-4">No patients found</p>
+              ) : (
+                filteredPatients.slice(0, 6).map((patient) => (
+                  <Card
+                    key={patient.id}
+                    className={cn(
+                      "cursor-pointer transition-all hover:border-primary",
+                      selectedPatient === patient.id && "border-primary bg-primary/5"
+                    )}
+                    onClick={() => setSelectedPatient(patient.id)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{patient.name}</p>
+                          <p className="text-xs text-muted-foreground">{patient.rollNumber}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{patient.condition}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant="outline" className={cn("text-xs", getPriorityColor(patient.priority))}>
+                            {patient.priority}
+                          </Badge>
+                          {selectedPatient === patient.id && (
+                            <Check className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <Badge variant="outline" className={cn("text-xs", getPriorityColor(patient.priority))}>
-                          {patient.priority}
-                        </Badge>
-                        {selectedPatient === patient.id && (
-                          <Check className="w-4 h-4 text-primary" />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
