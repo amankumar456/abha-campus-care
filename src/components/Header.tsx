@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,9 @@ const Header = () => {
     if (isDoctor) return 'doctor';
     if (isMentor) return 'mentor';
     if (isAdmin) return 'admin';
+    if (isMedicalStaff) return 'medical_staff';
+    if (isLabOfficer) return 'lab_officer';
+    if (isPharmacy) return 'pharmacy';
     return user?.user_metadata?.user_type || 'student';
   };
 
@@ -269,6 +272,8 @@ const Header = () => {
                         <Stethoscope className="w-4 h-4" />
                       ) : isPharmacy ? (
                         <Pill className="w-4 h-4" />
+                      ) : isMedicalStaff ? (
+                        <ShieldCheck className="w-4 h-4" />
                       ) : (
                         <GraduationCap className="w-4 h-4" />
                       )}
@@ -279,7 +284,7 @@ const Header = () => {
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{getUserDisplayName()}</p>
                       <p className="text-xs text-muted-foreground">
-                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : isLabOfficer ? 'Lab Officer' : isPharmacy ? 'Pharmacy' : 'Student'}
+                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : isLabOfficer ? 'Lab Officer' : isPharmacy ? 'Pharmacy' : isMedicalStaff ? 'Medical Staff' : 'Student'}
                       </p>
                     </div>
                     <DropdownMenuSeparator />
@@ -340,6 +345,33 @@ const Header = () => {
                           <Link to="/pharmacy/dashboard?tab=inventory" className="flex items-center gap-2">
                             <Package className="w-4 h-4" />
                             Inventory
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    ) : isMedicalStaff ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/staff/home" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/staff/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Staff Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-team" className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />
+                            Medical Team
                           </Link>
                         </DropdownMenuItem>
                       </>
