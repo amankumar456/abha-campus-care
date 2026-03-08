@@ -219,9 +219,22 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                         <Eye className="w-3 h-3 mr-1" />View PDF
                       </Button>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => setViewReport(r)}>
-                        <Eye className="w-3 h-3 mr-1" />View Results
-                      </Button>
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => setViewReport(r)}>
+                          <Eye className="w-3 h-3 mr-1" />View Results
+                        </Button>
+                        {r.notes && (
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => handleGeneratePdf(r)}
+                            disabled={generatingPdf === r.id}
+                          >
+                            <RefreshCw className={`w-3 h-3 mr-1 ${generatingPdf === r.id ? 'animate-spin' : ''}`} />
+                            {generatingPdf === r.id ? 'Generating...' : 'Generate PDF'}
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => r.report_file_url ? handleViewFile(r) : handlePrint(r)}>
                       <Printer className="w-3 h-3 mr-1" />Print
