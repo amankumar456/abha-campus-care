@@ -51,7 +51,7 @@ const StudentHomeDashboard = () => {
       const today = new Date().toISOString().split("T")[0];
       const { data } = await supabase
         .from("appointments")
-        .select("id, appointment_date, appointment_time, reason, status, medical_officer_id, visiting_doctor_id, doctor_type")
+        .select("id, appointment_date, appointment_time, reason, status, doctor_type, medical_officers(name, designation), visiting_doctors(name, specialization)")
         .eq("patient_id", user.id)
         .gte("appointment_date", today)
         .in("status", ["pending", "confirmed"])
