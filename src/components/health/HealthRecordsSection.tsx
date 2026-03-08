@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Download, Eye, User, Calendar, Stethoscope, ClipboardList, Printer, Award, UserCheck, TestTube, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface HealthRecord {
   id: string;
