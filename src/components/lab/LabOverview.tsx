@@ -1,14 +1,12 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   TestTubes, Clock, CheckCircle2, AlertTriangle, TrendingUp,
-  Plus, Upload, User, Stethoscope, Calendar, ArrowRight,
+  Plus, Upload, User, Stethoscope, ArrowRight,
   FlaskConical, FileText, Bell
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import RegisterSampleDialog from "./RegisterSampleDialog";
 
 interface LabReport {
   id: string;
