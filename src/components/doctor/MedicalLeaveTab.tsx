@@ -187,7 +187,7 @@ export default function MedicalLeaveTab() {
     total: latestUniqueReferrals.length,
     pending: latestUniqueReferrals.filter((r) => ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status)).length,
     onLeave: latestUniqueReferrals.filter((r) => r.status === "on_leave").length,
-    completed: latestUniqueReferrals.filter((r) => ["returned", "completed".includes ? "returned" : "returned"]).length,
+    completed: latestUniqueReferrals.filter((r) => ["returned", "completed"].includes(r.status)).length,
   };
 
   const handleViewDetails = (request: LeaveRequest) => {
