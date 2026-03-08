@@ -238,6 +238,10 @@ const NotificationBell = () => {
                       setOpen(false);
                       if (notification.type === 'prescription') {
                         navigate("/student/profile?tab=prescriptions");
+                      } else if (notification.type === 'certificate_issued') {
+                        navigate("/student/profile?tab=certificates");
+                      } else if (notification.type === 'lab_report') {
+                        navigate("/student/profile?tab=labtests");
                       } else if (isMedicalLeave) {
                         navigate("/medical-leave");
                       } else if (notification.type === 'approved' || notification.type === 'rejected') {

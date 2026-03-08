@@ -285,7 +285,7 @@ export default function StudentProfilePage() {
         // Fetch referral letters
         const { data: referralData } = await supabase
           .from('medical_leave_requests')
-          .select('id, referral_hospital, illness_description, doctor_notes, expected_duration, leave_start_date, expected_return_date, actual_return_date, status, health_priority, referral_date, referral_type, referring_doctor_id, approved_by_doctor_id, approval_date, created_at')
+          .select('id, referral_hospital, illness_description, doctor_notes, expected_duration, leave_start_date, expected_return_date, actual_return_date, status, health_priority, referral_date, referral_type, referring_doctor_id, approved_by_doctor_id, approval_date, created_at, doctor_clearance, doctor_clearance_date, rest_days')
           .eq('student_id', studentData.id)
           .order('created_at', { ascending: false });
 
