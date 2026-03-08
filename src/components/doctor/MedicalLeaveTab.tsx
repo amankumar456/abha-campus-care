@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -135,12 +135,65 @@ export default function MedicalLeaveTab() {
     enabled: !!doctorId,
   });
 
-  // Stats for quick overview
+  const studentDedupKey = (request: LeaveRequest) => {
+    const rollNumber = request.student?.roll_number?.trim().toLowerCase();
+    if (rollNumber) return `roll:${rollNumber}`;
+
+    const studentId = request.student?.id?.trim();
+    if (studentId) return `id:${studentId}`;
+
+    const fullName = request.student?.full_name?.trim().toLowerCase();
+    if (fullName) return `name:${fullName}`;
+
+    return `request:${request.id}`;
+  };
+
+  const latestUniqueReferrals = useMemo(() => {
+    if (!referrals?.length) return [];
+
+    const latestByStudent = new Map<string, LeaveRequest>();
+
+    for (const request of referrals) {
+      const dedupeKey = studentDedupKey(request);
+      if (!latestByStudent.has(dedupeKey)) {
+        latestByStudent.set(dedupeKey, request);
+      }
+    }
+
+    return Array.from(latestByStudent.values()).sort((a, b) => {
+      const nameA = a.student?.full_name?.trim().toLowerCase() || "";
+      const nameB = b.student?.full_name?.trim().toLowerCase() || "";
+      if (nameA !== nameB) {
+        return nameA.localeCompare(nameB);
+      }
+
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [referrals]);
+
+  const filteredReferrals = useMemo(() => {
+    if (referralFilter === "all") return latestUniqueReferrals;
+
+    return latestUniqueReferrals.filter((request) => {
+      if (referralFilter === "pending") {
+        return ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(request.status);
+      }
+      if (referralFilter === "on_leave") {
+        return request.status === "on_leave";
+      }
+      if (referralFilter === "completed") {
+        return ["returned", "completed"].includes(request.status);
+      }
+      return true;
+    });
+  }, [latestUniqueReferrals, referralFilter]);
+
+  // Stats for quick overview (deduplicated by student roll number)
   const stats = {
-    total: referrals?.length || 0,
-    pending: referrals?.filter(r => ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status)).length || 0,
-    onLeave: referrals?.filter(r => r.status === "on_leave").length || 0,
-    completed: referrals?.filter(r => ["returned", "completed"].includes(r.status)).length || 0,
+    total: latestUniqueReferrals.length,
+    pending: latestUniqueReferrals.filter((r) => ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status)).length,
+    onLeave: latestUniqueReferrals.filter((r) => r.status === "on_leave").length,
+    completed: latestUniqueReferrals.filter((r) => ["returned", "completed"].includes(r.status)).length,
   };
 
   const handleViewDetails = (request: LeaveRequest) => {
@@ -257,102 +310,96 @@ export default function MedicalLeaveTab() {
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
-              ) : referrals && referrals.length > 0 ? (() => {
-                const filteredReferrals = referralFilter === "all" ? referrals : referrals.filter(r => {
-                  if (referralFilter === "pending") return ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status);
-                  if (referralFilter === "on_leave") return r.status === "on_leave";
-                  if (referralFilter === "completed") return ["returned", "completed"].includes(r.status);
-                  return true;
-                });
-                return filteredReferrals.length > 0 ? (
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Student</TableHead>
-                        <TableHead>Hospital</TableHead>
-                        <TableHead className="hidden md:table-cell">Leave Days</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredReferrals.map((request) => {
-                        const statusConfig = getStatusConfig(request.status);
-                        const StatusIcon = statusConfig.icon;
-                        return (
-                          <TableRow key={request.id} className="hover:bg-muted/30">
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <User className="h-4 w-4 text-primary" />
+              ) : latestUniqueReferrals.length > 0 ? (
+                filteredReferrals.length > 0 ? (
+                  <div className="rounded-md border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>Student</TableHead>
+                          <TableHead>Hospital</TableHead>
+                          <TableHead className="hidden md:table-cell">Leave Days</TableHead>
+                          <TableHead>Priority</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredReferrals.map((request) => {
+                          const statusConfig = getStatusConfig(request.status);
+                          const StatusIcon = statusConfig.icon;
+                          return (
+                            <TableRow key={request.id} className="hover:bg-muted/30">
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <User className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{request.student?.full_name || "Unknown"}</p>
+                                    <p className="text-xs text-muted-foreground">{request.student?.roll_number}</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-medium text-sm">{request.student?.full_name || "Unknown"}</p>
-                                  <p className="text-xs text-muted-foreground">{request.student?.roll_number}</p>
+                              </TableCell>
+                              <TableCell>
+                                <div className="max-w-[150px]">
+                                  <p className="text-sm truncate">{request.referral_hospital}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {request.leave_start_date ? format(parseISO(request.leave_start_date), "MMM d") : "-"}
+                                  </p>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="max-w-[150px]">
-                                <p className="text-sm truncate">{request.referral_hospital}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {request.leave_start_date ? format(parseISO(request.leave_start_date), "MMM d") : "-"}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-sm">{request.rest_days || "-"} days</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>{getPriorityBadge(request.health_priority)}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={`gap-1 ${statusConfig.color}`}>
-                                <StatusIcon className="h-3 w-3" />
-                                {statusConfig.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewDetails(request)}>
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Details
-                                  </DropdownMenuItem>
-                                  {request.student && (
-                                    <DropdownMenuItem asChild>
-                                      <PrintableReferralLetter
-                                        data={{
-                                          studentName: request.student.full_name,
-                                          rollNumber: request.student.roll_number,
-                                          program: request.student.program,
-                                          branch: request.student.branch,
-                                          hospital: { name: request.referral_hospital, location: "" },
-                                          illnessDescription: request.illness_description || "",
-                                          leaveDays: request.rest_days || 0,
-                                          healthPriority: request.health_priority || "medium",
-                                          doctorNotes: request.doctor_notes || undefined,
-                                        }}
-                                      />
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span className="text-sm">{request.rest_days || "-"} days</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>{getPriorityBadge(request.health_priority)}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={`gap-1 ${statusConfig.color}`}>
+                                  <StatusIcon className="h-3 w-3" />
+                                  {statusConfig.label}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewDetails(request)}>
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View Details
                                     </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                                    {request.student && (
+                                      <DropdownMenuItem asChild>
+                                        <PrintableReferralLetter
+                                          data={{
+                                            studentName: request.student.full_name,
+                                            rollNumber: request.student.roll_number,
+                                            program: request.student.program,
+                                            branch: request.student.branch,
+                                            hospital: { name: request.referral_hospital, location: "" },
+                                            illnessDescription: request.illness_description || "",
+                                            leaveDays: request.rest_days || 0,
+                                            healthPriority: request.health_priority || "medium",
+                                            doctorNotes: request.doctor_notes || undefined,
+                                          }}
+                                        />
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 ) : (
                   <div className="text-center py-8">
                     <ClipboardList className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
@@ -366,8 +413,8 @@ export default function MedicalLeaveTab() {
                       </Button>
                     )}
                   </div>
-                );
-              })() : (
+                )
+              ) : (
                 <div className="text-center py-12">
                   <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-foreground">No referrals yet</h3>
