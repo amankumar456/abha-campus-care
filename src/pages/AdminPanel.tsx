@@ -630,6 +630,9 @@ const AdminPanel = () => {
                         <SelectItem value="doctor">Doctor</SelectItem>
                         <SelectItem value="mentor">Mentor</SelectItem>
                         <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="medical_staff">Medical Staff</SelectItem>
+                        <SelectItem value="lab_officer">Lab Officer</SelectItem>
+                        <SelectItem value="pharmacy">Pharmacy</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
