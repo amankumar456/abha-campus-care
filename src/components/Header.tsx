@@ -98,6 +98,9 @@ const Header = () => {
     if (isDoctor) return 'doctor';
     if (isMentor) return 'mentor';
     if (isAdmin) return 'admin';
+    if (isMedicalStaff) return 'medical_staff';
+    if (isLabOfficer) return 'lab_officer';
+    if (isPharmacy) return 'pharmacy';
     return user?.user_metadata?.user_type || 'student';
   };
 
