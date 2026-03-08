@@ -25,7 +25,7 @@ const Index = () => {
   useEffect(() => {
     if (loading || !user) return;
     if (isAdmin) navigate('/admin', { replace: true });
-    else if (isMentor) navigate('/mentor/dashboard', { replace: true });
+    else if (isMentor) navigate('/mentor/home', { replace: true });
     else if (isMedicalStaff) navigate('/staff/home', { replace: true });
   }, [user, loading, isAdmin, isMentor, isMedicalStaff, navigate]);
 
