@@ -60,10 +60,12 @@ const PageLoader = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 min stale time
+      staleTime: 30 * 1000, // 30 seconds stale time
       gcTime: 5 * 60 * 1000, // 5 min garbage collection
       retry: 1,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
+      refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+      refetchIntervalInBackground: false, // Pause when tab is not active
     },
   },
 });
