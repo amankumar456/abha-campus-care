@@ -678,6 +678,61 @@ const StudentProfile = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="labtests" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TestTube className="h-5 w-5 text-primary" />
+                  Lab Test Reports
+                </CardTitle>
+                <CardDescription>
+                  {labReports.length} lab test{labReports.length !== 1 ? 's' : ''} on record
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {labReports.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No lab test reports found</p>
+                ) : (
+                  <div className="space-y-3">
+                    {labReports.map((report) => (
+                      <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            report.status === 'completed' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-amber-100 dark:bg-amber-900/20'
+                          }`}>
+                            {report.status === 'completed' ? (
+                              <FileCheck className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-amber-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{report.test_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {report.medical_officers ? `Dr. ${report.medical_officers.name}` : 'Doctor'} · {format(new Date(report.created_at), 'MMM d, yyyy')}
+                            </p>
+                            {report.notes && <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={report.status === 'completed' ? 'default' : 'secondary'}>
+                            {report.status === 'completed' ? 'Completed' : 'Pending'}
+                          </Badge>
+                          {report.status === 'completed' && report.report_file_url && (
+                            <Button variant="outline" size="sm" onClick={() => window.open(report.report_file_url!, '_blank')}>
+                              <Download className="w-4 h-4 mr-1" />
+                              View Report
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="analysis" className="mt-6">
             <VisitPatternAnalysis visits={visits} studentName={student?.full_name || ''} />
           </TabsContent>
