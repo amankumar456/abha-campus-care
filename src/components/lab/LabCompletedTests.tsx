@@ -319,14 +319,32 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                 {pdfViewTitle}
               </DialogTitle>
             </DialogHeader>
-            <iframe
-              src={pdfViewUrl}
-              className="flex-1 w-full rounded-lg border"
-              title="Lab Report PDF"
-            />
+            <div className="flex-1 w-full rounded-lg border overflow-hidden bg-muted/30 relative">
+              <object
+                data={`${pdfViewUrl}#toolbar=1&navpanes=1`}
+                type="application/pdf"
+                className="w-full h-full"
+              >
+                {/* Fallback if object tag can't render PDF */}
+                <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+                  <FileText className="w-16 h-16 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground text-center">
+                    PDF preview is not available in this browser.
+                  </p>
+                  <Button variant="default" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
+                    <Eye className="w-4 h-4 mr-1" />Open PDF in New Tab
+                  </Button>
+                </div>
+              </object>
+            </div>
             <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href={pdfViewUrl} download target="_blank" rel="noopener noreferrer">
+                  <Download className="w-4 h-4 mr-1" />Download
+                </a>
+              </Button>
               <Button variant="outline" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
-                <Download className="w-4 h-4 mr-1" />Download
+                <Eye className="w-4 h-4 mr-1" />Open in New Tab
               </Button>
               <Button variant="default" size="sm" onClick={() => {
                 const w = window.open(pdfViewUrl, "_blank");
