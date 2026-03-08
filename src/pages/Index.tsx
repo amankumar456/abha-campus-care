@@ -22,15 +22,16 @@ const Index = () => {
   const { user, isDoctor, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, loading } = useUserRole();
   const navigate = useNavigate();
 
-  // Redirect admin and mentor roles to their dedicated dashboards
+  // Redirect admin, mentor, and medical staff roles to their dedicated pages
   useEffect(() => {
     if (loading || !user) return;
     if (isAdmin) navigate('/admin', { replace: true });
     else if (isMentor) navigate('/mentor/dashboard', { replace: true });
-  }, [user, loading, isAdmin, isMentor, navigate]);
+    else if (isMedicalStaff) navigate('/staff/home', { replace: true });
+  }, [user, loading, isAdmin, isMentor, isMedicalStaff, navigate]);
 
   // Don't render landing page for redirecting roles
-  if (user && (isAdmin || isMentor)) {
+  if (user && (isAdmin || isMentor || isMedicalStaff)) {
     return null;
   }
 
