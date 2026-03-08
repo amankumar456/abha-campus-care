@@ -66,7 +66,7 @@ export default function DoctorProfile() {
       const { data: todayApts } = await supabase
         .from("appointments")
         .select("id")
-        .eq("medical_officer_id", doctorId)
+        
         .eq("appointment_date", today)
         .neq("status", "cancelled");
       const { data: pendingApts } = await supabase
