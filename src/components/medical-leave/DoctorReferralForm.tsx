@@ -612,17 +612,14 @@ const DoctorReferralForm = () => {
         fatherContact: profileData?.father_contact || undefined,
         motherName: profileData?.mother_name || undefined,
         motherContact: profileData?.mother_contact || undefined,
-        mentorName: studentWithEmail?.mentor_name || undefined,
-        mentorContact: studentWithEmail?.mentor_contact || undefined,
-        personalPhone: studentWithEmail?.phone || undefined,
+        mentorName: data.mentor_name || undefined,
+        mentorContact: data.mentor_contact || undefined,
+        personalPhone: data.phone || undefined,
       };
 
-      const studentResult = { 
+      const studentResult: Student = { 
         ...data, 
         email,
-        phone: studentWithEmail?.phone,
-        mentor_name: studentWithEmail?.mentor_name,
-        mentor_contact: studentWithEmail?.mentor_contact,
         emergencyContacts,
       };
       setFoundStudent(studentResult);
