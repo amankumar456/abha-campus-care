@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,6 +86,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: roleLoading } = useUserRole();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -96,7 +97,8 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('users');
+  const initialTab = searchParams.get('tab') || 'users';
+  const [activeTab, setActiveTab] = useState(initialTab);
   
   // Dialog states
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
@@ -366,7 +368,7 @@ const AdminPanel = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('users')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             </CardHeader>
@@ -374,7 +376,7 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{users.length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('users')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Admins</CardTitle>
             </CardHeader>
@@ -382,7 +384,7 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('admin')).length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('users')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Doctor Roles</CardTitle>
             </CardHeader>
@@ -390,7 +392,7 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{users.filter(u => u.roles.includes('doctor')).length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('medical-officers')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Medical Officers</CardTitle>
             </CardHeader>
@@ -398,7 +400,7 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{medicalOfficers.length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('visiting-doctors')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Visiting Doctors</CardTitle>
             </CardHeader>
@@ -406,7 +408,7 @@ const AdminPanel = () => {
               <div className="text-2xl font-bold">{visitingDoctors.length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('mentors')}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Mentors</CardTitle>
             </CardHeader>

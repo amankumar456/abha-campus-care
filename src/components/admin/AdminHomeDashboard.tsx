@@ -163,7 +163,7 @@ export default function AdminHomeDashboard() {
 
           {/* Live Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Card className="border-primary/20">
+            <Card className="border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=users")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <Users className="w-5 h-5 text-primary mx-auto mb-1" />
                 {loadingStats ? (
@@ -175,7 +175,7 @@ export default function AdminHomeDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-blue-500/20">
+            <Card className="border-blue-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=medical-officers")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <Stethoscope className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 {loadingStats ? (
@@ -187,7 +187,7 @@ export default function AdminHomeDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-green-500/20">
+            <Card className="border-green-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=users")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <GraduationCap className="w-5 h-5 text-green-600 mx-auto mb-1" />
                 {loadingStats ? (
@@ -199,7 +199,7 @@ export default function AdminHomeDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-orange-500/20">
+            <Card className="border-orange-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/appointments")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <Calendar className="w-5 h-5 text-orange-600 mx-auto mb-1" />
                 {loadingAppts ? (
@@ -211,7 +211,7 @@ export default function AdminHomeDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-red-500/20">
+            <Card className="border-red-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/medical-leave")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <FileText className="w-5 h-5 text-red-600 mx-auto mb-1" />
                 {loadingLeaves ? (
@@ -223,7 +223,7 @@ export default function AdminHomeDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-yellow-500/20">
+            <Card className="border-yellow-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=security")}>
               <CardContent className="pt-4 pb-3 text-center">
                 <ShieldAlert className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
                 {loadingSecurity ? (
