@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Download, User, Calendar, Search, Printer } from "lucide-react";
+import { CheckCircle2, Download, User, Calendar, Search, Printer, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface LabReport {
   id: string;
@@ -39,6 +41,7 @@ const getSignedUrl = async (storagePath: string): Promise<string | null> => {
 
 export default function LabCompletedTests({ reports, searchQuery, onSearchChange }: Props) {
   const { toast } = useToast();
+  const [viewReport, setViewReport] = useState<LabReport | null>(null);
 
   const filtered = reports.filter(r => {
     if (!searchQuery.trim()) return true;
@@ -136,6 +139,9 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setViewReport(r)}>
+                      <Eye className="w-3 h-3 mr-1" />View Results
+                    </Button>
                     {r.report_file_url && (
                       <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
                         <Download className="w-3 h-3 mr-1" />View File
@@ -150,6 +156,48 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
             </Card>
           ))}
         </div>
+      )}
+
+      {/* View Results Dialog */}
+      {viewReport && (
+        <Dialog open={!!viewReport} onOpenChange={() => setViewReport(null)}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-emerald-600" />
+                Lab Results — {viewReport.test_name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-3">
+              <User className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-sm">{viewReport.student?.full_name} ({viewReport.student?.roll_number})</p>
+                <p className="text-xs text-muted-foreground">{viewReport.student?.program} • {viewReport.student?.branch || "N/A"}</p>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <Calendar className="w-3 h-3" />
+              Completed: {format(new Date(viewReport.updated_at), "dd MMM yyyy, hh:mm a")}
+            </div>
+            {viewReport.notes ? (
+              <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-background">
+                {viewReport.notes}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No entered results. Check attached file.</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              {viewReport.report_file_url && (
+                <Button variant="outline" size="sm" onClick={() => handleViewFile(viewReport)}>
+                  <Download className="w-4 h-4 mr-1" />View File
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => handlePrint(viewReport)}>
+                <Printer className="w-4 h-4 mr-1" />Print
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

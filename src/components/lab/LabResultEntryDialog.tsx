@@ -302,12 +302,6 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
             <Printer className="w-4 h-4 mr-1" />
             Print Report
           </Button>
-          <label className="cursor-pointer">
-            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onUpload(report, f); }} disabled={uploadingId === report.id} />
-            <Button variant="outline" asChild disabled={uploadingId === report.id}>
-              <span><Upload className="w-4 h-4 mr-1" />{uploadingId === report.id ? "Uploading..." : "Upload File"}</span>
-            </Button>
-          </label>
           <Button onClick={handleSaveResults} disabled={saving}>
             <Save className="w-4 h-4 mr-1" />
             {saving ? "Saving..." : "Save & Complete"}
