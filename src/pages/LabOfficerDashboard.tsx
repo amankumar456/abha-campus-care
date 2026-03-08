@@ -197,35 +197,35 @@ export default function LabOfficerDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f3f4f6]">
+    <div className="min-h-screen flex flex-col bg-muted/30">
       <Header />
-      <div className="flex flex-1">
-      <LabSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
-      <main className="flex-1 overflow-y-auto">
-        {/* Top bar */}
-        <div className="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-[36px] z-10">
-          <div>
-            <h1 className="text-lg font-bold text-[#1e3a8a]">Laboratory Management Dashboard</h1>
-            <p className="text-xs text-muted-foreground">NIT Warangal Health Centre</p>
+      <div className="flex flex-1 overflow-hidden">
+        <LabSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+        <main className="flex-1 overflow-y-auto">
+          {/* Top bar */}
+          <div className="bg-card border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div>
+              <h1 className="text-lg font-bold text-primary">Laboratory Management Dashboard</h1>
+              <p className="text-xs text-muted-foreground">NIT Warangal Health Centre</p>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {format(new Date(), "EEEE, dd MMMM yyyy • hh:mm a")}
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {format(new Date(), "EEEE, dd MMMM yyyy • hh:mm a")}
+
+          <div className="p-6">
+            {renderSection()}
           </div>
-        </div>
+        </main>
 
-        <div className="p-6">
-          {renderSection()}
-        </div>
-      </main>
-
-      <RegisterSampleDialog
-        open={registerOpen}
-        onClose={() => setRegisterOpen(false)}
-        onRegistered={() => {
-          fetchLabReports();
-          setRegisterOpen(false);
-        }}
-      />
+        <RegisterSampleDialog
+          open={registerOpen}
+          onClose={() => setRegisterOpen(false)}
+          onRegistered={() => {
+            fetchLabReports();
+            setRegisterOpen(false);
+          }}
+        />
       </div>
     </div>
   );
