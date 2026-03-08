@@ -26,6 +26,7 @@ import { format, isPast, isToday, isTomorrow } from "date-fns";
 
 const StudentHomeDashboard = () => {
   const { user } = useUserRole();
+  const navigate = useNavigate();
 
   // Fetch student basic info
   const { data: student } = useQuery({
