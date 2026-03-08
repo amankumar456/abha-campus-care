@@ -111,7 +111,24 @@ const HealthRecordsSection = () => {
     },
   });
 
-  const isLoading = loadingVisits || loadingRx || loadingLeave;
+  // Fetch lab reports
+  const { data: labReports = [], isLoading: loadingLabs } = useQuery({
+    queryKey: ['health-records-lab-reports'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lab_reports')
+        .select(`
+          id, test_name, status, notes, report_file_url, created_at,
+          students!lab_reports_student_id_fkey ( full_name, roll_number ),
+          medical_officers:doctor_id ( name, designation )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      return data || [];
+    },
+  });
+
+  const isLoading = loadingVisits || loadingRx || loadingLeave || loadingLabs;
 
   // Transform real data into HealthRecord format
   const records: HealthRecord[] = [
