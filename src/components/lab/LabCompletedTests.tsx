@@ -54,11 +54,31 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
            r.test_name.toLowerCase().includes(q);
   });
 
+  const [pdfViewUrl, setPdfViewUrl] = useState<string | null>(null);
+  const [pdfViewTitle, setPdfViewTitle] = useState("");
+
   const handleViewFile = async (r: LabReport) => {
     if (!r.report_file_url) return;
     const url = await getSignedUrl(r.report_file_url);
-    if (url) window.open(url, "_blank");
-    else toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+    if (url) {
+      setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
+      setPdfViewUrl(url);
+    } else {
+      toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+    }
+  };
+
+  const handlePrintPdf = async (r: LabReport) => {
+    if (!r.report_file_url) { handlePrint(r); return; }
+    const url = await getSignedUrl(r.report_file_url);
+    if (url) {
+      const printWin = window.open(url, "_blank");
+      if (printWin) {
+        printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+      }
+    } else {
+      toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
+    }
   };
 
   const handlePrint = async (r: LabReport) => {
@@ -236,7 +256,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                         )}
                       </>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => r.report_file_url ? handleViewFile(r) : handlePrint(r)}>
+                    <Button variant="ghost" size="sm" onClick={() => handlePrintPdf(r)}>
                       <Printer className="w-3 h-3 mr-1" />Print
                     </Button>
                   </div>
@@ -282,6 +302,36 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => handlePrint(viewReport)}>
+                <Printer className="w-4 h-4 mr-1" />Print
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* PDF Viewer Dialog */}
+      {pdfViewUrl && (
+        <Dialog open={!!pdfViewUrl} onOpenChange={() => setPdfViewUrl(null)}>
+          <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-sm">
+                <Eye className="w-4 h-4 text-primary" />
+                {pdfViewTitle}
+              </DialogTitle>
+            </DialogHeader>
+            <iframe
+              src={pdfViewUrl}
+              className="flex-1 w-full rounded-lg border"
+              title="Lab Report PDF"
+            />
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
+                <Download className="w-4 h-4 mr-1" />Download
+              </Button>
+              <Button variant="default" size="sm" onClick={() => {
+                const w = window.open(pdfViewUrl, "_blank");
+                if (w) w.addEventListener("load", () => setTimeout(() => w.print(), 600));
+              }}>
                 <Printer className="w-4 h-4 mr-1" />Print
               </Button>
             </div>
