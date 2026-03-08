@@ -130,6 +130,10 @@ export default function LabOfficerDashboard() {
             completed={todayCompleted.length}
             critical={0}
             recentUpdates={recentUpdates}
+            allReports={labReports}
+            pendingReports={pendingReports}
+            onNavigate={setActiveSection}
+            onRefresh={fetchLabReports}
           />
         );
       case "processing":
