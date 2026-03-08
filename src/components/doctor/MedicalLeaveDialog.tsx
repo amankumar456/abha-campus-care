@@ -347,7 +347,7 @@ const MedicalLeaveDialog = ({
                     <SelectValue placeholder="NIT Warangal Health Centre (default)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">NIT Warangal Health Centre</SelectItem>
+                    <SelectItem value="NIT Warangal Health Centre">NIT Warangal Health Centre</SelectItem>
                     {hospitals.map((h) => (
                       <SelectItem key={h.id} value={h.name}>
                         {h.name} — {h.location}
