@@ -301,6 +301,11 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
             <Badge variant="secondary" className="text-xs">
               {getStatusLabel(leave.status)}
             </Badge>
+            {isOverdue && overdueDays > 0 && (
+              <Badge className="text-xs bg-orange-500 hover:bg-orange-600 text-white">
+                {overdueDays}d overdue
+              </Badge>
+            )}
           </div>
         </div>
 
