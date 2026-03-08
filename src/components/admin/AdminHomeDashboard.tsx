@@ -37,19 +37,31 @@ export default function AdminHomeDashboard() {
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["admin-home-stats"],
     queryFn: async () => {
-      const [usersRes, doctorsRes, mentorsRes, studentsRes, medOfficersRes, visitingRes] = await Promise.all([
+      const [
+        totalUsersRes, adminsRes, doctorsRes, mentorsRes, studentsRes,
+        labOfficersRes, pharmacyRes, medStaffRes,
+        medOfficersRes, visitingRes,
+      ] = await Promise.all([
         supabase.from("user_roles").select("user_id", { count: "exact", head: true }),
+        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "admin"),
         supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "doctor"),
         supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "mentor"),
         supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "student"),
+        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "lab_officer"),
+        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "pharmacy"),
+        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "medical_staff"),
         supabase.from("medical_officers").select("id", { count: "exact", head: true }),
         supabase.from("visiting_doctors").select("id", { count: "exact", head: true }),
       ]);
       return {
-        totalUsers: usersRes.count || 0,
+        totalUsers: totalUsersRes.count || 0,
+        admins: adminsRes.count || 0,
         totalDoctors: doctorsRes.count || 0,
         totalMentors: mentorsRes.count || 0,
         totalStudents: studentsRes.count || 0,
+        labOfficers: labOfficersRes.count || 0,
+        pharmacy: pharmacyRes.count || 0,
+        medicalStaff: medStaffRes.count || 0,
         medicalOfficers: medOfficersRes.count || 0,
         visitingDoctors: visitingRes.count || 0,
       };
