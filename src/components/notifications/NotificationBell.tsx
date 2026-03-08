@@ -133,6 +133,10 @@ const NotificationBell = () => {
         return 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20';
       case 'prescription':
         return 'border-l-rose-500 bg-rose-50 dark:bg-rose-950/20';
+      case 'certificate_issued':
+        return 'border-l-amber-500 bg-amber-50 dark:bg-amber-950/20';
+      case 'lab_report':
+        return 'border-l-cyan-500 bg-cyan-50 dark:bg-cyan-950/20';
       default:
         return 'border-l-primary bg-primary/5';
     }
