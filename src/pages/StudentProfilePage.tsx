@@ -772,7 +772,6 @@ export default function StudentProfilePage() {
                 <TestTube className="w-4 h-4" />
                 Lab Tests ({labReports.length})
               </Button>
-              </Button>
             </div>
 
             {/* Visit History Sub-tab */}
