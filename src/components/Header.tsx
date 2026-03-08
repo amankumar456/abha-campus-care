@@ -36,6 +36,7 @@ const Header = () => {
   const [isLoading, setIsLoading] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff, loading: roleLoading } = useUserRole();
 
