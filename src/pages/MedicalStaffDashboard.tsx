@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
+import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import {
   ShieldCheck, Search, FileText, ClipboardCheck, AlertTriangle, CheckCircle2,
   User, Calendar, Building, Loader2, Mail, Phone, Heart, Droplets, Pill,
