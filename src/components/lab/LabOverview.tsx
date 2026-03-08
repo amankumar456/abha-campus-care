@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   TestTubes, Clock, CheckCircle2, AlertTriangle, TrendingUp,
   Plus, User, Stethoscope, ArrowRight,
-  FlaskConical, FileText, Bell
+  FlaskConical, FileText, Bell, Activity, Microscope,
+  ClipboardCheck, BarChart3, RefreshCw
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 
@@ -36,33 +37,24 @@ interface LabOverviewProps {
   onRefresh: () => void;
 }
 
-const statCards = [
-  { key: "totalToday", label: "Samples Today", icon: TestTubes, color: "bg-blue-50 border-blue-200", iconColor: "text-blue-600" },
-  { key: "pending", label: "Pending Processing", icon: Clock, color: "bg-amber-50 border-amber-200", iconColor: "text-amber-600" },
-  { key: "completed", label: "Completed Today", icon: CheckCircle2, color: "bg-emerald-50 border-emerald-200", iconColor: "text-emerald-600" },
-  { key: "critical", label: "Critical Values", icon: AlertTriangle, color: "bg-red-50 border-red-200", iconColor: "text-red-600" },
-] as const;
-
 export default function LabOverview({
   totalToday, pending, completed, critical, recentUpdates,
   allReports, pendingReports, onNavigate, onRefresh
 }: LabOverviewProps) {
-  const values = { totalToday, pending, completed, critical };
 
-  // Test type distribution for all reports
+  // Test type distribution
   const testCounts = new Map<string, number>();
   allReports.forEach(r => testCounts.set(r.test_name, (testCounts.get(r.test_name) || 0) + 1));
   const testDistribution = Array.from(testCounts.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6);
 
-  // Unique students count
   const uniqueStudents = new Set(allReports.map(r => r.student_id)).size;
 
   // Oldest pending (most urgent)
   const urgentPending = pendingReports
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .slice(0, 4);
+    .slice(0, 5);
 
   const priorityColor = (createdAt: string) => {
     const hours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
@@ -71,88 +63,118 @@ export default function LabOverview({
     return "border-l-blue-500";
   };
 
+  const completionRate = allReports.length > 0
+    ? Math.round((allReports.filter(r => r.status === "completed").length / allReports.length) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Today's Overview</h2>
-          <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, dd MMMM yyyy")}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => onNavigate("register")}>
-            <Plus className="w-4 h-4 mr-1" />Register New Sample
-          </Button>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
-            <span>Lab operational</span>
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+              <Microscope className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Laboratory Dashboard</h2>
+              <p className="text-blue-200 text-sm mt-0.5">
+                {format(new Date(), "EEEE, dd MMMM yyyy")} • NIT Warangal Health Centre
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              className="bg-white text-[#1e3a8a] hover:bg-blue-50 font-semibold"
+              onClick={() => onNavigate("register")}
+            >
+              <Plus className="w-4 h-4 mr-1" />Register New Sample
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-white/80 hover:text-white hover:bg-white/10"
+              onClick={onRefresh}
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((s) => (
-          <Card
-            key={s.key}
-            className={`${s.color} border cursor-pointer hover:shadow-md transition-shadow`}
-            onClick={() => {
-              if (s.key === "pending") onNavigate("processing");
-              else if (s.key === "completed") onNavigate("completed");
-            }}
+        {/* Inline Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+          <div
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-3 cursor-pointer hover:bg-white/20 transition-colors"
+            onClick={() => onNavigate("processing")}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <s.icon className={`w-5 h-5 ${s.iconColor}`} />
-                {s.key === "critical" && values.critical > 0 && (
-                  <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full animate-pulse">⚠️</span>
-                )}
-              </div>
-              <p className="text-2xl font-bold">{values[s.key]}</p>
-              <p className="text-xs text-muted-foreground">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
+            <div className="flex items-center gap-2 mb-1">
+              <TestTubes className="w-4 h-4 text-blue-200" />
+              <span className="text-xs text-blue-200">Samples Today</span>
+            </div>
+            <p className="text-2xl font-bold">{totalToday}</p>
+          </div>
+          <div
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-3 cursor-pointer hover:bg-white/20 transition-colors"
+            onClick={() => onNavigate("processing")}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-4 h-4 text-amber-300" />
+              <span className="text-xs text-blue-200">Pending</span>
+            </div>
+            <p className="text-2xl font-bold">{pending}</p>
+          </div>
+          <div
+            className="bg-white/10 backdrop-blur-sm rounded-lg p-3 cursor-pointer hover:bg-white/20 transition-colors"
+            onClick={() => onNavigate("completed")}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+              <span className="text-xs text-blue-200">Completed</span>
+            </div>
+            <p className="text-2xl font-bold">{completed}</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="w-4 h-4 text-green-300" />
+              <span className="text-xs text-blue-200">Completion Rate</span>
+            </div>
+            <p className="text-2xl font-bold">{completionRate}%</p>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <FlaskConical className="w-4 h-4 text-primary" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("register")}>
-              <Plus className="w-5 h-5 text-primary" />
-              <span className="text-xs">New Sample</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("processing")}>
-              <FlaskConical className="w-5 h-5 text-amber-600" />
-              <span className="text-xs">Processing Queue</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("completed")}>
-              <FileText className="w-5 h-5 text-emerald-600" />
-              <span className="text-xs">Completed Tests</span>
-            </Button>
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("notifications")}>
-              <Bell className="w-5 h-5 text-orange-500" />
-              <span className="text-xs">Notifications</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {[
+          { label: "Register Sample", icon: Plus, color: "text-primary", bg: "bg-primary/10 hover:bg-primary/20", action: "register" },
+          { label: "Processing Queue", icon: FlaskConical, color: "text-amber-600", bg: "bg-amber-50 hover:bg-amber-100", action: "processing" },
+          { label: "Completed Tests", icon: ClipboardCheck, color: "text-emerald-600", bg: "bg-emerald-50 hover:bg-emerald-100", action: "completed" },
+          { label: "Student Records", icon: User, color: "text-blue-600", bg: "bg-blue-50 hover:bg-blue-100", action: "students" },
+          { label: "Analytics", icon: BarChart3, color: "text-purple-600", bg: "bg-purple-50 hover:bg-purple-100", action: "analytics" },
+        ].map((item) => (
+          <button
+            key={item.action}
+            onClick={() => onNavigate(item.action)}
+            className={`${item.bg} rounded-xl p-4 flex flex-col items-center gap-2 transition-colors border border-transparent hover:border-border`}
+          >
+            <item.icon className={`w-6 h-6 ${item.color}`} />
+            <span className="text-xs font-medium text-foreground">{item.label}</span>
+          </button>
+        ))}
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Urgent Pending Queue */}
-        <Card>
+        <Card className="border-t-4 border-t-amber-400">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-500" />
                 Urgent Pending Tests
+                {pendingReports.length > 0 && (
+                  <Badge className="bg-amber-100 text-amber-700 text-[10px] ml-1">{pendingReports.length}</Badge>
+                )}
               </CardTitle>
               {pendingReports.length > 0 && (
                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => onNavigate("processing")}>
@@ -163,11 +185,19 @@ export default function LabOverview({
           </CardHeader>
           <CardContent className="pb-4">
             {urgentPending.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">🎉 No pending tests — all clear!</p>
+              <div className="text-center py-8">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground">All Clear!</p>
+                <p className="text-xs text-muted-foreground mt-1">No pending tests in the queue</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {urgentPending.map(r => (
-                  <div key={r.id} className={`border-l-4 ${priorityColor(r.created_at)} bg-muted/30 rounded-r-md p-3 cursor-pointer hover:bg-muted/60 transition-colors`} onClick={() => onNavigate("processing")}>
+                  <div
+                    key={r.id}
+                    className={`border-l-4 ${priorityColor(r.created_at)} bg-muted/30 rounded-r-lg p-3 cursor-pointer hover:bg-muted/60 transition-colors`}
+                    onClick={() => onNavigate("processing")}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User className="w-3.5 h-3.5 text-muted-foreground" />
@@ -178,7 +208,11 @@ export default function LabOverview({
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge className="bg-blue-100 text-blue-800 text-[10px]">{r.test_name}</Badge>
-                      {r.doctor?.name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><Stethoscope className="w-2.5 h-2.5" />Dr. {r.doctor.name}</span>}
+                      {r.doctor?.name && (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Stethoscope className="w-2.5 h-2.5" />Dr. {r.doctor.name}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -187,8 +221,8 @@ export default function LabOverview({
           </CardContent>
         </Card>
 
-        {/* Recent Updates Timeline */}
-        <Card>
+        {/* Recent Completions */}
+        <Card className="border-t-4 border-t-emerald-400">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -202,7 +236,10 @@ export default function LabOverview({
           </CardHeader>
           <CardContent className="pb-4">
             {recentUpdates.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">No recent completions</p>
+              <div className="text-center py-8">
+                <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No recent completions</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {recentUpdates.map((u, i) => (
@@ -222,7 +259,7 @@ export default function LabOverview({
         </Card>
       </div>
 
-      {/* Bottom row: Test Distribution + Summary */}
+      {/* Bottom row: Test Distribution + Lab Summary */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Test Type Distribution */}
         <Card>
@@ -234,19 +271,25 @@ export default function LabOverview({
           </CardHeader>
           <CardContent className="pb-4">
             {testDistribution.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No tests recorded yet</p>
+              <div className="text-center py-6">
+                <FlaskConical className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No tests recorded yet</p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {testDistribution.map(([name, count]) => {
                   const pct = Math.round((count / allReports.length) * 100);
                   return (
                     <div key={name}>
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="truncate mr-2">{name}</span>
-                        <span className="text-xs text-muted-foreground">{count} ({pct}%)</span>
+                        <span className="truncate mr-2 font-medium">{name}</span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{count} ({pct}%)</span>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary/70 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </div>
                   );
@@ -265,20 +308,24 @@ export default function LabOverview({
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <TestTubes className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{allReports.length}</p>
                 <p className="text-xs text-muted-foreground">Total Reports</p>
               </div>
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
+                <User className="w-5 h-5 text-purple-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{uniqueStudents}</p>
                 <p className="text-xs text-muted-foreground">Unique Students</p>
               </div>
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{allReports.filter(r => r.status === "completed").length}</p>
-                <p className="text-xs text-muted-foreground">Reports Completed</p>
+                <p className="text-xs text-muted-foreground">Completed</p>
               </div>
-              <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-100">
+                <Microscope className="w-5 h-5 text-orange-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-foreground">{testCounts.size}</p>
                 <p className="text-xs text-muted-foreground">Test Types</p>
               </div>
@@ -289,7 +336,7 @@ export default function LabOverview({
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
                   <span className="text-sm text-amber-800 font-medium">{pendingReports.length} tests awaiting processing</span>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs border-amber-300" onClick={() => onNavigate("processing")}>
+                <Button variant="outline" size="sm" className="text-xs border-amber-300 hover:bg-amber-100" onClick={() => onNavigate("processing")}>
                   Process Now
                 </Button>
               </div>
