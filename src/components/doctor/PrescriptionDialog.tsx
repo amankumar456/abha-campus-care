@@ -74,13 +74,18 @@ const DURATION_OPTIONS = [
   "1 day",
   "2 days",
   "3 days",
+  "4 days",
   "5 days",
+  "6 days",
   "7 days",
+  "8 days",
+  "9 days",
   "10 days",
   "14 days",
   "21 days",
   "30 days",
   "Until follow-up",
+  "Custom",
 ];
 
 const MEAL_TIMING_OPTIONS = [
@@ -513,10 +518,14 @@ export default function PrescriptionDialog({
                       <CalendarDays className="h-3 w-3" /> Duration
                     </Label>
                     <Select
-                      value={med.duration}
-                      onValueChange={(val) =>
-                        updateMedicine(med.id, "duration", val)
-                      }
+                      value={DURATION_OPTIONS.includes(med.duration) ? med.duration : "Custom"}
+                      onValueChange={(val) => {
+                        if (val === "Custom") {
+                          updateMedicine(med.id, "duration", "");
+                        } else {
+                          updateMedicine(med.id, "duration", val);
+                        }
+                      }}
                     >
                       <SelectTrigger className="h-9">
                         <SelectValue />
@@ -529,6 +538,14 @@ export default function PrescriptionDialog({
                         ))}
                       </SelectContent>
                     </Select>
+                    {!DURATION_OPTIONS.includes(med.duration) && (
+                      <Input
+                        placeholder="e.g., 15 days"
+                        value={med.duration}
+                        onChange={(e) => updateMedicine(med.id, "duration", e.target.value)}
+                        className="mt-1.5 h-9"
+                      />
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground flex items-center gap-1">
