@@ -135,12 +135,59 @@ export default function MedicalLeaveTab() {
     enabled: !!doctorId,
   });
 
-  // Stats for quick overview
+  const studentDedupKey = (request: LeaveRequest) => {
+    const rollNumber = request.student?.roll_number?.trim().toLowerCase();
+    if (rollNumber) return `roll:${rollNumber}`;
+
+    const studentId = request.student?.id?.trim();
+    if (studentId) return `id:${studentId}`;
+
+    const fullName = request.student?.full_name?.trim().toLowerCase();
+    if (fullName) return `name:${fullName}`;
+
+    return `request:${request.id}`;
+  };
+
+  const latestUniqueReferrals = useMemo(() => {
+    if (!referrals?.length) return [];
+
+    const latestByStudent = new Map<string, LeaveRequest>();
+
+    for (const request of referrals) {
+      const dedupeKey = studentDedupKey(request);
+      if (!latestByStudent.has(dedupeKey)) {
+        latestByStudent.set(dedupeKey, request);
+      }
+    }
+
+    return Array.from(latestByStudent.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [referrals]);
+
+  const filteredReferrals = useMemo(() => {
+    if (referralFilter === "all") return latestUniqueReferrals;
+
+    return latestUniqueReferrals.filter((request) => {
+      if (referralFilter === "pending") {
+        return ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(request.status);
+      }
+      if (referralFilter === "on_leave") {
+        return request.status === "on_leave";
+      }
+      if (referralFilter === "completed") {
+        return ["returned", "completed"].includes(request.status);
+      }
+      return true;
+    });
+  }, [latestUniqueReferrals, referralFilter]);
+
+  // Stats for quick overview (deduplicated by student roll number)
   const stats = {
-    total: referrals?.length || 0,
-    pending: referrals?.filter(r => ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status)).length || 0,
-    onLeave: referrals?.filter(r => r.status === "on_leave").length || 0,
-    completed: referrals?.filter(r => ["returned", "completed"].includes(r.status)).length || 0,
+    total: latestUniqueReferrals.length,
+    pending: latestUniqueReferrals.filter((r) => ["doctor_referred", "student_form_pending", "student_form_submitted"].includes(r.status)).length,
+    onLeave: latestUniqueReferrals.filter((r) => r.status === "on_leave").length,
+    completed: latestUniqueReferrals.filter((r) => ["returned", "completed".includes ? "returned" : "returned"]).length,
   };
 
   const handleViewDetails = (request: LeaveRequest) => {
