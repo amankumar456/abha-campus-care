@@ -1147,6 +1147,18 @@ export default function StudentProfilePage() {
                             >
                               {ref.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="ml-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrintReferralLetter(ref);
+                              }}
+                            >
+                              <Printer className="w-3 h-3 mr-1" />
+                              Print
+                            </Button>
                           </div>
                           {ref.illness_description && (
                             <p className="text-sm text-muted-foreground pl-13">
