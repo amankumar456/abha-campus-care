@@ -31,7 +31,10 @@ interface MenteeCardProps {
 
 export default function MenteeCard({ student, onViewProfile, visitCount = 0 }: MenteeCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow border-l-4 border-l-primary/50">
+    <Card 
+      className={`hover:shadow-md transition-shadow border-l-4 border-l-primary/50 ${onViewProfile ? 'cursor-pointer' : ''}`}
+      onClick={() => onViewProfile?.(student.id)}
+    >
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           {/* Avatar */}
@@ -42,7 +45,7 @@ export default function MenteeCard({ student, onViewProfile, visitCount = 0 }: M
           {/* Main Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-lg text-foreground truncate">
+              <h3 className="font-semibold text-lg text-primary hover:underline truncate">
                 {student.full_name}
               </h3>
               <Badge variant="outline" className="ml-2">
