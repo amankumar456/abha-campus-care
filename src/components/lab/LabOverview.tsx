@@ -80,7 +80,7 @@ export default function LabOverview({
           <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, dd MMMM yyyy")}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => setRegisterOpen(true)}>
+          <Button size="sm" onClick={() => onNavigate("register")}>
             <Plus className="w-4 h-4 mr-1" />Register New Sample
           </Button>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
