@@ -1590,6 +1590,7 @@ export type Database = {
       archive_old_audit_logs: { Args: never; Returns: undefined }
       check_login_rate_limit: { Args: { p_email: string }; Returns: boolean }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
+      get_health_centre_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
