@@ -763,6 +763,16 @@ export default function StudentProfilePage() {
                 <Pill className="w-4 h-4" />
                 Prescriptions ({prescriptions.length})
               </Button>
+              <Button
+                variant={recordsSubTab === 'labtests' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('labtests')}
+                className="flex items-center gap-2"
+              >
+                <TestTube className="w-4 h-4" />
+                Lab Tests ({labReports.length})
+              </Button>
+              </Button>
             </div>
 
             {/* Visit History Sub-tab */}
