@@ -114,6 +114,7 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const initialTab = searchParams.get('tab') || 'users';
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [roleFilter, setRoleFilter] = useState('all');
   
   // Dialog states
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
