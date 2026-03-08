@@ -524,6 +524,62 @@ export default function StudentProfilePage() {
     await printDocument({ title: `Referral Letter — ${student?.full_name}`, bodyHtml, documentId: docId, documentType: 'REFERRAL LETTER' });
   };
 
+  const handlePrintCertificate = async (cert: MedicalCertificate) => {
+    const certNo = `MLC/${format(new Date(cert.created_at), 'yyyyMMdd')}/${cert.id.slice(0, 6).toUpperCase()}`;
+    const dateStr = cert.approval_date ? format(new Date(cert.approval_date), 'PPP') : format(new Date(cert.created_at), 'PPP');
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml('MEDICAL LEAVE CERTIFICATE')}
+      <div class="doc-title">
+        <h3>MEDICAL LEAVE CERTIFICATE</h3>
+        <div class="cert-no">Certificate No.: ${certNo} | Date: ${dateStr}</div>
+      </div>
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${student?.full_name}</span>
+        <span><strong>Roll No:</strong> ${student?.roll_number}</span>
+      </div>
+      <div class="info-grid" style="margin-bottom:16px;">
+        <div class="info-item"><span class="info-label">Program:</span><span>${student?.program || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Branch:</span><span>${student?.branch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Batch:</span><span>${student?.batch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Year:</span><span>${student?.year_of_study || '—'}</span></div>
+      </div>
+      <div class="section body-text">
+        <p>This is to certify that <strong>${student?.full_name}</strong> (Roll No: <strong>${student?.roll_number}</strong>) was referred to <strong>${cert.referral_hospital}</strong> for medical treatment.</p>
+        ${cert.illness_description ? `<p><strong>Illness / Condition:</strong> ${cert.illness_description}</p>` : ''}
+        <div class="info-grid" style="margin:16px 0;">
+          <div class="info-item"><span class="info-label">Referred Hospital:</span><span>${cert.referral_hospital}</span></div>
+          <div class="info-item"><span class="info-label">Expected Duration:</span><span>${cert.expected_duration}</span></div>
+          ${cert.leave_start_date ? `<div class="info-item"><span class="info-label">Leave From:</span><span>${format(new Date(cert.leave_start_date), 'PPP')}</span></div>` : ''}
+          ${cert.expected_return_date ? `<div class="info-item"><span class="info-label">Expected Return:</span><span>${format(new Date(cert.expected_return_date), 'PPP')}</span></div>` : ''}
+          ${cert.actual_return_date ? `<div class="info-item"><span class="info-label">Actual Return:</span><span>${format(new Date(cert.actual_return_date), 'PPP')}</span></div>` : ''}
+          ${cert.health_priority ? `<div class="info-item"><span class="info-label">Priority:</span><span>${cert.health_priority.charAt(0).toUpperCase() + cert.health_priority.slice(1)}</span></div>` : ''}
+        </div>
+        ${cert.doctor_notes ? `<p><strong>Doctor's Notes:</strong> ${cert.doctor_notes}</p>` : ''}
+        <p>The student is hereby granted medical leave for the above-mentioned period as per the medical assessment.</p>
+      </div>
+      <div class="signature-section">
+        <div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW Emblem" /><div class="emblem-label">NIT Warangal</div></div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${cert.doctor_name}</div>
+          <div class="signature-line">
+            <strong>Dr. ${cert.doctor_name}</strong><br/>
+            ${cert.doctor_designation}<br/>
+            <span style="font-size:10px;">${cert.doctor_qualification}</span><br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-footer">
+        <p>Date of Issue: ${format(new Date(), 'PPPP')}</p>
+        <p>This certificate is valid for official purposes. For verification, contact Health Centre, NIT Warangal.</p>
+        <p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p>
+      </div>
+    `;
+
+    await printDocument({ title: `Medical Leave Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'MEDICAL LEAVE CERTIFICATE' });
+  };
+
   const profileFields = student ? [
     { name: 'fullName', label: 'Full Name', filled: !!student.full_name, required: true },
     { name: 'rollNumber', label: 'Roll Number', filled: !!student.roll_number, required: true },
