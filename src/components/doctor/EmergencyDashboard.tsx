@@ -107,7 +107,49 @@ export default function EmergencyDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<AmbulanceRequest | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Fetch active ambulance requests
+  // Fetch real ambulance service contacts
+  const { data: ambulanceServices } = useQuery({
+    queryKey: ["ambulance-service-contacts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ambulance_service")
+        .select("id, phone_landline, phone_mobile, description, equipment, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch on-duty doctors count
+  const { data: onDutyDoctors } = useQuery({
+    queryKey: ["on-duty-doctors-count"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_officers")
+        .select("id, name")
+        .not("user_id", "is", null);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Build dynamic contacts list from ambulance_service
+  const dynamicContacts = [
+    ...(ambulanceServices?.map((svc, i) => ({
+      name: i === 0 ? "Campus Ambulance" : `Ambulance Service ${i + 1}`,
+      phone: svc.phone_mobile,
+      icon: Ambulance,
+    })) || []),
+    ...(ambulanceServices?.map((svc, i) => ({
+      name: i === 0 ? "Health Centre Landline" : `Ambulance Landline ${i + 1}`,
+      phone: svc.phone_landline,
+      icon: Building2,
+    })) || []),
+    { name: "National Emergency", phone: "108", icon: Siren },
+    { name: "Police Emergency", phone: "100", icon: Shield },
+  ];
+
   const { data: ambulanceRequests, isLoading, refetch } = useQuery({
     queryKey: ["emergency-ambulance-requests"],
     queryFn: async () => {
