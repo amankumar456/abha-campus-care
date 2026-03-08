@@ -315,21 +315,29 @@ const StudentHomeDashboard = () => {
                   </Button>
                 </div>
               ) : (
-                upcomingAppointments.map((apt) => (
-                  <div key={apt.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                    <div className="text-center min-w-[50px]">
-                      <p className="text-xs text-muted-foreground">{formatAppointmentDate(apt.appointment_date)}</p>
-                      <p className="text-sm font-semibold text-primary">{formatTime(apt.appointment_time)}</p>
+                upcomingAppointments.map((apt) => {
+                  const doctorName = apt.doctor_type === "visiting" 
+                    ? (apt.visiting_doctors as any)?.name 
+                    : (apt.medical_officers as any)?.name;
+                  const doctorLabel = apt.doctor_type === "visiting"
+                    ? (apt.visiting_doctors as any)?.specialization
+                    : (apt.medical_officers as any)?.designation;
+                  return (
+                    <div key={apt.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                      <div className="text-center min-w-[50px]">
+                        <p className="text-xs text-muted-foreground">{formatAppointmentDate(apt.appointment_date)}</p>
+                        <p className="text-sm font-semibold text-primary">{formatTime(apt.appointment_time)}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{apt.reason || "General Consultation"}</p>
+                        <p className="text-xs text-muted-foreground">{doctorName || doctorLabel || apt.doctor_type?.replace("_", " ")}</p>
+                      </div>
+                      <Badge variant={apt.status === "confirmed" ? "default" : "secondary"} className="shrink-0">
+                        {apt.status}
+                      </Badge>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{apt.reason || "General Consultation"}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{apt.doctor_type?.replace("_", " ")}</p>
-                    </div>
-                    <Badge variant={apt.status === "confirmed" ? "default" : "secondary"} className="shrink-0">
-                      {apt.status}
-                    </Badge>
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
