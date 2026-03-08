@@ -272,6 +272,8 @@ const Header = () => {
                         <Stethoscope className="w-4 h-4" />
                       ) : isPharmacy ? (
                         <Pill className="w-4 h-4" />
+                      ) : isMedicalStaff ? (
+                        <ShieldCheck className="w-4 h-4" />
                       ) : (
                         <GraduationCap className="w-4 h-4" />
                       )}
