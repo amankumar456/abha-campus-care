@@ -106,7 +106,7 @@ const Header = () => {
   };
 
   const getDashboardPath = () => {
-    if (isAdmin) return '/admin';
+    if (isAdmin) return '/admin/dashboard';
     if (isDoctor) return '/doctor/dashboard';
     if (isMentor) return '/mentor/dashboard';
     if (isLabOfficer) return '/lab/dashboard';
@@ -668,7 +668,7 @@ const Header = () => {
         }
 
         const homePath = getHomePath();
-        const homePages = ['/', '/mentor/home', '/admin', '/staff/home'];
+        const homePages = ['/', '/mentor/home', '/admin', '/staff/home', '/admin/dashboard'];
         const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
 
         // Hide on user's home page
