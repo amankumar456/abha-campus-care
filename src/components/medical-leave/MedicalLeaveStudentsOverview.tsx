@@ -429,7 +429,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
 
         <CardContent className="space-y-4">
           {/* Filter tabs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
