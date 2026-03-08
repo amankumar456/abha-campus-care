@@ -130,8 +130,8 @@ export default function LabOverview({
               <span className="text-xs">New Sample</span>
             </Button>
             <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("processing")}>
-              <Upload className="w-5 h-5 text-amber-600" />
-              <span className="text-xs">Upload Reports</span>
+              <FlaskConical className="w-5 h-5 text-amber-600" />
+              <span className="text-xs">Processing Queue</span>
             </Button>
             <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("completed")}>
               <FileText className="w-5 h-5 text-emerald-600" />
