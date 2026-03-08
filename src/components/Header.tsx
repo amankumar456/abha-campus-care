@@ -293,6 +293,8 @@ const Header = () => {
                         <Stethoscope className="w-4 h-4" />
                       ) : getUserType() === 'mentor' ? (
                         <Users className="w-4 h-4" />
+                      ) : isAdmin ? (
+                        <Shield className="w-4 h-4" />
                       ) : isLabOfficer ? (
                         <Stethoscope className="w-4 h-4" />
                       ) : isPharmacy ? (
