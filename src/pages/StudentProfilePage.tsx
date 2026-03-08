@@ -926,7 +926,19 @@ export default function StudentProfilePage() {
                   ) : (
                     <div className="space-y-3">
                       {labReports.map((report) => (
-                        <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div
+                          key={report.id}
+                          className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                            report.status === 'completed' && report.report_file_url
+                              ? 'cursor-pointer hover:bg-primary/5 hover:border-primary/30'
+                              : 'hover:bg-muted/30'
+                          }`}
+                          onClick={() => {
+                            if (report.status === 'completed' && report.report_file_url) {
+                              window.open(report.report_file_url, '_blank');
+                            }
+                          }}
+                        >
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                               report.status === 'completed' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-amber-100 dark:bg-amber-900/20'
@@ -945,6 +957,15 @@ export default function StudentProfilePage() {
                               {report.notes && (
                                 <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>
                               )}
+                              {report.status === 'completed' && report.report_file_url && (
+                                <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
+                                  Click to view report (PDF)
+                                </p>
+                              )}
+                              {report.status !== 'completed' && (
+                                <p className="text-xs text-amber-600 mt-1">Report pending from lab</p>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
@@ -955,10 +976,13 @@ export default function StudentProfilePage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(report.report_file_url!, '_blank')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(report.report_file_url!, '_blank');
+                                }}
                               >
                                 <Download className="w-3 h-3 mr-1" />
-                                View
+                                View PDF
                               </Button>
                             )}
                           </div>
