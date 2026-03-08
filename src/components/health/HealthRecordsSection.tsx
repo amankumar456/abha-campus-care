@@ -255,7 +255,27 @@ const HealthRecordsSection = () => {
     });
   }, [healthVisits, prescriptions, leaveCerts, labReports]);
 
-  const handleView = (record: HealthRecord) => {
+  const handleView = async (record: HealthRecord) => {
+    // For lab reports with PDF files, open the PDF directly
+    if (record.id.startsWith('lab-')) {
+      const labId = record.id.replace('lab-', '');
+      const labReport = labReports.find((lr: any) => lr.id === labId);
+      if (labReport?.report_file_url) {
+        try {
+          const path = labReport.report_file_url;
+          if (path.startsWith('http')) {
+            window.open(path, '_blank');
+            return;
+          }
+          const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+          if (error) throw error;
+          window.open(data.signedUrl, '_blank');
+          return;
+        } catch {
+          // Fall through to text view
+        }
+      }
+    }
     setSelectedRecord(record);
     setIsViewOpen(true);
   };
