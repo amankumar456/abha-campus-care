@@ -109,6 +109,78 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
     await printDocument({ title: `Lab Report — ${r.student?.full_name}`, bodyHtml, documentId: reportNo, documentType: "LAB_REPORT" });
   };
 
+  const handleGeneratePdf = async (r: LabReport) => {
+    if (!r.notes) {
+      toast({ title: "Error", description: "No results data to generate PDF from", variant: "destructive" });
+      return;
+    }
+    setGeneratingPdf(r.id);
+    try {
+      // Parse notes to extract parameters
+      const lines = r.notes.split("\n").filter(l => l.includes(":") && !l.startsWith("Technician") && !l.startsWith("Sample") && !l.startsWith("LAB"));
+      const pdfParams = lines.map(line => {
+        const match = line.match(/^(.+?):\s*(.+?)\s*(\S+)\s*\(Ref:\s*(.+?)\)\s*(.*)?$/);
+        if (match) {
+          const flag = match[5]?.includes("HIGH") ? "High" : match[5]?.includes("LOW") ? "Low" : "Normal";
+          return { name: match[1].trim(), value: match[2].trim(), unit: match[3].trim(), refRange: match[4].trim(), flag };
+        }
+        // Simpler format: "Name: value unit (Ref: range)"
+        const simpleMatch = line.match(/^(.+?):\s*(.+?)\s+(\S+)\s+\(Ref:\s*(.+?)\)/);
+        if (simpleMatch) {
+          return { name: simpleMatch[1].trim(), value: simpleMatch[2].trim(), unit: simpleMatch[3].trim(), refRange: simpleMatch[4].trim(), flag: "Normal" as string };
+        }
+        return null;
+      }).filter(Boolean) as Array<{ name: string; value: string; unit: string; refRange: string; flag: string }>;
+
+      if (pdfParams.length === 0) {
+        toast({ title: "Error", description: "Could not parse results from notes", variant: "destructive" });
+        setGeneratingPdf(null);
+        return;
+      }
+
+      // Extract tech notes
+      const techNotesMatch = r.notes.match(/Technician Notes:\s*(.+)/);
+      const techNotes = techNotesMatch?.[1]?.trim() || "";
+      const sampleOkMatch = r.notes.match(/Sample Quality:\s*(.+)/);
+      const sampleOk = sampleOkMatch?.[1]?.trim() === "OK";
+
+      const pdfBlob = generateLabReportPdf({
+        reportId: r.id,
+        testName: r.test_name,
+        studentName: r.student?.full_name || "N/A",
+        rollNumber: r.student?.roll_number || "N/A",
+        program: r.student?.program || "N/A",
+        branch: r.student?.branch || "N/A",
+        doctorName: r.doctor?.name || "N/A",
+        testDate: r.created_at,
+        parameters: pdfParams,
+        techNotes,
+        sampleOk,
+      });
+
+      const pdfFileName = `${r.student_id}/${Date.now()}_${r.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("lab-reports")
+        .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+
+      const { error } = await supabase.from("lab_reports").update({
+        report_file_url: pdfFileName,
+        report_file_name: `${r.test_name}_Report.pdf`,
+      }).eq("id", r.id);
+
+      if (error) throw error;
+
+      toast({ title: "✅ PDF Generated", description: `PDF report created for ${r.test_name}` });
+      onRefresh?.();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to generate PDF", variant: "destructive" });
+    } finally {
+      setGeneratingPdf(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
