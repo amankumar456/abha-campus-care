@@ -168,6 +168,8 @@ const NotificationBell = () => {
 
   const getActionLabel = (type: string) => {
     if (type === 'prescription') return 'View Prescription';
+    if (type === 'certificate_issued') return 'View Certificate';
+    if (type === 'lab_report') return 'View Lab Reports';
     if (type.startsWith('medical_leave_') || type.startsWith('mentee_leave_') || type.startsWith('referral_')) {
       return 'Open Medical Leave';
     }
