@@ -69,7 +69,7 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
         .select("id, photo_url")
         .in("id", studentIds) : { data: [] };
 
-      const photoMap = new Map(photoData?.map(p => [p.id, p.photo_url]) || []);
+      const photoMap = new Map<string, string | null>(photoData?.map(p => [p.id, p.photo_url] as [string, string | null]) || []);
 
       // Map students to appointments
       const appointmentsWithStudents = data.map((apt) => ({
