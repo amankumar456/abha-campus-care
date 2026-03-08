@@ -94,6 +94,7 @@ const App = () => (
             <Route path="/student-profile/:rollNumber" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
             <Route path="/new-visit" element={<ProtectedRoute><NewVisit /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="/mentor/home" element={<ProtectedRoute><MentorHome /></ProtectedRoute>} />
             <Route path="/mentor/register" element={<ProtectedRoute><MentorRegistration /></ProtectedRoute>} />
             <Route path="/mentor/dashboard" element={<ProtectedRoute><MentorDashboard /></ProtectedRoute>} />
             <Route path="/mentor/profile" element={<ProtectedRoute><MentorProfile /></ProtectedRoute>} />
