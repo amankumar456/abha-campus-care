@@ -10,6 +10,7 @@ import LabCompletedTests from "@/components/lab/LabCompletedTests";
 import LabNotifications from "@/components/lab/LabNotifications";
 import LabStudentRecords from "@/components/lab/LabStudentRecords";
 import LabAnalytics from "@/components/lab/LabAnalytics";
+import RegisterSampleDialog from "@/components/lab/RegisterSampleDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings } from "lucide-react";
 
@@ -35,6 +36,7 @@ export default function LabOfficerDashboard() {
   const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [testFilter, setTestFilter] = useState("all");
@@ -66,6 +68,19 @@ export default function LabOfficerDashboard() {
   };
 
   useEffect(() => { fetchLabReports(); }, []);
+
+  // Handle section changes - open register dialog or refresh data
+  const handleSectionChange = (section: string) => {
+    if (section === "register") {
+      setRegisterOpen(true);
+      return;
+    }
+    setActiveSection(section);
+    // Refresh data when switching back to overview or processing
+    if (section === "overview" || section === "processing" || section === "completed") {
+      fetchLabReports();
+    }
+  };
 
   const handleFileUpload = async (report: LabReport, file: File) => {
     if (!user) return;
@@ -132,7 +147,7 @@ export default function LabOfficerDashboard() {
             recentUpdates={recentUpdates}
             allReports={labReports}
             pendingReports={pendingReports}
-            onNavigate={setActiveSection}
+            onNavigate={handleSectionChange}
             onRefresh={fetchLabReports}
           />
         );
@@ -184,7 +199,7 @@ export default function LabOfficerDashboard() {
 
   return (
     <div className="min-h-screen flex bg-[#f3f4f6]">
-      <LabSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <LabSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
       <main className="flex-1 overflow-y-auto">
         {/* Top bar */}
         <div className="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-10">
@@ -201,6 +216,15 @@ export default function LabOfficerDashboard() {
           {renderSection()}
         </div>
       </main>
+
+      <RegisterSampleDialog
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onRegistered={() => {
+          fetchLabReports();
+          setRegisterOpen(false);
+        }}
+      />
     </div>
   );
 }

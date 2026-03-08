@@ -1,14 +1,12 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   TestTubes, Clock, CheckCircle2, AlertTriangle, TrendingUp,
-  Plus, Upload, User, Stethoscope, Calendar, ArrowRight,
+  Plus, Upload, User, Stethoscope, ArrowRight,
   FlaskConical, FileText, Bell
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import RegisterSampleDialog from "./RegisterSampleDialog";
 
 interface LabReport {
   id: string;
@@ -50,7 +48,6 @@ export default function LabOverview({
   allReports, pendingReports, onNavigate, onRefresh
 }: LabOverviewProps) {
   const values = { totalToday, pending, completed, critical };
-  const [registerOpen, setRegisterOpen] = useState(false);
 
   // Test type distribution for all reports
   const testCounts = new Map<string, number>();
@@ -83,7 +80,7 @@ export default function LabOverview({
           <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, dd MMMM yyyy")}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => setRegisterOpen(true)}>
+          <Button size="sm" onClick={() => onNavigate("register")}>
             <Plus className="w-4 h-4 mr-1" />Register New Sample
           </Button>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -128,7 +125,7 @@ export default function LabOverview({
         </CardHeader>
         <CardContent className="pb-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => setRegisterOpen(true)}>
+            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("register")}>
               <Plus className="w-5 h-5 text-primary" />
               <span className="text-xs">New Sample</span>
             </Button>
@@ -300,8 +297,6 @@ export default function LabOverview({
           </CardContent>
         </Card>
       </div>
-
-      <RegisterSampleDialog open={registerOpen} onClose={() => setRegisterOpen(false)} onRegistered={onRefresh} />
     </div>
   );
 }
