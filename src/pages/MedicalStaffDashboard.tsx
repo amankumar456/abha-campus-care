@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
+import PrintableReferralLetter from "@/components/medical-leave/PrintableReferralLetter";
 import {
   ShieldCheck, Search, FileText, ClipboardCheck, AlertTriangle, CheckCircle2,
   User, Calendar, Building, Loader2, Mail, Phone, Heart, Droplets, Pill,
@@ -628,11 +629,37 @@ export default function MedicalStaffDashboard() {
                                 )}
                               </div>
                               <div>
-                                <Badge className="bg-green-600">
+                              <Badge className="bg-green-600">
                                   <CheckCircle2 className="w-3 h-3 mr-1" />
                                   Doctor Approved
                                 </Badge>
                               </div>
+                            </div>
+                            <div className="mt-3 pt-3 border-t flex items-center gap-2">
+                              <PrintableReferralLetter
+                                data={{
+                                  studentName: verifiedStudent?.full_name || "",
+                                  rollNumber: verifiedStudent?.roll_number || "",
+                                  program: verifiedStudent?.program,
+                                  branch: verifiedStudent?.branch,
+                                  hospital: {
+                                    name: leave.referral_hospital,
+                                    location: leave.referral_hospital,
+                                  },
+                                  illnessDescription: leave.illness_description || leave.doctor_notes || "As per doctor's assessment",
+                                  leaveDays: (leave.rest_days ?? parseInt(leave.expected_duration)) || 1,
+                                  healthPriority: leave.health_priority || "medium",
+                                  doctorNotes: leave.doctor_notes || undefined,
+                                  doctorDetails: leave.doctor ? {
+                                    name: leave.doctor.name,
+                                    designation: "Medical Officer",
+                                  } : undefined,
+                                  mentorDetails: verifiedStudent?.mentor_name ? {
+                                    name: verifiedStudent.mentor_name,
+                                    phone: verifiedStudent.mentor_contact || undefined,
+                                  } : undefined,
+                                }}
+                              />
                             </div>
                           </CardContent>
                         </Card>
