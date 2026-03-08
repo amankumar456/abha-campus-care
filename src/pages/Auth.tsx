@@ -381,17 +381,24 @@ export default function Auth() {
       if (!data.session) {
         navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
       } else {
-        toast({
-          title: "Account Created!",
-          description: "Welcome to the Health Portal. Your profile has been set up.",
-        });
-        // Redirect based on role
-        if (userType === "pharmacy") navigate("/");
-        else if (userType === "lab_officer") navigate("/");
-        else if (userType === "medical_staff") navigate("/staff/home");
-        else if (userType === "doctor") navigate("/");
-        else if (userType === "mentor") navigate("/mentor/dashboard");
-        else navigate("/");
+        // For doctors, redirect to 3-step registration to complete profile
+        if (userType === "doctor") {
+          toast({
+            title: "Account Created!",
+            description: "Please complete your medical staff registration to activate your profile.",
+          });
+          navigate("/doctor/register");
+        } else {
+          toast({
+            title: "Account Created!",
+            description: "Welcome to the Health Portal. Your profile has been set up.",
+          });
+          if (userType === "pharmacy") navigate("/");
+          else if (userType === "lab_officer") navigate("/");
+          else if (userType === "medical_staff") navigate("/staff/home");
+          else if (userType === "mentor") navigate("/mentor/dashboard");
+          else navigate("/");
+        }
       }
     } else {
       setIsLoading(false);
