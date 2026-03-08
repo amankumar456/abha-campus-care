@@ -8,7 +8,7 @@ const BackNavigation = () => {
   const location = useLocation();
   const { isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff } = useUserRole();
 
-  if (location.pathname === "/") return null;
+  if (location.pathname === "/" || location.pathname === "/mentor/home") return null;
 
   const getHomePath = () => {
     if (isAdmin) return '/admin';
