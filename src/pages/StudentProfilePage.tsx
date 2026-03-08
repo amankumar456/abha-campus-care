@@ -177,7 +177,7 @@ export default function StudentProfilePage() {
         setEditPhone(studentData.phone || '');
         setEditEmail(studentData.email || '');
 
-        const [profileRes, visitsRes, prescriptionsRes, completedApptsRes] = await Promise.all([
+        const [profileRes, visitsRes, prescriptionsRes, completedApptsRes, labReportsRes] = await Promise.all([
           supabase.from('student_profiles').select('*').eq('student_id', studentData.id).maybeSingle(),
           supabase.from('health_visits').select('id, visit_date, follow_up_required, reason_category, reason_notes, diagnosis, prescription, doctor_id').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
           supabase.from('prescriptions')
@@ -188,6 +188,10 @@ export default function StudentProfilePage() {
             .select('id, appointment_date')
             .eq('patient_id', user!.id)
             .eq('status', 'completed'),
+          supabase.from('lab_reports')
+            .select('id, test_name, status, notes, report_file_url, report_file_name, created_at, updated_at, doctor_id')
+            .eq('student_id', studentData.id)
+            .order('created_at', { ascending: false }),
         ]);
 
         setHealthProfile(profileRes.data as StudentHealthProfile | null);
