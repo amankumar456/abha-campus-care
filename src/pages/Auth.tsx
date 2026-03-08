@@ -122,12 +122,12 @@ export default function Auth() {
     const isMentor = roleList.includes('mentor');
 
     if (isAdmin) navigate('/admin');
-    else if (isPharmacy || userType === 'pharmacy') navigate('/pharmacy/dashboard');
-    else if (isLabOfficer || userType === 'lab_officer') navigate('/lab/dashboard');
-    else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/dashboard');
-    else if (isDoctor || userType === 'doctor') navigate('/doctor/dashboard');
+    else if (isPharmacy || userType === 'pharmacy') navigate('/');
+    else if (isLabOfficer || userType === 'lab_officer') navigate('/');
+    else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/home');
+    else if (isDoctor || userType === 'doctor') navigate('/');
     else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
-    else navigate('/health-dashboard');
+    else navigate('/');
   };
 
   const resetForm = () => {
@@ -386,12 +386,12 @@ export default function Auth() {
           description: "Welcome to the Health Portal. Your profile has been set up.",
         });
         // Redirect based on role
-        if (userType === "pharmacy") navigate("/pharmacy/dashboard");
-        else if (userType === "lab_officer") navigate("/lab/dashboard");
-        else if (userType === "medical_staff") navigate("/staff/dashboard");
-        else if (userType === "doctor") navigate("/doctor/dashboard");
+        if (userType === "pharmacy") navigate("/");
+        else if (userType === "lab_officer") navigate("/");
+        else if (userType === "medical_staff") navigate("/staff/home");
+        else if (userType === "doctor") navigate("/");
         else if (userType === "mentor") navigate("/mentor/dashboard");
-        else navigate("/health-dashboard");
+        else navigate("/");
       }
     } else {
       setIsLoading(false);
