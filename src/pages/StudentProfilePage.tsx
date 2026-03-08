@@ -134,7 +134,12 @@ interface MedicalCertificate {
   doctor_qualification: string;
   created_at: string;
   approval_date: string | null;
+  doctor_clearance: boolean | null;
+  doctor_clearance_date: string | null;
+  rest_days: number | null;
 }
+
+type CertificateCategory = 'all' | 'medical_leave' | 'fitness' | 'referral';
 
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
