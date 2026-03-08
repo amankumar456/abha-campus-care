@@ -13,7 +13,7 @@ const BackNavigation = () => {
   const getHomePath = () => {
     if (isAdmin) return '/admin';
     if (isDoctor) return '/';
-    if (isMentor) return '/mentor/dashboard';
+    if (isMentor) return '/mentor/home';
     if (isLabOfficer) return '/';
     if (isPharmacy) return '/';
     if (isMedicalStaff) return '/staff/home';
