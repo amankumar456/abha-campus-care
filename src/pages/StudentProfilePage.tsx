@@ -903,6 +903,72 @@ export default function StudentProfilePage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Lab Tests Sub-tab */}
+            {recordsSubTab === 'labtests' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TestTube className="w-4 h-4 text-primary" />
+                    Lab Test Reports
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {labReports.length} lab test{labReports.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {labReports.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <TestTube className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No lab tests yet</p>
+                      <p className="text-sm">Lab test reports prescribed by your doctor will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {labReports.map((report) => (
+                        <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              report.status === 'completed' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-amber-100 dark:bg-amber-900/20'
+                            }`}>
+                              {report.status === 'completed' ? (
+                                <FileCheck className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <Clock className="w-5 h-5 text-amber-600" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{report.test_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Prescribed by Dr. {report.doctor_name} · {format(new Date(report.created_at), 'MMM d, yyyy')}
+                              </p>
+                              {report.notes && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge variant={report.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                              {report.status === 'completed' ? 'Completed' : 'Pending'}
+                            </Badge>
+                            {report.status === 'completed' && report.report_file_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(report.report_file_url!, '_blank')}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                View
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* ── SETTINGS TAB ── */}
