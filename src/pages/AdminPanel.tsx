@@ -301,9 +301,13 @@ const AdminPanel = () => {
     setAddRoleDialogOpen(true);
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (roleFilter === 'all') return true;
+    if (roleFilter === 'no_roles') return u.roles.length === 0;
+    return u.roles.includes(roleFilter);
+  });
 
   const unlinkedDoctors = doctors.filter(d => !d.user_id);
   const unlinkedMentors = mentorsForLinking.filter(m => !m.user_id);
