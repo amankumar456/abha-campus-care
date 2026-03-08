@@ -41,9 +41,10 @@ const getSignedUrl = async (storagePath: string): Promise<string | null> => {
   return data.signedUrl;
 };
 
-export default function LabCompletedTests({ reports, searchQuery, onSearchChange }: Props) {
+export default function LabCompletedTests({ reports, searchQuery, onSearchChange, onRefresh }: Props) {
   const { toast } = useToast();
   const [viewReport, setViewReport] = useState<LabReport | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
   const filtered = reports.filter(r => {
     if (!searchQuery.trim()) return true;
