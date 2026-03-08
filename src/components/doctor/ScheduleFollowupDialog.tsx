@@ -114,6 +114,13 @@ export default function ScheduleFollowupDialog({ trigger, doctorId }: ScheduleFo
       priority: "low" as const,
     })) || []),
   ];
+  const filteredPatients = patientSearch.trim()
+    ? allPatients.filter(
+        (p) =>
+          p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+          p.rollNumber.toLowerCase().includes(patientSearch.toLowerCase())
+      )
+    : allPatients;
 
   const selectedPatientData = allPatients.find((p) => p.id === selectedPatient);
 
