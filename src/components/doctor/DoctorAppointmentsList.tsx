@@ -84,12 +84,13 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
 
       // Date filter
       let dateMatch = true;
+      const isCompleted = apt.status === "completed";
       if (dateFilter === "today") {
-        dateMatch = isToday(aptDate);
+        dateMatch = isToday(aptDate) && !isCompleted;
       } else if (dateFilter === "upcoming") {
-        dateMatch = aptDate >= today && !isToday(aptDate);
+        dateMatch = aptDate >= today && !isToday(aptDate) && !isCompleted;
       } else if (dateFilter === "past") {
-        dateMatch = aptDate < today;
+        dateMatch = aptDate < today || isCompleted;
       }
 
       // Search filter
