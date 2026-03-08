@@ -771,6 +771,142 @@ const StudentProfile = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="medicalleave" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HeartPulse className="h-5 w-5 text-destructive" />
+                  Medical Leave History
+                </CardTitle>
+                <CardDescription>
+                  {medicalLeaves.length} leave record{medicalLeaves.length !== 1 ? 's' : ''} found
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {medicalLeaves.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No medical leave records found</p>
+                ) : (
+                  <div className="space-y-4">
+                    {medicalLeaves.map((leave) => {
+                      const isCleared = leave.doctor_clearance === true;
+                      const isOverdue = leave.expected_return_date && parseISO(leave.expected_return_date) < new Date() && !isCleared && leave.status !== 'returned';
+                      const overdueDays = isOverdue ? differenceInDays(new Date(), parseISO(leave.expected_return_date!)) : 0;
+                      const leaveDays = leave.leave_start_date && leave.expected_return_date
+                        ? differenceInDays(parseISO(leave.expected_return_date), parseISO(leave.leave_start_date))
+                        : null;
+
+                      const getStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'on_leave': return 'destructive' as const;
+                          case 'return_pending': return 'secondary' as const;
+                          case 'returned': return 'default' as const;
+                          default: return 'outline' as const;
+                        }
+                      };
+
+                      const getStatusLabel = (status: string) => {
+                        switch (status) {
+                          case 'doctor_referred': return 'Referred';
+                          case 'student_form_pending': return 'Form Pending';
+                          case 'on_leave': return 'On Leave';
+                          case 'return_pending': return 'Return Pending';
+                          case 'returned': return 'Returned';
+                          case 'cancelled': return 'Cancelled';
+                          default: return status;
+                        }
+                      };
+
+                      return (
+                        <div key={leave.id} className={`rounded-xl border p-4 space-y-3 transition-all ${isOverdue ? 'border-destructive/50 bg-destructive/5' : isCleared ? 'border-primary/30 bg-primary/5' : ''}`}>
+                          {/* Header */}
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant={getStatusColor(leave.status)}>
+                                  {getStatusLabel(leave.status)}
+                                </Badge>
+                                <Badge variant="outline" className="capitalize">
+                                  {leave.health_priority || 'medium'}
+                                </Badge>
+                                {isOverdue && overdueDays > 0 && (
+                                  <Badge variant="destructive" className="flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {overdueDays}d overdue
+                                  </Badge>
+                                )}
+                                {isCleared && (
+                                  <Badge className="bg-primary/20 text-primary border-primary/30 flex items-center gap-1">
+                                    <BadgeCheck className="h-3 w-3" />
+                                    Cleared
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Referred on {format(new Date(leave.created_at), 'MMMM d, yyyy')}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Details grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Building2 className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{leave.referral_hospital}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
+                              <span>{leave.leave_start_date ? format(parseISO(leave.leave_start_date), 'MMM d, yyyy') : '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5 shrink-0" />
+                              <span>{leaveDays != null ? `${leaveDays} days` : leave.expected_duration}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
+                              <span>Return: {leave.expected_return_date ? format(parseISO(leave.expected_return_date), 'MMM d') : '—'}</span>
+                            </div>
+                          </div>
+
+                          {/* Referring doctor */}
+                          {leave.medical_officers && (
+                            <p className="text-sm text-muted-foreground">
+                              Referred by: <span className="font-medium text-foreground">{leave.medical_officers.name}</span>
+                            </p>
+                          )}
+
+                          {/* Illness description */}
+                          {leave.illness_description && (
+                            <div className="p-2.5 rounded-lg bg-muted/50 text-sm">
+                              <span className="font-medium">Reason:</span> {leave.illness_description}
+                            </div>
+                          )}
+
+                          {/* Doctor notes */}
+                          {leave.doctor_notes && (
+                            <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/10 text-sm">
+                              <span className="font-medium flex items-center gap-1 mb-0.5">
+                                <FileText className="h-3.5 w-3.5 text-primary" /> Doctor Note:
+                              </span>
+                              {leave.doctor_notes}
+                            </div>
+                          )}
+
+                          {/* Clearance info */}
+                          {isCleared && leave.doctor_clearance_date && (
+                            <div className="flex items-center gap-2 text-sm text-primary pt-1 border-t">
+                              <ShieldCheck className="h-4 w-4" />
+                              <span className="font-medium">Cleared on {format(parseISO(leave.doctor_clearance_date), 'MMM d, yyyy')}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="analysis" className="mt-6">
             <VisitPatternAnalysis visits={visits} studentName={student?.full_name || ''} />
           </TabsContent>
