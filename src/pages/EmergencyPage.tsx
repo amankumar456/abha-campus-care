@@ -20,6 +20,8 @@ import EmergencyQuickActions from "@/components/doctor/EmergencyQuickActions";
 
 export default function EmergencyPage() {
   const [subTab, setSubTab] = useState("live");
+  const location = useLocation();
+  const isStandalone = location.pathname === "/emergency";
 
   // Get active count for badge
   const { data: activeCount } = useQuery({
@@ -34,7 +36,7 @@ export default function EmergencyPage() {
     refetchInterval: 30000,
   });
 
-  return (
+  const content = (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center gap-3">
