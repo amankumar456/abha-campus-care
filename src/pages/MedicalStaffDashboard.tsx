@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PrintableReferralLetter from "@/components/medical-leave/PrintableReferralLetter";
+import StaffReferralDetails from "@/components/staff/StaffReferralDetails";
 import {
   ShieldCheck, Search, FileText, ClipboardCheck, AlertTriangle, CheckCircle2,
   User, Calendar, Building, Loader2, Mail, Phone, Heart, Droplets, Pill,
@@ -554,128 +555,19 @@ export default function MedicalStaffDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {leaveRequests.length === 0 ? (
-                    <div className="p-6 text-center">
-                      <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                      <p className="font-medium text-yellow-800">No Active Medical Leave Found</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        No doctor has approved medical leave for this student. Medical leave can only be issued after a doctor's referral.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {leaveRequests.map((leave) => (
-                        <Card key={leave.id} className="border-blue-200">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="space-y-2 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge variant={leave.status === "on_leave" ? "default" : "secondary"}>
-                                    {leave.status.replace(/_/g, " ").toUpperCase()}
-                                  </Badge>
-                                  {leave.rest_days != null && (
-                                    <Badge variant="outline">{leave.rest_days} day(s) rest</Badge>
-                                  )}
-                                  {leave.health_priority && (
-                                    <Badge className={getPriorityColor(leave.health_priority)}>
-                                      {leave.health_priority.toUpperCase()} Priority
-                                    </Badge>
-                                  )}
-                                  {leave.referral_type && leave.referral_type.length > 0 && (
-                                    leave.referral_type.map((type, i) => (
-                                      <Badge key={i} variant="outline" className="border-primary/30 text-primary">
-                                        {type}
-                                      </Badge>
-                                    ))
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div className="flex items-center gap-1">
-                                    <Building className="w-3 h-3 text-muted-foreground" />
-                                    <span>Hospital: {leave.referral_hospital}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <User className="w-3 h-3 text-muted-foreground" />
-                                    <span>Doctor: Dr. {leave.doctor?.name || "Unknown"}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-muted-foreground" />
-                                    <span>Duration: {leave.expected_duration}</span>
-                                  </div>
-                                  {leave.referral_date && (
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="w-3 h-3 text-muted-foreground" />
-                                      <span>Referred: {format(new Date(leave.referral_date), "dd MMM yyyy")}</span>
-                                    </div>
-                                  )}
-                                  {leave.leave_start_date && (
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="w-3 h-3 text-muted-foreground" />
-                                      <span>Leave Start: {format(new Date(leave.leave_start_date), "dd MMM yyyy")}</span>
-                                    </div>
-                                  )}
-                                  {leave.expected_return_date && (
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="w-3 h-3 text-muted-foreground" />
-                                      <span>Expected Return: {format(new Date(leave.expected_return_date), "dd MMM yyyy")}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                {leave.illness_description && (
-                                  <p className="text-sm"><strong>Description:</strong> {leave.illness_description}</p>
-                                )}
-                                {leave.doctor_notes && (
-                                  <p className="text-sm"><strong>Doctor Notes:</strong> {leave.doctor_notes}</p>
-                                )}
-                              </div>
-                              <div>
-                              <Badge className="bg-green-600">
-                                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                                  Doctor Approved
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="mt-3 pt-3 border-t flex items-center gap-2">
-                              <PrintableReferralLetter
-                                data={{
-                                  studentName: verifiedStudent?.full_name || "",
-                                  rollNumber: verifiedStudent?.roll_number || "",
-                                  program: verifiedStudent?.program,
-                                  branch: verifiedStudent?.branch,
-                                  hospital: {
-                                    name: leave.referral_hospital,
-                                    location: leave.referral_hospital,
-                                  },
-                                  illnessDescription: leave.illness_description || leave.doctor_notes || "As per doctor's assessment",
-                                  leaveDays: (leave.rest_days ?? parseInt(leave.expected_duration)) || 1,
-                                  healthPriority: leave.health_priority || "medium",
-                                  doctorNotes: leave.doctor_notes || undefined,
-                                  doctorDetails: leave.doctor ? {
-                                    name: leave.doctor.name,
-                                    designation: "Medical Officer",
-                                  } : undefined,
-                                  mentorDetails: verifiedStudent?.mentor_name ? {
-                                    name: verifiedStudent.mentor_name,
-                                    phone: verifiedStudent.mentor_contact || undefined,
-                                  } : undefined,
-                                }}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      <p className="text-sm text-muted-foreground mt-2">
-                        ✅ Medical leave has been approved by the doctor. You may proceed with issuing the referral letter and hospital card.
-                      </p>
-                      <Button
-                        className="w-full"
-                        onClick={() => window.location.href = "/medical-leave"}
-                      >
-                        <FileText className="w-4 h-4 mr-1" />
-                        Go to Medical Leave Page to Issue Documents
-                      </Button>
-                    </div>
-                  )}
+                  <StaffReferralDetails
+                    leaveRequests={leaveRequests}
+                    student={{
+                      full_name: verifiedStudent.full_name,
+                      roll_number: verifiedStudent.roll_number,
+                      program: verifiedStudent.program,
+                      branch: verifiedStudent.branch,
+                      mentor_name: verifiedStudent.mentor_name,
+                      mentor_contact: verifiedStudent.mentor_contact,
+                      phone: verifiedStudent.phone,
+                      email: verifiedStudent.email,
+                    }}
+                  />
                 </CardContent>
               </Card>
             )}
