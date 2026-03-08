@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -184,6 +184,20 @@ const Header = () => {
                 <div className="w-20 h-9 bg-muted animate-pulse rounded-md" />
               ) : user ? (
                 <>
+                {isDoctor && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    onClick={() => navigate('/doctor/dashboard')}
+                    title="Pending Access Requests"
+                  >
+                    <Shield className="w-5 h-5 text-muted-foreground" />
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground flex items-center justify-center animate-pulse">
+                      3
+                    </span>
+                  </Button>
+                )}
                 <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
