@@ -169,15 +169,31 @@ const Header = () => {
             </div>
 
             <nav className="flex items-center gap-4 lg:gap-6">
-              <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Medical Team
-              </Link>
-              <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Appointments
-              </Link>
-              <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Health Records
-              </Link>
+              {isDoctor ? (
+                <>
+                  <Link to="/doctor/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Appointments
+                  </Link>
+                  <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Health Records
+                  </Link>
+                </>
+              )}
               
               {/* Auth Section */}
               {isLoading ? (
