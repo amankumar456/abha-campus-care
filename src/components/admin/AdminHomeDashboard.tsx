@@ -176,79 +176,62 @@ export default function AdminHomeDashboard() {
             </p>
           </div>
 
-          {/* Live Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Card className="border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=users")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <Users className="w-5 h-5 text-primary mx-auto mb-1" />
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{stats?.totalUsers}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Total Users</p>
-              </CardContent>
-            </Card>
+          {/* Role-Based Stats */}
+          <h3 className="text-sm font-medium text-muted-foreground mt-2">User Roles</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Total Users", value: stats?.totalUsers, icon: Users, border: "border-primary/20", iconColor: "text-primary", path: "/admin/dashboard?tab=users" },
+              { label: "Admins", value: stats?.admins, icon: Shield, border: "border-red-500/20", iconColor: "text-red-600", path: "/admin/dashboard?tab=users" },
+              { label: "Doctors", value: stats?.totalDoctors, icon: Stethoscope, border: "border-blue-500/20", iconColor: "text-blue-600", path: "/admin/dashboard?tab=medical-officers" },
+              { label: "Students", value: stats?.totalStudents, icon: GraduationCap, border: "border-green-500/20", iconColor: "text-green-600", path: "/admin/dashboard?tab=users" },
+              { label: "Mentors", value: stats?.totalMentors, icon: UserCheck, border: "border-purple-500/20", iconColor: "text-purple-600", path: "/admin/dashboard?tab=mentors" },
+              { label: "Medical Staff", value: stats?.medicalStaff, icon: ShieldCheck, border: "border-teal-500/20", iconColor: "text-teal-600", path: "/admin/dashboard?tab=users" },
+              { label: "Lab Officers", value: stats?.labOfficers, icon: FlaskConical, border: "border-indigo-500/20", iconColor: "text-indigo-600", path: "/admin/dashboard?tab=users" },
+              { label: "Pharmacy", value: stats?.pharmacy, icon: Pill, border: "border-pink-500/20", iconColor: "text-pink-600", path: "/admin/dashboard?tab=users" },
+            ].map((item) => (
+              <Card
+                key={item.label}
+                className={`${item.border} cursor-pointer hover:shadow-md transition-shadow`}
+                onClick={() => navigate(item.path)}
+              >
+                <CardContent className="pt-3 pb-2 text-center">
+                  <item.icon className={`w-5 h-5 ${item.iconColor} mx-auto mb-1`} />
+                  {loadingStats ? (
+                    <Skeleton className="h-7 w-10 mx-auto" />
+                  ) : (
+                    <p className="text-xl font-bold text-foreground">{item.value}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-            <Card className="border-blue-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=medical-officers")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <Stethoscope className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{stats?.medicalOfficers}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Medical Officers</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=users")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <GraduationCap className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                {loadingStats ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{stats?.totalStudents}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Students</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-orange-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/appointments")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <Calendar className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                {loadingAppts ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{todayAppointments?.length || 0}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Today's Appointments</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-red-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/medical-leave")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <FileText className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                {loadingLeaves ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{activeLeaves?.length || 0}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Active Leaves</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-yellow-500/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/dashboard?tab=security")}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <ShieldAlert className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
-                {loadingSecurity ? (
-                  <Skeleton className="h-8 w-12 mx-auto" />
-                ) : (
-                  <p className="text-2xl font-bold text-foreground">{recentSecurityEvents}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Failed Logins (24h)</p>
-              </CardContent>
-            </Card>
+          {/* System Stats */}
+          <h3 className="text-sm font-medium text-muted-foreground mt-4">System Activity</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Medical Officers", value: stats?.medicalOfficers, icon: Stethoscope, border: "border-blue-500/20", iconColor: "text-blue-600", path: "/admin/dashboard?tab=medical-officers" },
+              { label: "Visiting Doctors", value: stats?.visitingDoctors, icon: UserCheck, border: "border-cyan-500/20", iconColor: "text-cyan-600", path: "/admin/dashboard?tab=visiting-doctors" },
+              { label: "Today's Appointments", value: todayAppointments?.length || 0, icon: Calendar, border: "border-orange-500/20", iconColor: "text-orange-600", path: "/appointments", loading: loadingAppts },
+              { label: "Active Leaves", value: activeLeaves?.length || 0, icon: FileText, border: "border-red-500/20", iconColor: "text-red-600", path: "/medical-leave", loading: loadingLeaves },
+            ].map((item) => (
+              <Card
+                key={item.label}
+                className={`${item.border} cursor-pointer hover:shadow-md transition-shadow`}
+                onClick={() => navigate(item.path)}
+              >
+                <CardContent className="pt-3 pb-2 text-center">
+                  <item.icon className={`w-5 h-5 ${item.iconColor} mx-auto mb-1`} />
+                  {(item.loading || loadingStats) ? (
+                    <Skeleton className="h-7 w-10 mx-auto" />
+                  ) : (
+                    <p className="text-xl font-bold text-foreground">{item.value}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
