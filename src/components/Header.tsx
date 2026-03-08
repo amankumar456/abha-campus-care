@@ -107,8 +107,15 @@ const Header = () => {
     if (isMentor) return '/mentor/dashboard';
     if (isLabOfficer) return '/lab/dashboard';
     if (isPharmacy) return '/pharmacy/dashboard';
-    if (isMedicalStaff) return '/staff/dashboard';
+    if (isMedicalStaff) return '/staff/home';
     return '/health-dashboard';
+  };
+
+  const getHomePath = () => {
+    if (isAdmin) return '/admin';
+    if (isMentor) return '/mentor/dashboard';
+    if (isMedicalStaff) return '/staff/home';
+    return '/';
   };
 
   return (
