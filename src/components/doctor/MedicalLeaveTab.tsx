@@ -91,6 +91,7 @@ const getPriorityBadge = (priority: string | null) => {
 };
 
 export default function MedicalLeaveTab() {
+  const navigate = useNavigate();
   const { doctorId } = useUserRole();
   const queryClient = useQueryClient();
   const [activeSubTab, setActiveSubTab] = useState("new-referral");
