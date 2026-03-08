@@ -275,6 +275,7 @@ const StudentProfile = () => {
       setProfile(profileRes.data as StudentProfileData | null);
       setPrescriptions((prescriptionsRes.data as unknown as Prescription[]) || []);
       setLabReports((labReportsRes.data as unknown as LabReport[]) || []);
+      setMedicalLeaves((medicalLeavesRes.data as unknown as MedicalLeaveRecord[]) || []);
     } catch (error) {
       console.error('Error fetching student data:', error);
       setNotFound(true);
