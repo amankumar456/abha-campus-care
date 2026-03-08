@@ -288,9 +288,9 @@ export default function DoctorHomeDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {activeLeaves && activeLeaves.length > 0 ? (
+            {uniqueActiveLeaves.length > 0 ? (
               <div className="space-y-3">
-                {activeLeaves.slice(0, 4).map((leave: any) => (
+                {uniqueActiveLeaves.slice(0, 4).map((leave: any) => (
                   <div
                     key={leave.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
