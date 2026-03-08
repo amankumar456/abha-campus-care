@@ -20,22 +20,41 @@ const BackNavigation = () => {
     return '/';
   };
 
+  const homePath = getHomePath();
+  const isOnHomeDashboard = location.pathname === homePath;
+
+  const handleBack = () => {
+    // If already on the user's home dashboard, don't navigate away
+    if (isOnHomeDashboard) {
+      return;
+    }
+    // For staff roles, "Back" should go to their dashboard instead of browser history
+    // to prevent navigating to the generic landing page
+    if (isLabOfficer || isPharmacy || isMedicalStaff || isAdmin) {
+      navigate(homePath);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-primary/10 shadow-sm">
       <div className="container mx-auto px-4 py-2 flex gap-2">
+        {!isOnHomeDashboard && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="text-primary hover:bg-primary/10"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
-          className="text-primary hover:bg-primary/10"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(getHomePath())}
+          onClick={() => navigate(homePath)}
           className="text-primary hover:bg-primary/10"
         >
           <Home className="h-4 w-4 mr-1" />
