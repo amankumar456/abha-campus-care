@@ -734,8 +734,11 @@ const MedicalLeave = () => {
           </>
         )}
 
-        {/* Mentor/Admin View */}
-        {(isMentor || isAdmin || isMedicalStaff) && (
+        {/* Mentor/Admin/Medical Staff View */}
+        {(isMentor || isAdmin || isMedicalStaff) && !isDoctor && (
+          <>
+          {/* Medical Leave Students Overview */}
+          <MedicalLeaveStudentsOverview doctorId={null} />
           <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
