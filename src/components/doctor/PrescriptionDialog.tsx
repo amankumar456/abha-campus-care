@@ -74,13 +74,18 @@ const DURATION_OPTIONS = [
   "1 day",
   "2 days",
   "3 days",
+  "4 days",
   "5 days",
+  "6 days",
   "7 days",
+  "8 days",
+  "9 days",
   "10 days",
   "14 days",
   "21 days",
   "30 days",
   "Until follow-up",
+  "Custom",
 ];
 
 const MEAL_TIMING_OPTIONS = [
