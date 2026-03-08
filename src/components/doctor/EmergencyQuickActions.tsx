@@ -24,11 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const EMERGENCY_CONTACTS = {
-  ambulance: { name: "Campus Ambulance", phone: "0870-246-2088" },
-  security: { name: "Security Control Room", phone: "0870-246-2087" },
-  hospital: { name: "City General ER", phone: "0870-246-1111" },
-};
+// Contacts fetched dynamically from ambulance_service
 
 export default function EmergencyQuickActions() {
   const navigate = useNavigate();
