@@ -164,12 +164,35 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
     .filter((s) => s.health_priority !== "high" && s.status !== "returned" && s.doctor_clearance !== true)
     .sort(sortByReturnDate);
   const onLeave = all.filter((s) => s.status !== "returned" && s.doctor_clearance !== true).sort(sortByReturnDate);
+
+  // Awaiting Clearance: students who have returned (status return_pending or actual_return_date set, or past expected_return_date) but not yet cleared
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const awaitingClearance = all
+    .filter((s) => {
+      if (s.doctor_clearance === true) return false;
+      // Explicitly return_pending status
+      if (s.status === "return_pending") return true;
+      // Past expected return date but still on leave
+      if (s.expected_return_date && parseISO(s.expected_return_date) < today && s.status !== "returned") return true;
+      // Has actual return date but no clearance
+      if (s.actual_return_date && !s.doctor_clearance) return true;
+      return false;
+    })
+    .sort((a, b) => {
+      // Most overdue first
+      const dateA = a.expected_return_date ? parseISO(a.expected_return_date).getTime() : Infinity;
+      const dateB = b.expected_return_date ? parseISO(b.expected_return_date).getTime() : Infinity;
+      return dateA - dateB;
+    });
+
   const cleared = all.filter((s) => s.doctor_clearance === true);
 
   const counts = {
     high: highPriority.length,
     medium_low: mediumLow.length,
     on_leave: onLeave.length,
+    awaiting_clearance: awaitingClearance.length,
     cleared: cleared.length,
   };
 
@@ -178,6 +201,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
       case "high": return highPriority;
       case "medium_low": return mediumLow;
       case "on_leave": return onLeave;
+      case "awaiting_clearance": return awaitingClearance;
       case "cleared": return cleared;
     }
   })();
