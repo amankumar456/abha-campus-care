@@ -208,6 +208,19 @@ export default function StudentProfilePage() {
           docs?.forEach(d => { doctorMap[d.id] = d.name; });
         }
 
+        // Process lab reports with doctor names
+        const labDoctorIds = (labReportsRes.data || []).filter((r: any) => r.doctor_id).map((r: any) => r.doctor_id);
+        const allDocIds = [...new Set([...doctorIds, ...labDoctorIds])];
+        if (allDocIds.length > 0 && labDoctorIds.length > 0) {
+          const { data: labDocs } = await supabase.from('medical_officers').select('id, name').in('id', labDoctorIds);
+          labDocs?.forEach(d => { doctorMap[d.id] = d.name; });
+        }
+
+        setLabReports((labReportsRes.data || []).map((r: any) => ({
+          ...r,
+          doctor_name: r.doctor_id ? doctorMap[r.doctor_id] || 'Doctor' : 'Health Centre',
+        })));
+
         // Combine health_visits and completed appointments into visit history
         const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
           id: v.id,
