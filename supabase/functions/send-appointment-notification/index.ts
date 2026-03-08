@@ -251,8 +251,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailResponse.ok) {
       console.error("Failed to send email:", emailResult);
-      return new Response(JSON.stringify({ error: "Failed to send notification email", details: emailResult }), {
-        status: 500,
+      // Return 200 gracefully — email failure should never block the appointment workflow
+      return new Response(JSON.stringify({ 
+        success: true, 
+        emailSent: false, 
+        warning: "Email notification could not be sent", 
+        details: emailResult 
+      }), {
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
