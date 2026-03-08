@@ -24,7 +24,7 @@ const Index = () => {
         <HealthServicesSection />
         <FeaturesSection />
         <HospitalIntegration />
-        <QuickAccessSection />
+        
         <SecurityBanner />
         <HealthCentreInfo />
       </main>
