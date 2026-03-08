@@ -297,24 +297,6 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link to="/doctor/dashboard" className="flex items-center gap-2">
-                            <LayoutDashboard className="w-4 h-4" />
-                            My Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to="/doctor/dashboard" className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            Today's Appointments
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to="/medical-leave" className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
-                            Medical Leave
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
                           <Link to="/doctor/profile?tab=settings" className="flex items-center gap-2">
                             <Settings className="w-4 h-4" />
                             Settings
