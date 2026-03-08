@@ -6,9 +6,13 @@ import { useUserRole } from "@/hooks/useUserRole";
 const BackNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff } = useUserRole();
+  const { user, isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff } = useUserRole();
 
-  if (location.pathname === "/" || location.pathname === "/mentor/home") return null;
+  // Hide on public pages when not logged in (landing, auth, email confirmation)
+  const publicOnlyPages = ["/auth", "/email-confirmation"];
+  if (!user && (location.pathname === "/" || publicOnlyPages.includes(location.pathname))) {
+    return null;
+  }
 
   const getHomePath = () => {
     if (isAdmin) return '/admin';
@@ -21,15 +25,16 @@ const BackNavigation = () => {
   };
 
   const homePath = getHomePath();
-  const isOnHomeDashboard = location.pathname === homePath;
+
+  // These are the "home" pages for each role — hide Back but show Home
+  const homePages = ['/', '/mentor/home', '/admin', '/staff/home'];
+  const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
+
+  // On the actual home page for the role, hide the entire bar
+  if (isOnHomePage) return null;
 
   const handleBack = () => {
-    // If already on the user's home dashboard, don't navigate away
-    if (isOnHomeDashboard) {
-      return;
-    }
-    // For staff roles, "Back" should go to their dashboard instead of browser history
-    // to prevent navigating to the generic landing page
+    // For staff roles, "Back" goes to their home to prevent landing on wrong page
     if (isLabOfficer || isPharmacy || isMedicalStaff || isAdmin) {
       navigate(homePath);
     } else {
@@ -40,17 +45,15 @@ const BackNavigation = () => {
   return (
     <div className="sticky top-[72px] z-40 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-2 flex gap-2">
-        {!isOnHomeDashboard && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="text-primary hover:bg-primary/10"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          className="text-primary hover:bg-primary/10"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
         <Button
           variant="ghost"
           size="sm"
