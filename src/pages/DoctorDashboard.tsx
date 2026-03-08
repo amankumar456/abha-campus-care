@@ -145,6 +145,19 @@ export default function DoctorDashboard() {
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
       <header className="bg-card border-b sticky top-0 z-50">
+        {/* Back / Home sub-bar */}
+        <div className="border-b border-border bg-muted/40">
+          <div className="container mx-auto px-4 py-1 flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-7 text-xs text-primary hover:bg-primary/10">
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+              Back
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="h-7 text-xs text-primary hover:bg-primary/10">
+              <Home className="h-3.5 w-3.5 mr-1" />
+              Home
+            </Button>
+          </div>
+        </div>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">

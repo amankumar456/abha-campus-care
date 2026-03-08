@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format, startOfDay, isAfter } from "date-fns";
+import { ArrowLeft, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import LabSidebar from "@/components/lab/LabSidebar";
 import LabOverview from "@/components/lab/LabOverview";
 import LabProcessingQueue from "@/components/lab/LabProcessingQueue";
