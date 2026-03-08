@@ -603,83 +603,126 @@ const MedicalLeave = () => {
                       <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                       <p>No referrals yet</p>
                     </div>
-                  ) : (
-                    <ScrollArea className="h-[400px]">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-8"></TableHead>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Hospital</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                      {[...(allLeaveRequests || [])].sort((a, b) => {
-                            const nameA = a.students?.full_name?.toLowerCase() || '';
-                            const nameB = b.students?.full_name?.toLowerCase() || '';
-                            if (nameA !== nameB) return nameA.localeCompare(nameB);
-                            const rollA = a.students?.roll_number?.toLowerCase() || '';
-                            const rollB = b.students?.roll_number?.toLowerCase() || '';
-                            return rollA.localeCompare(rollB);
-                          }).map((request) => (
-                            <>
-                              <TableRow 
-                                key={request.id} 
-                                className="cursor-pointer hover:bg-muted/50"
-                                onClick={() => toggleRowExpanded(request.id)}
-                              >
-                                <TableCell className="p-2">
-                                  {expandedRows.has(request.id) ? (
-                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <div>
-                                    <p className="font-medium">{request.students?.full_name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {request.students?.roll_number}
-                                    </p>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{request.referral_hospital}</TableCell>
-                                <TableCell>
-                                  {format(new Date(request.referral_date), "PP")}
-                                </TableCell>
-                                <TableCell>{getStatusBadge(request.status)}</TableCell>
-                              </TableRow>
-                              {expandedRows.has(request.id) && (
-                                <TableRow key={`${request.id}-timeline`}>
-                                  <TableCell colSpan={5} className="bg-muted/30 p-4 space-y-4">
-                                    <LeaveStatusTimeline leaveRequest={request} />
-                                    {request.status === "returned" && !request.doctor_clearance && (
-                                      <DoctorClearanceCard
-                                        leaveRequest={{
-                                          ...request,
-                                          health_centre_visited: (request as any).health_centre_visited ?? false,
-                                          doctor_clearance: (request as any).doctor_clearance ?? false,
-                                        }}
-                                        doctorId={request.referring_doctor_id || ""}
-                                      />
-                                    )}
-                                    {(request as any).doctor_clearance && (
-                                      <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
-                                        <ShieldCheck className="h-4 w-4" />
-                                        <span className="text-sm font-medium">Student cleared for classes</span>
+                  ) : (() => {
+                    // Group referrals by student (roll_number)
+                    const grouped = new Map<string, { student: LeaveRequest['students']; requests: LeaveRequest[] }>();
+                    (allLeaveRequests || []).forEach((req) => {
+                      const key = req.students?.roll_number || req.student_id;
+                      if (!grouped.has(key)) {
+                        grouped.set(key, { student: req.students, requests: [] });
+                      }
+                      grouped.get(key)!.requests.push(req);
+                    });
+                    const sortedGroups = Array.from(grouped.entries()).sort((a, b) =>
+                      (a[1].student?.full_name || '').localeCompare(b[1].student?.full_name || '')
+                    );
+
+                    return (
+                      <ScrollArea className="h-[400px]">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8"></TableHead>
+                              <TableHead>Student</TableHead>
+                              <TableHead>Total Referrals</TableHead>
+                              <TableHead>Latest Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {sortedGroups.map(([key, group]) => {
+                              const latestRequest = group.requests[0];
+                              const isExpanded = expandedRows.has(key);
+                              return (
+                                <>
+                                  <TableRow
+                                    key={key}
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => {
+                                      setExpandedRows(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(key)) next.delete(key);
+                                        else next.add(key);
+                                        return next;
+                                      });
+                                    }}
+                                  >
+                                    <TableCell className="p-2">
+                                      {isExpanded ? (
+                                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div>
+                                        <button
+                                          className="font-medium text-primary hover:underline text-left"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (group.student?.roll_number) {
+                                              navigate(`/student-profile/${group.student.roll_number}`);
+                                            }
+                                          }}
+                                        >
+                                          {group.student?.full_name}
+                                        </button>
+                                        <p className="text-sm text-muted-foreground">
+                                          {group.student?.roll_number}
+                                        </p>
                                       </div>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              )}
-                            </>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </ScrollArea>
-                  )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant="secondary">{group.requests.length} referral{group.requests.length > 1 ? 's' : ''}</Badge>
+                                    </TableCell>
+                                    <TableCell>{getStatusBadge(latestRequest.status)}</TableCell>
+                                  </TableRow>
+                                  {isExpanded && (
+                                    <TableRow key={`${key}-details`}>
+                                      <TableCell colSpan={4} className="bg-muted/30 p-0">
+                                        <div className="p-4 space-y-3">
+                                          {group.requests.map((request) => (
+                                            <div key={request.id} className="border rounded-lg p-3 bg-background space-y-2">
+                                              <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                                                  <span className="font-medium text-sm">{request.referral_hospital}</span>
+                                                  <span className="text-sm text-muted-foreground">
+                                                    {format(new Date(request.referral_date), "PP")}
+                                                  </span>
+                                                </div>
+                                                {getStatusBadge(request.status)}
+                                              </div>
+                                              <LeaveStatusTimeline leaveRequest={request} />
+                                              {request.status === "returned" && !request.doctor_clearance && (
+                                                <DoctorClearanceCard
+                                                  leaveRequest={{
+                                                    ...request,
+                                                    health_centre_visited: (request as any).health_centre_visited ?? false,
+                                                    doctor_clearance: (request as any).doctor_clearance ?? false,
+                                                  }}
+                                                  doctorId={request.referring_doctor_id || ""}
+                                                />
+                                              )}
+                                              {(request as any).doctor_clearance && (
+                                                <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg">
+                                                  <ShieldCheck className="h-4 w-4" />
+                                                  <span className="text-sm font-medium">Student cleared for classes</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
+                                </>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
