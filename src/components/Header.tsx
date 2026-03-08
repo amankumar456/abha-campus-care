@@ -357,13 +357,33 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                       </>
+                    ) : isLabOfficer ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/lab/dashboard" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/lab/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Lab Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-team" className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />
+                            Medical Team
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     ) : (
                       <>
                         <DropdownMenuItem asChild>
                           <Link to={
                             isMentor ? '/mentor/profile' :
                             isAdmin ? '/admin' :
-                            isLabOfficer ? '/lab/dashboard' :
                             '/student/profile'
                           } className="flex items-center gap-2">
                             <User className="w-4 h-4" />
