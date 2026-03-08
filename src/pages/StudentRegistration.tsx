@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
@@ -332,19 +334,7 @@ export default function StudentRegistration() {
   if (loadingExisting) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-primary text-primary-foreground py-4">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-primary-foreground hover:bg-primary-foreground/10">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold">Loading Profile...</h1>
-                <p className="text-sm text-primary-foreground/80">NIT Warangal Health Portal</p>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
         <main className="container mx-auto px-4 py-8 max-w-3xl">
           <Card className="border-0 shadow-lg">
             <CardContent className="p-6 sm:p-8 space-y-4">
@@ -362,29 +352,7 @@ export default function StudentRegistration() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-primary text-primary-foreground py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-xl font-semibold">
-                  {isEditMode ? "Edit Profile" : "Student Registration"}
-                </h1>
-                <p className="text-sm text-primary-foreground/80">NIT Warangal Health Portal</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-3xl">

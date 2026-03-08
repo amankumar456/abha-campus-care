@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -454,12 +456,8 @@ const StudentProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Back Button */}
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
 
         {/* Student Info Card */}
         <Card>
