@@ -133,6 +133,10 @@ const NotificationBell = () => {
         return 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20';
       case 'prescription':
         return 'border-l-rose-500 bg-rose-50 dark:bg-rose-950/20';
+      case 'certificate_issued':
+        return 'border-l-amber-500 bg-amber-50 dark:bg-amber-950/20';
+      case 'lab_report':
+        return 'border-l-cyan-500 bg-cyan-50 dark:bg-cyan-950/20';
       default:
         return 'border-l-primary bg-primary/5';
     }
@@ -145,6 +149,10 @@ const NotificationBell = () => {
       case 'rescheduled': return <Calendar className="h-3.5 w-3.5 text-yellow-600 flex-shrink-0" />;
       case 'prescription':
         return <Stethoscope className="h-3.5 w-3.5 text-rose-600 flex-shrink-0" />;
+      case 'certificate_issued':
+        return <CheckCircle2 className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />;
+      case 'lab_report':
+        return <Bell className="h-3.5 w-3.5 text-cyan-600 flex-shrink-0" />;
       case 'medical_leave_referral':
       case 'medical_leave_on_leave':
       case 'medical_leave_returned':
@@ -160,6 +168,8 @@ const NotificationBell = () => {
 
   const getActionLabel = (type: string) => {
     if (type === 'prescription') return 'View Prescription';
+    if (type === 'certificate_issued') return 'View Certificate';
+    if (type === 'lab_report') return 'View Lab Reports';
     if (type.startsWith('medical_leave_') || type.startsWith('mentee_leave_') || type.startsWith('referral_')) {
       return 'Open Medical Leave';
     }
@@ -228,6 +238,10 @@ const NotificationBell = () => {
                       setOpen(false);
                       if (notification.type === 'prescription') {
                         navigate("/student/profile?tab=prescriptions");
+                      } else if (notification.type === 'certificate_issued') {
+                        navigate("/student/profile?tab=certificates");
+                      } else if (notification.type === 'lab_report') {
+                        navigate("/student/profile?tab=labtests");
                       } else if (isMedicalLeave) {
                         navigate("/medical-leave");
                       } else if (notification.type === 'approved' || notification.type === 'rejected') {

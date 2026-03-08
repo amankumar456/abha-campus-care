@@ -11,6 +11,7 @@ import { CheckCircle2, ShieldCheck, Stethoscope, User } from "lucide-react";
 import { format } from "date-fns";
 import { 
   notifyStudentOfStatusUpdate, 
+  notifyStudentOfCertificate,
   getStudentUserId 
 } from "@/lib/notifications/medical-leave-notifications";
 
@@ -59,6 +60,11 @@ const DoctorClearanceCard = ({ leaveRequest, doctorId, onSuccess }: DoctorCleara
           "returned",
           "Your doctor has confirmed you are fit to resume classes. Your medical leave cycle is now complete."
         );
+        await notifyStudentOfCertificate(studentUserId, {
+          type: 'fitness',
+          doctorName: 'Health Centre',
+          details: 'You have been cleared to resume academic activities.',
+        });
       }
     },
     onSuccess: () => {

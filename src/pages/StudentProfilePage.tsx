@@ -134,7 +134,12 @@ interface MedicalCertificate {
   doctor_qualification: string;
   created_at: string;
   approval_date: string | null;
+  doctor_clearance: boolean | null;
+  doctor_clearance_date: string | null;
+  rest_days: number | null;
 }
+
+type CertificateCategory = 'all' | 'medical_leave' | 'fitness' | 'referral';
 
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
@@ -147,18 +152,35 @@ const MEAL_LABELS: Record<string, string> = {
 export default function StudentProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') === 'settings' ? 'settings' : (searchParams.get('tab') === 'prescriptions' || searchParams.get('tab') === 'records') ? 'records' : 'profile';
-  const defaultSubTab = searchParams.get('tab') === 'prescriptions' ? 'prescriptions' : 'visits';
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  const [recordsSubTab, setRecordsSubTab] = useState(defaultSubTab);
+  const getDefaultTab = () => {
+    const tab = searchParams.get('tab');
+    if (tab === 'settings') return 'settings';
+    if (tab === 'prescriptions' || tab === 'records' || tab === 'certificates' || tab === 'labtests' || tab === 'referrals') return 'records';
+    return 'profile';
+  };
+  const getDefaultSubTab = () => {
+    const tab = searchParams.get('tab');
+    if (tab === 'prescriptions') return 'prescriptions';
+    if (tab === 'certificates') return 'certificates';
+    if (tab === 'labtests') return 'labtests';
+    if (tab === 'referrals') return 'referrals';
+    return 'visits';
+  };
+  const [activeTab, setActiveTab] = useState(getDefaultTab());
+  const [recordsSubTab, setRecordsSubTab] = useState(getDefaultSubTab());
+  const [certCategory, setCertCategory] = useState<CertificateCategory>('all');
 
   // Sync tab state when URL params change (e.g. navigating from header)
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'settings') setActiveTab('settings');
-    else if (tab === 'prescriptions' || tab === 'records') {
+    else if (['prescriptions', 'records', 'certificates', 'labtests', 'referrals'].includes(tab || '')) {
       setActiveTab('records');
-      setRecordsSubTab(tab === 'prescriptions' ? 'prescriptions' : 'visits');
+      if (tab === 'prescriptions') setRecordsSubTab('prescriptions');
+      else if (tab === 'certificates') setRecordsSubTab('certificates');
+      else if (tab === 'labtests') setRecordsSubTab('labtests');
+      else if (tab === 'referrals') setRecordsSubTab('referrals');
+      else setRecordsSubTab('visits');
     } else setActiveTab('profile');
   }, [searchParams]);
   const { user, loading: roleLoading } = useUserRole();
@@ -263,7 +285,7 @@ export default function StudentProfilePage() {
         // Fetch referral letters
         const { data: referralData } = await supabase
           .from('medical_leave_requests')
-          .select('id, referral_hospital, illness_description, doctor_notes, expected_duration, leave_start_date, expected_return_date, actual_return_date, status, health_priority, referral_date, referral_type, referring_doctor_id, approved_by_doctor_id, approval_date, created_at')
+          .select('id, referral_hospital, illness_description, doctor_notes, expected_duration, leave_start_date, expected_return_date, actual_return_date, status, health_priority, referral_date, referral_type, referring_doctor_id, approved_by_doctor_id, approval_date, created_at, doctor_clearance, doctor_clearance_date, rest_days')
           .eq('student_id', studentData.id)
           .order('created_at', { ascending: false });
 
@@ -307,6 +329,9 @@ export default function StudentProfilePage() {
               doctor_qualification: doc?.qualification || 'MBBS',
               created_at: r.created_at,
               approval_date: r.approval_date,
+              doctor_clearance: (r as any).doctor_clearance || null,
+              doctor_clearance_date: (r as any).doctor_clearance_date || null,
+              rest_days: (r as any).rest_days || null,
             };
           }));
         }
@@ -579,6 +604,63 @@ export default function StudentProfilePage() {
     `;
 
     await printDocument({ title: `Medical Leave Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'MEDICAL LEAVE CERTIFICATE' });
+  };
+
+  const handlePrintFitnessCertificate = async (cert: MedicalCertificate) => {
+    const certNo = `FC/${format(new Date(), 'yyyyMMdd')}/${cert.id.slice(0, 6).toUpperCase()}`;
+    const dateStr = cert.doctor_clearance_date ? format(new Date(cert.doctor_clearance_date), 'PPP') : format(new Date(), 'PPP');
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml('FITNESS CERTIFICATE')}
+      <div class="doc-title">
+        <h3>FITNESS CERTIFICATE</h3>
+        <div class="cert-no">Certificate No.: ${certNo} | Date: ${dateStr}</div>
+      </div>
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${student?.full_name}</span>
+        <span><strong>Roll No:</strong> ${student?.roll_number}</span>
+      </div>
+      <div class="info-grid" style="margin-bottom:16px;">
+        <div class="info-item"><span class="info-label">Program:</span><span>${student?.program || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Branch:</span><span>${student?.branch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Batch:</span><span>${student?.batch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Year:</span><span>${student?.year_of_study || '—'}</span></div>
+      </div>
+      <div class="section body-text">
+        <p>This is to certify that <strong>${student?.full_name}</strong> (Roll No: <strong>${student?.roll_number}</strong>) was on medical leave and was referred to <strong>${cert.referral_hospital}</strong> for treatment.</p>
+        ${cert.illness_description ? `<p><strong>Condition:</strong> ${cert.illness_description}</p>` : ''}
+        <div class="info-grid" style="margin:16px 0;">
+          ${cert.leave_start_date ? `<div class="info-item"><span class="info-label">Leave From:</span><span>${format(new Date(cert.leave_start_date), 'PPP')}</span></div>` : ''}
+          ${cert.actual_return_date ? `<div class="info-item"><span class="info-label">Returned On:</span><span>${format(new Date(cert.actual_return_date), 'PPP')}</span></div>` : ''}
+          ${cert.doctor_clearance_date ? `<div class="info-item"><span class="info-label">Clearance Date:</span><span>${format(new Date(cert.doctor_clearance_date), 'PPP')}</span></div>` : ''}
+          <div class="info-item"><span class="info-label">Duration:</span><span>${cert.expected_duration}</span></div>
+        </div>
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:12px;margin:16px 0;">
+          <p style="color:#065f46;font-weight:bold;margin-bottom:4px;">✅ FITNESS DECLARATION</p>
+          <p>After thorough medical examination, the student has been found <strong>FIT</strong> to resume regular academic activities and classes.</p>
+        </div>
+        ${cert.doctor_notes ? `<p><strong>Doctor's Notes:</strong> ${cert.doctor_notes}</p>` : ''}
+      </div>
+      <div class="signature-section">
+        <div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW Emblem" /><div class="emblem-label">NIT Warangal</div></div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${cert.doctor_name}</div>
+          <div class="signature-line">
+            <strong>Dr. ${cert.doctor_name}</strong><br/>
+            ${cert.doctor_designation}<br/>
+            <span style="font-size:10px;">${cert.doctor_qualification}</span><br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-footer">
+        <p>Date of Issue: ${format(new Date(), 'PPPP')}</p>
+        <p>This certificate confirms the student's fitness to attend classes. For verification, contact Health Centre, NIT Warangal.</p>
+        <p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p>
+      </div>
+    `;
+
+    await printDocument({ title: `Fitness Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'FITNESS CERTIFICATE' });
   };
 
   const profileFields = student ? [
@@ -1319,88 +1401,128 @@ export default function StudentProfilePage() {
 
             {/* Certificates Sub-tab */}
             {recordsSubTab === 'certificates' && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Award className="w-4 h-4 text-primary" />
-                    Medical Leave Certificates
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {certificates.length} certificate{certificates.length !== 1 ? 's' : ''} on record
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {certificates.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Award className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="font-medium">No certificates yet</p>
-                      <p className="text-sm">Medical leave certificates will appear here once issued.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {certificates.map((cert) => (
-                        <div key={cert.id} className="p-4 rounded-lg border hover:bg-muted/30 transition-colors space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10">
-                                <Award className="w-5 h-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm">Medical Leave Certificate — {cert.referral_hospital}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Issued by Dr. {cert.doctor_name} · {format(new Date(cert.created_at), 'MMM d, yyyy')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={
-                                  cert.status === 'returned' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
-                                  cert.status === 'on_leave' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' :
-                                  'bg-muted text-muted-foreground'
-                                }
-                              >
-                                {cert.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                              </Badge>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPreviewCertificate(cert)}
-                              >
-                                <Eye className="w-3 h-3 mr-1" />
-                                Preview
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handlePrintCertificate(cert)}
-                              >
-                                <Printer className="w-3 h-3 mr-1" />
-                                Print
-                              </Button>
-                            </div>
-                          </div>
-                          {cert.illness_description && (
-                            <p className="text-sm text-muted-foreground pl-13">
-                              <span className="font-medium">Illness:</span> {cert.illness_description}
-                            </p>
-                          )}
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pl-13">
-                            <span>Duration: {cert.expected_duration}</span>
-                            {cert.leave_start_date && (
-                              <span>From: {format(new Date(cert.leave_start_date), 'MMM d, yyyy')}</span>
-                            )}
-                            {cert.expected_return_date && (
-                              <span>Until: {format(new Date(cert.expected_return_date), 'MMM d, yyyy')}</span>
-                            )}
-                          </div>
-                        </div>
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Award className="w-4 h-4 text-primary" />
+                      Medical Certificates & Documents
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {certificates.length} document{certificates.length !== 1 ? 's' : ''} on record
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Certificate Category Filters */}
+                    <div className="flex gap-2 flex-wrap mb-4">
+                      {([
+                        { key: 'all' as CertificateCategory, label: 'All Documents', count: certificates.length },
+                        { key: 'medical_leave' as CertificateCategory, label: '📋 Medical Leave', count: certificates.filter(c => c.status === 'on_leave' || c.status === 'student_form_pending' || c.status === 'doctor_referred').length },
+                        { key: 'fitness' as CertificateCategory, label: '✅ Fitness Clearance', count: certificates.filter(c => c.doctor_clearance).length },
+                        { key: 'referral' as CertificateCategory, label: '🏥 Referral', count: certificates.filter(c => c.status === 'returned' || c.actual_return_date).length },
+                      ]).map(cat => (
+                        <Button
+                          key={cat.key}
+                          variant={certCategory === cat.key ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setCertCategory(cat.key)}
+                          className="text-xs"
+                        >
+                          {cat.label} ({cat.count})
+                        </Button>
                       ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+
+                    {(() => {
+                      let filtered = certificates;
+                      if (certCategory === 'medical_leave') filtered = certificates.filter(c => c.status === 'on_leave' || c.status === 'student_form_pending' || c.status === 'doctor_referred');
+                      else if (certCategory === 'fitness') filtered = certificates.filter(c => c.doctor_clearance);
+                      else if (certCategory === 'referral') filtered = certificates.filter(c => c.status === 'returned' || c.actual_return_date);
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Award className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                            <p className="font-medium">No {certCategory === 'all' ? '' : certCategory.replace('_', ' ')} certificates yet</p>
+                            <p className="text-sm">Certificates will appear here once issued by your doctor.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {filtered.map((cert) => {
+                            const isFitness = cert.doctor_clearance;
+                            const isOnLeave = cert.status === 'on_leave' || cert.status === 'student_form_pending' || cert.status === 'doctor_referred';
+                            const certType = isFitness ? 'Fitness Clearance Certificate' : isOnLeave ? 'Medical Leave Certificate' : 'Medical Certificate';
+                            const certIcon = isFitness ? '✅' : isOnLeave ? '📋' : '🏥';
+                            const certBgClass = isFitness ? 'bg-emerald-50 dark:bg-emerald-900/10' : isOnLeave ? 'bg-blue-50 dark:bg-blue-900/10' : 'bg-primary/5';
+
+                            return (
+                              <div key={cert.id} className={`p-4 rounded-lg border hover:shadow-sm transition-all space-y-2 ${certBgClass}`}>
+                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                                      isFitness ? 'bg-emerald-100 dark:bg-emerald-900/30' : isOnLeave ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-primary/10'
+                                    }`}>
+                                      {certIcon}
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-sm">{certType}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {cert.referral_hospital} · Dr. {cert.doctor_name} · {format(new Date(cert.created_at), 'MMM d, yyyy')}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        cert.status === 'returned' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
+                                        cert.status === 'on_leave' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' :
+                                        cert.doctor_clearance ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300' :
+                                        'bg-muted text-muted-foreground'
+                                      }
+                                    >
+                                      {cert.doctor_clearance ? 'Fit for Classes' : cert.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </Badge>
+                                    {isFitness && cert.doctor_clearance_date && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        Cleared: {format(new Date(cert.doctor_clearance_date), 'MMM d, yyyy')}
+                                      </span>
+                                    )}
+                                    <Button variant="outline" size="sm" onClick={() => setPreviewCertificate(cert)}>
+                                      <Eye className="w-3 h-3 mr-1" />Preview
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => {
+                                      if (isFitness) handlePrintFitnessCertificate(cert);
+                                      else handlePrintCertificate(cert);
+                                    }}>
+                                      <Printer className="w-3 h-3 mr-1" />Print
+                                    </Button>
+                                  </div>
+                                </div>
+                                {cert.illness_description && (
+                                  <p className="text-sm text-muted-foreground pl-[52px]">
+                                    <span className="font-medium">Condition:</span> {cert.illness_description}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pl-[52px]">
+                                  <span>Duration: {cert.expected_duration}</span>
+                                  {cert.rest_days && <span>Rest Days: {cert.rest_days}</span>}
+                                  {cert.leave_start_date && <span>From: {format(new Date(cert.leave_start_date), 'MMM d, yyyy')}</span>}
+                                  {cert.expected_return_date && <span>Until: {format(new Date(cert.expected_return_date), 'MMM d, yyyy')}</span>}
+                                  {cert.actual_return_date && <span>Returned: {format(new Date(cert.actual_return_date), 'MMM d, yyyy')}</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Certificate Preview Dialog */}
