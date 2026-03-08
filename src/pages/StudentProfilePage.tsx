@@ -1294,7 +1294,7 @@ export default function StudentProfilePage() {
                                   }
                                 }}
                               >
-                                <Download className="w-3 h-3 mr-1" />
+                                <Eye className="w-3 h-3 mr-1" />
                                 View PDF
                               </Button>
                             )}
@@ -1306,6 +1306,56 @@ export default function StudentProfilePage() {
                               >
                                 <Eye className="w-3 h-3 mr-1" />
                                 View Report
+                              </Button>
+                            )}
+                            {report.status === 'completed' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (report.report_file_url) {
+                                    try {
+                                      const path = report.report_file_url;
+                                      let url = path;
+                                      if (!path.startsWith('http')) {
+                                        const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                        if (error) throw error;
+                                        url = data.signedUrl;
+                                      }
+                                      const printWindow = window.open(url, '_blank');
+                                      if (printWindow) {
+                                        printWindow.addEventListener('load', () => {
+                                          setTimeout(() => printWindow.print(), 500);
+                                        });
+                                      }
+                                    } catch {
+                                      toast({ title: 'Error', description: 'Could not print PDF', variant: 'destructive' });
+                                    }
+                                  } else {
+                                    // Print from notes using NITW template
+                                    const reportNo = `LR/${format(new Date(report.created_at), 'yyyyMMdd')}/${report.id.slice(0, 6).toUpperCase()}`;
+                                    const bodyHtml = `
+                                      ${getNitwHeaderHtml('LABORATORY REPORT')}
+                                      <div class="doc-title">
+                                        <h3>LABORATORY INVESTIGATION REPORT</h3>
+                                        <div class="cert-no">Report No.: ${reportNo}</div>
+                                      </div>
+                                      <div class="section">
+                                        <div class="section-title">TEST: ${report.test_name.toUpperCase()}</div>
+                                        <div class="body-text" style="white-space:pre-line">${report.notes || 'Results not available.'}</div>
+                                      </div>
+                                      <div class="signature-section">
+                                        <div class="signature-box"><div class="signature-line">Lab Technician</div></div>
+                                        <div class="signature-box"><div class="signature-line">Pathologist</div></div>
+                                      </div>
+                                    `;
+                                    await printDocument({ title: `Lab Report — ${report.test_name}`, bodyHtml, documentId: reportNo, documentType: 'LAB_REPORT' });
+                                  }
+                                }}
+                              >
+                                <Printer className="w-3 h-3 mr-1" />
+                                Print
                               </Button>
                             )}
                           </div>
