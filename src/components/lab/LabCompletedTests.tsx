@@ -189,8 +189,8 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
             )}
             <div className="flex gap-2 justify-end">
               {viewReport.report_file_url && (
-                <Button variant="outline" size="sm" onClick={() => handleViewFile(viewReport)}>
-                  <Download className="w-4 h-4 mr-1" />View File
+                <Button variant="default" size="sm" onClick={() => handleViewFile(viewReport)}>
+                  <Eye className="w-4 h-4 mr-1" />Open PDF Report
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => handlePrint(viewReport)}>
