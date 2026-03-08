@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import DoctorHomeDashboard from "@/components/doctor/DoctorHomeDashboard";
 import LabOfficerHomeDashboard from "@/components/lab/LabOfficerHomeDashboard";
+import PharmacyHomeDashboard from "@/components/pharmacy/PharmacyHomeDashboard";
 
 const Index = () => {
   const { user, isDoctor, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, loading } = useUserRole();
