@@ -1038,6 +1038,91 @@ export default function StudentProfilePage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Referral Letters Sub-tab */}
+            {recordsSubTab === 'referrals' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    Referral Letters
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {referralLetters.length} referral{referralLetters.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {referralLetters.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No referral letters yet</p>
+                      <p className="text-sm">Medical leave referrals from doctors will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {referralLetters.map((ref) => (
+                        <div key={ref.id} className="p-4 rounded-lg border hover:bg-muted/30 transition-colors space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/20">
+                                <Building2 className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{ref.referral_hospital}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Referred by Dr. {ref.doctor_name} · {format(new Date(ref.referral_date), 'MMM d, yyyy')}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={
+                                ref.status === 'returned' ? 'bg-green-100 text-green-800' :
+                                ref.status === 'on_leave' ? 'bg-blue-100 text-blue-800' :
+                                ref.status === 'student_form_pending' ? 'bg-amber-100 text-amber-800' :
+                                ref.status === 'return_pending' ? 'bg-purple-100 text-purple-800' :
+                                'bg-muted text-muted-foreground'
+                              }
+                            >
+                              {ref.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </Badge>
+                          </div>
+                          {ref.illness_description && (
+                            <p className="text-sm text-muted-foreground pl-13">
+                              <span className="font-medium">Illness:</span> {ref.illness_description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pl-13">
+                            <span>Duration: {ref.expected_duration}</span>
+                            {ref.leave_start_date && (
+                              <span>From: {format(new Date(ref.leave_start_date), 'MMM d, yyyy')}</span>
+                            )}
+                            {ref.expected_return_date && (
+                              <span>Until: {format(new Date(ref.expected_return_date), 'MMM d, yyyy')}</span>
+                            )}
+                            {ref.health_priority && (
+                              <Badge variant="secondary" className="text-xs">{ref.health_priority}</Badge>
+                            )}
+                          </div>
+                          {ref.doctor_notes && (
+                            <p className="text-xs text-muted-foreground pl-13">
+                              <span className="font-medium">Doctor's Notes:</span> {ref.doctor_notes}
+                            </p>
+                          )}
+                          {ref.referral_type && ref.referral_type.length > 0 && (
+                            <div className="flex gap-1 pl-13">
+                              {ref.referral_type.map((type, i) => (
+                                <Badge key={i} variant="outline" className="text-xs">{type}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* ── SETTINGS TAB ── */}
