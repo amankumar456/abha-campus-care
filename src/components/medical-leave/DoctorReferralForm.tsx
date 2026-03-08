@@ -579,8 +579,8 @@ const DoctorReferralForm = () => {
 
     try {
       const { data, error } = await supabase
-        .from("students_doctor_view")
-        .select("id, full_name, roll_number, program, branch")
+        .from("students")
+        .select("id, full_name, roll_number, program, branch, email, phone, photo_url, year_of_study, batch, mentor_name, mentor_contact, mentor_email")
         .ilike("roll_number", rollNumber)
         .limit(1)
         .maybeSingle();
@@ -592,14 +592,8 @@ const DoctorReferralForm = () => {
         return;
       }
 
-      // Verify email matches and get additional student info
-      const { data: studentWithEmail } = await supabase
-        .from("students")
-        .select("email, phone, mentor_name, mentor_contact")
-        .eq("id", data.id)
-        .maybeSingle();
-
-      if (studentWithEmail?.email && studentWithEmail.email.toLowerCase() !== email) {
+      // Verify email matches
+      if (data.email && data.email.toLowerCase() !== email) {
         setSearchError("Email does not match the student's registered email");
         return;
       }
