@@ -193,6 +193,12 @@ export default function LabProcessingQueue({
           onRefresh={onRefresh}
         />
       )}
+
+      <RegisterSampleDialog
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onRegistered={onRefresh}
+      />
     </div>
   );
 }
