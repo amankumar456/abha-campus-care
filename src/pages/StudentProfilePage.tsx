@@ -311,6 +311,7 @@ export default function StudentProfilePage() {
         }
 
 
+        const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
           id: v.id,
           visit_date: v.visit_date,
           reason_category: v.reason_category,
