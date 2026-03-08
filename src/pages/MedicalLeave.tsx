@@ -241,7 +241,8 @@ const MedicalLeave = () => {
               {isDoctor && "Refer students for external treatment and track leave requests"}
               {!isDoctor && isStudent && "Track and manage your off-campus medical leave"}
               {!isDoctor && !isStudent && isMentor && "Monitor your mentees' medical leave status"}
-              {isAdmin && !isDoctor && "Oversee all medical leave requests"}
+              {isMedicalStaff && !isDoctor && "View and manage all medical leave records"}
+              {isAdmin && !isDoctor && !isMedicalStaff && "Oversee all medical leave requests"}
             </p>
           </div>
         </div>
