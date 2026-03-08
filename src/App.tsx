@@ -73,7 +73,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <BackNavigation />
+        {/* BackNavigation integrated into Header */}
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
