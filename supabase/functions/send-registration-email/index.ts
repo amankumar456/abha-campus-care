@@ -12,7 +12,7 @@ const corsHeaders = {
 interface RegistrationEmailRequest {
   email: string;
   name: string;
-  userType: "student" | "doctor" | "mentor";
+  userType: "student" | "doctor" | "mentor" | "pharmacy" | "lab_officer" | "medical_staff";
   rollNumber?: string;
 }
 
@@ -26,8 +26,8 @@ const validateName = (name: string): boolean => {
   return name.length >= 2 && name.length <= 100 && /^[a-zA-Z\s.'-]+$/.test(name);
 };
 
-const validateUserType = (type: string): type is "student" | "doctor" | "mentor" => {
-  return ["student", "doctor", "mentor"].includes(type);
+const validateUserType = (type: string): type is "student" | "doctor" | "mentor" | "pharmacy" | "lab_officer" | "medical_staff" => {
+  return ["student", "doctor", "mentor", "pharmacy", "lab_officer", "medical_staff"].includes(type);
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -101,13 +101,16 @@ const handler = async (req: Request): Promise<Response> => {
       return entities[char] || char;
     });
 
-    const userTypeLabels = {
+    const userTypeLabels: Record<string, string> = {
       student: "Student",
       doctor: "Medical Officer",
-      mentor: "Faculty Mentor"
+      mentor: "Faculty Mentor",
+      pharmacy: "Pharmacy Staff",
+      lab_officer: "Lab Officer",
+      medical_staff: "Medical Staff",
     };
 
-    const welcomeMessages = {
+    const welcomeMessages: Record<string, string> = {
       student: `
         <p>You now have access to:</p>
         <ul>
@@ -134,7 +137,34 @@ const handler = async (req: Request): Promise<Response> => {
           <li>🔔 Receive wellness alerts</li>
           <li>📊 Access mentee health reports</li>
         </ul>
-      `
+      `,
+      pharmacy: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>💊 Manage medicine inventory</li>
+          <li>📋 Process prescriptions</li>
+          <li>📦 Track stock and expiry</li>
+          <li>📊 View dispensing analytics</li>
+        </ul>
+      `,
+      lab_officer: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>🔬 Process lab test requests</li>
+          <li>📋 Upload and manage reports</li>
+          <li>🧪 Register and track samples</li>
+          <li>📊 View lab analytics</li>
+        </ul>
+      `,
+      medical_staff: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>🏥 Access health centre operations</li>
+          <li>📋 View medical leave requests</li>
+          <li>📝 Manage administrative tasks</li>
+          <li>📊 Access operational reports</li>
+        </ul>
+      `,
     };
 
     const emailHtml = `
