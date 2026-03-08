@@ -36,6 +36,7 @@ interface LabReport {
 export default function LabOfficerDashboard() {
   const { toast } = useToast();
   const { user } = useUserRole();
+  const navigate = useNavigate();
   const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
