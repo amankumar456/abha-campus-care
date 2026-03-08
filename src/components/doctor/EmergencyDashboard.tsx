@@ -416,11 +416,11 @@ export default function EmergencyDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {QUICK_CONTACTS.map((contact) => {
+              {dynamicContacts.map((contact) => {
                 const Icon = contact.icon;
                 return (
                   <a
-                    key={contact.name}
+                    key={`${contact.name}-${contact.phone}`}
                     href={`tel:${contact.phone}`}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
                   >
@@ -463,7 +463,7 @@ export default function EmergencyDashboard() {
             </CardContent>
           </Card>
 
-          {/* Resource Status */}
+          {/* Resource Status - Dynamic */}
           <Card className="bg-muted/30">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -472,22 +472,46 @@ export default function EmergencyDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {/* Ambulance availability based on active dispatches */}
+              {(() => {
+                const dispatchedCount = ambulanceRequests?.filter(r => ["dispatched", "in_transit"].includes(r.status)).length || 0;
+                const totalAmbulances = ambulanceServices?.length || 0;
+                const available = Math.max(totalAmbulances - dispatchedCount, 0);
+                return (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background">
+                    <span className="text-sm">Ambulances</span>
+                    <Badge variant="outline" className={available > 0 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}>
+                      {available > 0 ? `${available} Available` : "All Dispatched"}
+                    </Badge>
+                  </div>
+                );
+              })()}
               <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">College Ambulance</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Available</Badge>
+                <span className="text-sm">Active Emergencies</span>
+                <Badge variant="outline" className={stats.totalActive > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}>
+                  {stats.totalActive > 0 ? `${stats.totalActive} Active` : "None"}
+                </Badge>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Emergency Bed</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">1 Free</Badge>
+                <span className="text-sm">Doctors On Duty</span>
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  {onDutyDoctors?.length || 0} Available
+                </Badge>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Doctor On Duty</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Present</Badge>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Oxygen Supply</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Full</Badge>
-              </div>
+              {/* Equipment from ambulance_service */}
+              {ambulanceServices?.[0]?.equipment && (
+                <div className="p-2 rounded-lg bg-background">
+                  <span className="text-sm font-medium block mb-1">Equipment Available</span>
+                  <div className="flex flex-wrap gap-1">
+                    {(ambulanceServices[0].equipment as string[]).slice(0, 4).map((eq) => (
+                      <Badge key={eq} variant="secondary" className="text-xs">{eq}</Badge>
+                    ))}
+                    {(ambulanceServices[0].equipment as string[]).length > 4 && (
+                      <Badge variant="secondary" className="text-xs">+{(ambulanceServices[0].equipment as string[]).length - 4} more</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
