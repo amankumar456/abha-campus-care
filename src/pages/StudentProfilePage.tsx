@@ -808,6 +808,15 @@ export default function StudentProfilePage() {
                 <TestTube className="w-4 h-4" />
                 Lab Tests ({labReports.length})
               </Button>
+              <Button
+                variant={recordsSubTab === 'referrals' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('referrals')}
+                className="flex items-center gap-2"
+              >
+                <Building2 className="w-4 h-4" />
+                Referral Letters ({referralLetters.length})
+              </Button>
             </div>
 
             {/* Visit History Sub-tab */}
