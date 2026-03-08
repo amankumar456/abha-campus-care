@@ -18,7 +18,7 @@ import {
   User, Mail, Phone, GraduationCap, Building2, Calendar, Users,
   Activity, AlertCircle, Settings, Bell, Shield, Heart,
   Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList, Camera, Loader2,
-  TestTube, Download, Clock, FileCheck
+  TestTube, Download, Clock, FileCheck, Award, Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
