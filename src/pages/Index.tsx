@@ -16,7 +16,6 @@ import { useEffect } from "react";
 import DoctorHomeDashboard from "@/components/doctor/DoctorHomeDashboard";
 import LabOfficerHomeDashboard from "@/components/lab/LabOfficerHomeDashboard";
 import PharmacyHomeDashboard from "@/components/pharmacy/PharmacyHomeDashboard";
-import MedicalStaffHomeDashboard from "@/components/staff/MedicalStaffHomeDashboard";
 
 const Index = () => {
   const { user, isDoctor, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, loading } = useUserRole();
