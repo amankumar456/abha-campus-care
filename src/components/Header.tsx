@@ -430,10 +430,43 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                       </>
+                    ) : isAdmin ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-team" className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />
+                            Medical Team
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/dashboard?tab=security" className="flex items-center gap-2">
+                            <ShieldAlert className="w-4 h-4" />
+                            Security
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     ) : (
                       <>
                         <DropdownMenuItem asChild>
-                          <Link to={isAdmin ? '/admin' : '/student/profile'} className="flex items-center gap-2">
+                          <Link to="/student/profile" className="flex items-center gap-2">
                             <User className="w-4 h-4" />
                             Profile
                           </Link>
