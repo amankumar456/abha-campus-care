@@ -195,6 +195,7 @@ export default function StudentProfilePage() {
   const [referralLetters, setReferralLetters] = useState<ReferralLetter[]>([]);
   const [certificates, setCertificates] = useState<MedicalCertificate[]>([]);
   const [previewCertificate, setPreviewCertificate] = useState<MedicalCertificate | null>(null);
+  const [viewingLabReport, setViewingLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Edit state
@@ -1258,6 +1259,12 @@ export default function StudentProfilePage() {
                                   PDF Report Available
                                 </p>
                               )}
+                              {report.status === 'completed' && !report.report_file_url && (
+                                <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                                  <FileCheck className="w-3 h-3" />
+                                  Results Available
+                                </p>
+                              )}
                               {report.status !== 'completed' && (
                                 <p className="text-xs text-amber-600 mt-1">Report pending from lab</p>
                               )}
@@ -1291,6 +1298,16 @@ export default function StudentProfilePage() {
                                 View PDF
                               </Button>
                             )}
+                            {report.status === 'completed' && !report.report_file_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setViewingLabReport(report)}
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                View Report
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1298,6 +1315,37 @@ export default function StudentProfilePage() {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* Lab Report View Dialog */}
+            {viewingLabReport && (
+              <Dialog open={!!viewingLabReport} onOpenChange={() => setViewingLabReport(null)}>
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <TestTube className="w-5 h-5 text-emerald-600" />
+                      Lab Results — {viewingLabReport.test_name}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    Completed: {format(new Date(viewingLabReport.updated_at), 'dd MMM yyyy, hh:mm a')}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Prescribed by Dr. {viewingLabReport.doctor_name}
+                  </div>
+                  {viewingLabReport.notes ? (
+                    <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-muted/30 font-mono">
+                      {viewingLabReport.notes}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">No results available yet.</p>
+                  )}
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" size="sm" onClick={() => setViewingLabReport(null)}>Close</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
 
             {/* Referral Letters Sub-tab */}
