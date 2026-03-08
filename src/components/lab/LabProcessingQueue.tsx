@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle, Plus } from "lucide-react";
+import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle, Plus, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import LabResultEntryDialog from "./LabResultEntryDialog";
 import RegisterSampleDialog from "./RegisterSampleDialog";
 
