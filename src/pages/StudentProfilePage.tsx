@@ -606,7 +606,63 @@ export default function StudentProfilePage() {
     await printDocument({ title: `Medical Leave Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'MEDICAL LEAVE CERTIFICATE' });
   };
 
-  const profileFields = student ? [
+  const handlePrintFitnessCertificate = async (cert: MedicalCertificate) => {
+    const certNo = `FC/${format(new Date(), 'yyyyMMdd')}/${cert.id.slice(0, 6).toUpperCase()}`;
+    const dateStr = cert.doctor_clearance_date ? format(new Date(cert.doctor_clearance_date), 'PPP') : format(new Date(), 'PPP');
+
+    const bodyHtml = `
+      ${getNitwHeaderHtml('FITNESS CERTIFICATE')}
+      <div class="doc-title">
+        <h3>FITNESS CERTIFICATE</h3>
+        <div class="cert-no">Certificate No.: ${certNo} | Date: ${dateStr}</div>
+      </div>
+      <div class="ref-date">
+        <span><strong>Patient:</strong> ${student?.full_name}</span>
+        <span><strong>Roll No:</strong> ${student?.roll_number}</span>
+      </div>
+      <div class="info-grid" style="margin-bottom:16px;">
+        <div class="info-item"><span class="info-label">Program:</span><span>${student?.program || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Branch:</span><span>${student?.branch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Batch:</span><span>${student?.batch || '—'}</span></div>
+        <div class="info-item"><span class="info-label">Year:</span><span>${student?.year_of_study || '—'}</span></div>
+      </div>
+      <div class="section body-text">
+        <p>This is to certify that <strong>${student?.full_name}</strong> (Roll No: <strong>${student?.roll_number}</strong>) was on medical leave and was referred to <strong>${cert.referral_hospital}</strong> for treatment.</p>
+        ${cert.illness_description ? `<p><strong>Condition:</strong> ${cert.illness_description}</p>` : ''}
+        <div class="info-grid" style="margin:16px 0;">
+          ${cert.leave_start_date ? `<div class="info-item"><span class="info-label">Leave From:</span><span>${format(new Date(cert.leave_start_date), 'PPP')}</span></div>` : ''}
+          ${cert.actual_return_date ? `<div class="info-item"><span class="info-label">Returned On:</span><span>${format(new Date(cert.actual_return_date), 'PPP')}</span></div>` : ''}
+          ${cert.doctor_clearance_date ? `<div class="info-item"><span class="info-label">Clearance Date:</span><span>${format(new Date(cert.doctor_clearance_date), 'PPP')}</span></div>` : ''}
+          <div class="info-item"><span class="info-label">Duration:</span><span>${cert.expected_duration}</span></div>
+        </div>
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:12px;margin:16px 0;">
+          <p style="color:#065f46;font-weight:bold;margin-bottom:4px;">✅ FITNESS DECLARATION</p>
+          <p>After thorough medical examination, the student has been found <strong>FIT</strong> to resume regular academic activities and classes.</p>
+        </div>
+        ${cert.doctor_notes ? `<p><strong>Doctor's Notes:</strong> ${cert.doctor_notes}</p>` : ''}
+      </div>
+      <div class="signature-section">
+        <div class="emblem-area"><img src="/nitw-emblem.png" alt="NITW Emblem" /><div class="emblem-label">NIT Warangal</div></div>
+        <div class="signature-box" style="text-align:right;">
+          <div class="online-signature">${cert.doctor_name}</div>
+          <div class="signature-line">
+            <strong>Dr. ${cert.doctor_name}</strong><br/>
+            ${cert.doctor_designation}<br/>
+            <span style="font-size:10px;">${cert.doctor_qualification}</span><br/>
+            <span class="doctor-type">Health Centre, NIT Warangal</span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-footer">
+        <p>Date of Issue: ${format(new Date(), 'PPPP')}</p>
+        <p>This certificate confirms the student's fitness to attend classes. For verification, contact Health Centre, NIT Warangal.</p>
+        <p>NIT Warangal Health Centre | Phone: 0870-2462022 | healthcentre@nitw.ac.in</p>
+      </div>
+    `;
+
+    await printDocument({ title: `Fitness Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'FITNESS CERTIFICATE' });
+  };
+
     { name: 'fullName', label: 'Full Name', filled: !!student.full_name, required: true },
     { name: 'rollNumber', label: 'Roll Number', filled: !!student.roll_number, required: true },
     { name: 'email', label: 'Email', filled: !!student.email, required: true },
