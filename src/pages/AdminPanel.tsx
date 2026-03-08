@@ -86,6 +86,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: roleLoading } = useUserRole();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -96,7 +97,8 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('users');
+  const initialTab = searchParams.get('tab') || 'users';
+  const [activeTab, setActiveTab] = useState(initialTab);
   
   // Dialog states
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
