@@ -511,6 +511,8 @@ const DoctorReferralForm = () => {
   const [leaveCheckDone, setLeaveCheckDone] = useState(false);
   const [referredForTreatment, setReferredForTreatment] = useState(false);
   const [referredForTest, setReferredForTest] = useState(false);
+  const [isFetchingEmail, setIsFetchingEmail] = useState(false);
+  const [emailAutoFilled, setEmailAutoFilled] = useState(false);
 
   const form = useForm<ReferralFormData>({
     resolver: zodResolver(referralFormSchema),
