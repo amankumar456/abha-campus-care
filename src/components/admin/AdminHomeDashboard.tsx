@@ -19,6 +19,9 @@ import {
   Building,
   Settings,
   Link2,
+  FlaskConical,
+  Pill,
+  ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
