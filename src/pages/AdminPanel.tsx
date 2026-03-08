@@ -81,8 +81,23 @@ const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-500',
   doctor: 'bg-blue-500',
   mentor: 'bg-green-500',
-  student: 'bg-purple-500'
+  student: 'bg-purple-500',
+  lab_officer: 'bg-teal-600',
+  pharmacy: 'bg-orange-500',
+  medical_staff: 'bg-indigo-500',
 };
+
+const ROLE_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Users' },
+  { value: 'admin', label: 'Admins' },
+  { value: 'doctor', label: 'Doctors' },
+  { value: 'student', label: 'Students' },
+  { value: 'mentor', label: 'Mentors' },
+  { value: 'medical_staff', label: 'Medical Staff' },
+  { value: 'lab_officer', label: 'Lab Officers' },
+  { value: 'pharmacy', label: 'Pharmacy' },
+  { value: 'no_roles', label: 'No Roles' },
+];
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -99,6 +114,7 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const initialTab = searchParams.get('tab') || 'users';
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [roleFilter, setRoleFilter] = useState('all');
   
   // Dialog states
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
@@ -285,9 +301,13 @@ const AdminPanel = () => {
     setAddRoleDialogOpen(true);
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (roleFilter === 'all') return true;
+    if (roleFilter === 'no_roles') return u.roles.length === 0;
+    return u.roles.includes(roleFilter);
+  });
 
   const unlinkedDoctors = doctors.filter(d => !d.user_id);
   const unlinkedMentors = mentorsForLinking.filter(m => !m.user_id);
@@ -463,22 +483,48 @@ const AdminPanel = () => {
           <TabsContent value="users" className="space-y-4">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  User Management
-                </CardTitle>
-                <CardDescription>View and manage user roles</CardDescription>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    User Management
+                  </CardTitle>
+                  <CardDescription>View and manage user roles — filter by role category</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-64"
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64"
-                />
+              {/* Role filter sub-tabs */}
+              <div className="flex flex-wrap gap-2">
+                {ROLE_FILTER_OPTIONS.map((opt) => {
+                  const count = opt.value === 'all'
+                    ? users.length
+                    : opt.value === 'no_roles'
+                    ? users.filter(u => u.roles.length === 0).length
+                    : users.filter(u => u.roles.includes(opt.value)).length;
+                  return (
+                    <Button
+                      key={opt.value}
+                      variant={roleFilter === opt.value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setRoleFilter(opt.value)}
+                      className="gap-1.5"
+                    >
+                      {opt.label}
+                      <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                        {count}
+                      </Badge>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           </CardHeader>
@@ -495,60 +541,68 @@ const AdminPanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.email}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {u.roles.length === 0 ? (
-                          <span className="text-muted-foreground text-sm">No roles</span>
-                        ) : (
-                          u.roles.map((role) => (
-                            <Badge
-                              key={role}
-                              className={`${ROLE_COLORS[role]} text-white cursor-pointer hover:opacity-80`}
-                              onClick={() => handleRemoveRole(u.id, role)}
-                              title="Click to remove"
-                            >
-                              {role}
-                              <Trash2 className="h-3 w-3 ml-1" />
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {u.linked_doctor && (
-                        <span className="text-sm">Dr. {u.linked_doctor.name}</span>
-                      )}
-                      {u.linked_mentor && (
-                        <span className="text-sm">{u.linked_mentor.name}</span>
-                      )}
-                      {!u.linked_doctor && !u.linked_mentor && (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(u.created_at), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      {u.last_sign_in_at 
-                        ? format(new Date(u.last_sign_in_at), 'MMM d, yyyy')
-                        : 'Never'
-                      }
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openAddRoleDialog(u.id)}
-                      >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Add Role
-                      </Button>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      No users found {roleFilter !== 'all' ? `with role "${roleFilter}"` : ''}
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredUsers.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.email}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {u.roles.length === 0 ? (
+                            <span className="text-muted-foreground text-sm">No roles</span>
+                          ) : (
+                            u.roles.map((role) => (
+                              <Badge
+                                key={role}
+                                className={`${ROLE_COLORS[role] || 'bg-gray-500'} text-white cursor-pointer hover:opacity-80`}
+                                onClick={() => handleRemoveRole(u.id, role)}
+                                title="Click to remove"
+                              >
+                                {role}
+                                <Trash2 className="h-3 w-3 ml-1" />
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {u.linked_doctor && (
+                          <span className="text-sm">Dr. {u.linked_doctor.name}</span>
+                        )}
+                        {u.linked_mentor && (
+                          <span className="text-sm">{u.linked_mentor.name}</span>
+                        )}
+                        {!u.linked_doctor && !u.linked_mentor && (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(u.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell>
+                        {u.last_sign_in_at 
+                          ? format(new Date(u.last_sign_in_at), 'MMM d, yyyy')
+                          : 'Never'
+                        }
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAddRoleDialog(u.id)}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Add Role
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -576,6 +630,9 @@ const AdminPanel = () => {
                         <SelectItem value="doctor">Doctor</SelectItem>
                         <SelectItem value="mentor">Mentor</SelectItem>
                         <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="medical_staff">Medical Staff</SelectItem>
+                        <SelectItem value="lab_officer">Lab Officer</SelectItem>
+                        <SelectItem value="pharmacy">Pharmacy</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
