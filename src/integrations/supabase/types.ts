@@ -356,6 +356,39 @@ export type Database = {
           },
         ]
       }
+      empanelled_hospitals: {
+        Row: {
+          created_at: string
+          empanelment_period: string | null
+          entitlement: string
+          id: string
+          is_active: boolean
+          location: string
+          name: string
+          serial_number: number
+        }
+        Insert: {
+          created_at?: string
+          empanelment_period?: string | null
+          entitlement?: string
+          id?: string
+          is_active?: boolean
+          location: string
+          name: string
+          serial_number: number
+        }
+        Update: {
+          created_at?: string
+          empanelment_period?: string | null
+          entitlement?: string
+          id?: string
+          is_active?: boolean
+          location?: string
+          name?: string
+          serial_number?: number
+        }
+        Relationships: []
+      }
       health_visits: {
         Row: {
           created_at: string

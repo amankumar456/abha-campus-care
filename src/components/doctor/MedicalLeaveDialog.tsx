@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getMentorUserId } from "@/lib/notifications/medical-leave-notifications";
@@ -73,6 +73,19 @@ const MedicalLeaveDialog = ({
   const [referredForTreatment, setReferredForTreatment] = useState(false);
   const [referredForTest, setReferredForTest] = useState(false);
   const [testDetails, setTestDetails] = useState("");
+
+  const { data: hospitals = [] } = useQuery({
+    queryKey: ["empanelled-hospitals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("empanelled_hospitals")
+        .select("id, name, location")
+        .eq("is_active", true)
+        .order("serial_number");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const createLeaveMutation = useMutation({
     mutationFn: async () => {
@@ -326,12 +339,22 @@ const MedicalLeaveDialog = ({
                   <Building2 className="w-4 h-4" />
                   Referral Hospital (if any)
                 </Label>
-                <Input
-                  id="hospital"
-                  placeholder="Leave blank for Health Centre"
+                <Select
                   value={referralHospital}
-                  onChange={(e) => setReferralHospital(e.target.value)}
-                />
+                  onValueChange={setReferralHospital}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="NIT Warangal Health Centre (default)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NIT Warangal Health Centre">NIT Warangal Health Centre</SelectItem>
+                    {hospitals.map((h) => (
+                      <SelectItem key={h.id} value={h.name}>
+                        {h.name} — {h.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
