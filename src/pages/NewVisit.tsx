@@ -149,11 +149,8 @@ const NewVisit = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="max-w-3xl mx-auto p-8 space-y-8">
-        <Button variant="ghost" onClick={() => navigate('/health-dashboard')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
 
         <Card>
           <CardHeader>
