@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import BackNavigation from "./components/BackNavigation";
+// BackNavigation is now integrated into the Header component
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
 
