@@ -403,6 +403,15 @@ const Header = () => {
                     Medical Leave
                   </Link>
                 </>
+              ) : isLabOfficer ? (
+                <>
+                  <Link to="/lab/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Lab Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
