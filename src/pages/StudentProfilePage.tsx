@@ -17,7 +17,8 @@ import {
 import {
   User, Mail, Phone, GraduationCap, Building2, Calendar, Users,
   Activity, AlertCircle, Settings, Bell, Shield, Heart,
-  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList, Camera, Loader2
+  Droplets, Edit3, Save, X, CheckCircle, BookOpen, FileText, Pill, Printer, ClipboardList, Camera, Loader2,
+  TestTube, Download, Clock, FileCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -87,6 +88,18 @@ interface VisitHistoryItem {
   doctor_name: string;
 }
 
+interface LabReport {
+  id: string;
+  test_name: string;
+  status: string;
+  notes: string | null;
+  report_file_url: string | null;
+  report_file_name: string | null;
+  created_at: string;
+  updated_at: string;
+  doctor_name: string;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
@@ -120,6 +133,7 @@ export default function StudentProfilePage() {
   const [healthStats, setHealthStats] = useState({ totalVisits: 0, thisMonthVisits: 0, pendingFollowups: 0, lastVisitDate: null as string | null });
   const [prescriptions, setPrescriptions] = useState<StudentPrescription[]>([]);
   const [visitHistory, setVisitHistory] = useState<VisitHistoryItem[]>([]);
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit state
@@ -163,7 +177,7 @@ export default function StudentProfilePage() {
         setEditPhone(studentData.phone || '');
         setEditEmail(studentData.email || '');
 
-        const [profileRes, visitsRes, prescriptionsRes, completedApptsRes] = await Promise.all([
+        const [profileRes, visitsRes, prescriptionsRes, completedApptsRes, labReportsRes] = await Promise.all([
           supabase.from('student_profiles').select('*').eq('student_id', studentData.id).maybeSingle(),
           supabase.from('health_visits').select('id, visit_date, follow_up_required, reason_category, reason_notes, diagnosis, prescription, doctor_id').eq('student_id', studentData.id).order('visit_date', { ascending: false }),
           supabase.from('prescriptions')
@@ -174,6 +188,10 @@ export default function StudentProfilePage() {
             .select('id, appointment_date')
             .eq('patient_id', user!.id)
             .eq('status', 'completed'),
+          supabase.from('lab_reports')
+            .select('id, test_name, status, notes, report_file_url, report_file_name, created_at, updated_at, doctor_id')
+            .eq('student_id', studentData.id)
+            .order('created_at', { ascending: false }),
         ]);
 
         setHealthProfile(profileRes.data as StudentHealthProfile | null);
@@ -189,6 +207,19 @@ export default function StudentProfilePage() {
           const { data: docs } = await supabase.from('medical_officers').select('id, name').in('id', doctorIds);
           docs?.forEach(d => { doctorMap[d.id] = d.name; });
         }
+
+        // Process lab reports with doctor names
+        const labDoctorIds = (labReportsRes.data || []).filter((r: any) => r.doctor_id).map((r: any) => r.doctor_id);
+        const allDocIds = [...new Set([...doctorIds, ...labDoctorIds])];
+        if (allDocIds.length > 0 && labDoctorIds.length > 0) {
+          const { data: labDocs } = await supabase.from('medical_officers').select('id, name').in('id', labDoctorIds);
+          labDocs?.forEach(d => { doctorMap[d.id] = d.name; });
+        }
+
+        setLabReports((labReportsRes.data || []).map((r: any) => ({
+          ...r,
+          doctor_name: r.doctor_id ? doctorMap[r.doctor_id] || 'Doctor' : 'Health Centre',
+        })));
 
         // Combine health_visits and completed appointments into visit history
         const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
@@ -732,6 +763,15 @@ export default function StudentProfilePage() {
                 <Pill className="w-4 h-4" />
                 Prescriptions ({prescriptions.length})
               </Button>
+              <Button
+                variant={recordsSubTab === 'labtests' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('labtests')}
+                className="flex items-center gap-2"
+              >
+                <TestTube className="w-4 h-4" />
+                Lab Tests ({labReports.length})
+              </Button>
             </div>
 
             {/* Visit History Sub-tab */}
@@ -856,6 +896,72 @@ export default function StudentProfilePage() {
                               <strong>Notes:</strong> {rx.notes}
                             </p>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Lab Tests Sub-tab */}
+            {recordsSubTab === 'labtests' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TestTube className="w-4 h-4 text-primary" />
+                    Lab Test Reports
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {labReports.length} lab test{labReports.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {labReports.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <TestTube className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No lab tests yet</p>
+                      <p className="text-sm">Lab test reports prescribed by your doctor will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {labReports.map((report) => (
+                        <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              report.status === 'completed' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-amber-100 dark:bg-amber-900/20'
+                            }`}>
+                              {report.status === 'completed' ? (
+                                <FileCheck className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <Clock className="w-5 h-5 text-amber-600" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{report.test_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Prescribed by Dr. {report.doctor_name} · {format(new Date(report.created_at), 'MMM d, yyyy')}
+                              </p>
+                              {report.notes && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge variant={report.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                              {report.status === 'completed' ? 'Completed' : 'Pending'}
+                            </Badge>
+                            {report.status === 'completed' && report.report_file_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(report.report_file_url!, '_blank')}
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                View
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

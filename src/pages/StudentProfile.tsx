@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp, Pill, FileText, Droplets, AlertCircle, Heart, Building2, Printer } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp, Pill, FileText, Droplets, AlertCircle, Heart, Building2, Printer, TestTube, Download, Clock, FileCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import VisitPatternAnalysis from '@/components/health/VisitPatternAnalysis';
 
@@ -83,6 +83,18 @@ interface Prescription {
   prescription_items: PrescriptionItem[];
 }
 
+interface LabReport {
+  id: string;
+  test_name: string;
+  status: string;
+  notes: string | null;
+  report_file_url: string | null;
+  report_file_name: string | null;
+  created_at: string;
+  updated_at: string;
+  medical_officers: { name: string; designation: string } | null;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
@@ -100,6 +112,7 @@ const StudentProfile = () => {
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [visits, setVisits] = useState<HealthVisit[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -136,7 +149,7 @@ const StudentProfile = () => {
       setStudent(studentData as Student);
 
       // Fetch all data in parallel
-      const [visitsRes, profileRes, prescriptionsRes, completedApptsRes] = await Promise.all([
+      const [visitsRes, profileRes, prescriptionsRes, completedApptsRes, labReportsRes] = await Promise.all([
         supabase
           .from('health_visits')
           .select(`
@@ -168,6 +181,14 @@ const StudentProfile = () => {
           `)
           .eq('status', 'completed')
           .order('appointment_date', { ascending: false }),
+        supabase
+          .from('lab_reports')
+          .select(`
+            id, test_name, status, notes, report_file_url, report_file_name, created_at, updated_at,
+            medical_officers:doctor_id ( name, designation )
+          `)
+          .eq('student_id', studentData.id)
+          .order('created_at', { ascending: false }),
       ]);
 
       // Build combined visits: health_visits + completed appointments
@@ -220,6 +241,7 @@ const StudentProfile = () => {
       setVisits(allVisits);
       setProfile(profileRes.data as StudentProfileData | null);
       setPrescriptions((prescriptionsRes.data as unknown as Prescription[]) || []);
+      setLabReports((labReportsRes.data as unknown as LabReport[]) || []);
     } catch (error) {
       console.error('Error fetching student data:', error);
       setNotFound(true);
@@ -479,7 +501,7 @@ const StudentProfile = () => {
 
         {/* Tabs for Visit History, Prescriptions, and Analysis */}
         <Tabs defaultValue="history" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="history" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Visit History
@@ -488,9 +510,13 @@ const StudentProfile = () => {
               <Pill className="h-4 w-4" />
               Prescriptions
             </TabsTrigger>
+            <TabsTrigger value="labtests" className="flex items-center gap-2">
+              <TestTube className="h-4 w-4" />
+              Lab Tests ({labReports.length})
+            </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Pattern Analysis
+              Analysis
             </TabsTrigger>
           </TabsList>
 
@@ -644,6 +670,61 @@ const StudentProfile = () => {
                             <p className="text-sm">{rx.notes}</p>
                           </div>
                         )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="labtests" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TestTube className="h-5 w-5 text-primary" />
+                  Lab Test Reports
+                </CardTitle>
+                <CardDescription>
+                  {labReports.length} lab test{labReports.length !== 1 ? 's' : ''} on record
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {labReports.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No lab test reports found</p>
+                ) : (
+                  <div className="space-y-3">
+                    {labReports.map((report) => (
+                      <div key={report.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            report.status === 'completed' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-amber-100 dark:bg-amber-900/20'
+                          }`}>
+                            {report.status === 'completed' ? (
+                              <FileCheck className="w-5 h-5 text-green-600" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-amber-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{report.test_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {report.medical_officers ? `Dr. ${report.medical_officers.name}` : 'Doctor'} · {format(new Date(report.created_at), 'MMM d, yyyy')}
+                            </p>
+                            {report.notes && <p className="text-xs text-muted-foreground mt-0.5">{report.notes}</p>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={report.status === 'completed' ? 'default' : 'secondary'}>
+                            {report.status === 'completed' ? 'Completed' : 'Pending'}
+                          </Badge>
+                          {report.status === 'completed' && report.report_file_url && (
+                            <Button variant="outline" size="sm" onClick={() => window.open(report.report_file_url!, '_blank')}>
+                              <Download className="w-4 h-4 mr-1" />
+                              View Report
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
