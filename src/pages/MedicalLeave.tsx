@@ -881,6 +881,7 @@ const MedicalLeave = () => {
               )}
             </CardContent>
           </Card>
+          </>
         )}
       </div>
     </div>
