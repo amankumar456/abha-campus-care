@@ -246,7 +246,7 @@ const Header = () => {
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{getUserDisplayName()}</p>
                       <p className="text-xs text-muted-foreground">
-                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : 'Student'}
+                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : isLabOfficer ? 'Lab Officer' : isPharmacy ? 'Pharmacy' : 'Student'}
                       </p>
                     </div>
                     <DropdownMenuSeparator />
