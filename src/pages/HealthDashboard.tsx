@@ -106,7 +106,7 @@ interface AttentionStudent {
 
 const HealthDashboard = () => {
   const navigate = useNavigate();
-  const { user, isDoctor, isMentor, loading: roleLoading, mentorId } = useUserRole();
+  const { user, isDoctor, isMentor, isLabOfficer, isPharmacy, isMedicalStaff, loading: roleLoading, mentorId } = useUserRole();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentVisits, setRecentVisits] = useState<RecentVisit[]>([]);
   const [loading, setLoading] = useState(true);
