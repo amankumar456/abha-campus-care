@@ -21,6 +21,7 @@ import {
   FileWarning,
   BadgeCheck,
   StickyNote,
+  UserCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,7 @@ interface MedicalLeaveStudent {
   } | null;
 }
 
-type FilterTab = "high" | "medium_low" | "on_leave" | "cleared";
+type FilterTab = "high" | "medium_low" | "on_leave" | "awaiting_clearance" | "cleared";
 
 interface Props {
   doctorId?: string | null;
@@ -163,12 +164,35 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
     .filter((s) => s.health_priority !== "high" && s.status !== "returned" && s.doctor_clearance !== true)
     .sort(sortByReturnDate);
   const onLeave = all.filter((s) => s.status !== "returned" && s.doctor_clearance !== true).sort(sortByReturnDate);
+
+  // Awaiting Clearance: students who have returned (status return_pending or actual_return_date set, or past expected_return_date) but not yet cleared
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const awaitingClearance = all
+    .filter((s) => {
+      if (s.doctor_clearance === true) return false;
+      // Explicitly return_pending status
+      if (s.status === "return_pending") return true;
+      // Past expected return date but still on leave
+      if (s.expected_return_date && parseISO(s.expected_return_date) < today && s.status !== "returned") return true;
+      // Has actual return date but no clearance
+      if (s.actual_return_date && !s.doctor_clearance) return true;
+      return false;
+    })
+    .sort((a, b) => {
+      // Most overdue first
+      const dateA = a.expected_return_date ? parseISO(a.expected_return_date).getTime() : Infinity;
+      const dateB = b.expected_return_date ? parseISO(b.expected_return_date).getTime() : Infinity;
+      return dateA - dateB;
+    });
+
   const cleared = all.filter((s) => s.doctor_clearance === true);
 
   const counts = {
     high: highPriority.length,
     medium_low: mediumLow.length,
     on_leave: onLeave.length,
+    awaiting_clearance: awaitingClearance.length,
     cleared: cleared.length,
   };
 
@@ -177,6 +201,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
       case "high": return highPriority;
       case "medium_low": return mediumLow;
       case "on_leave": return onLeave;
+      case "awaiting_clearance": return awaitingClearance;
       case "cleared": return cleared;
     }
   })();
@@ -223,6 +248,13 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
       activeClass: "bg-secondary/15 border-secondary ring-1 ring-secondary/30",
     },
     {
+      key: "awaiting_clearance",
+      label: "Awaiting Clearance",
+      icon: <UserCheck className="h-5 w-5" />,
+      color: "text-orange-600 dark:text-orange-400",
+      activeClass: "bg-orange-100/60 border-orange-400 ring-1 ring-orange-400/50 dark:bg-orange-900/30 dark:border-orange-700",
+    },
+    {
       key: "cleared",
       label: "Cleared",
       icon: <ShieldCheck className="h-5 w-5" />,
@@ -234,11 +266,13 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
   const renderStudentCard = (leave: MedicalLeaveStudent) => {
     const days = getLeaveDays(leave);
     const isCleared = leave.doctor_clearance === true;
+    const isOverdue = leave.expected_return_date && parseISO(leave.expected_return_date) < new Date() && !isCleared;
+    const overdueDays = isOverdue ? differenceInDays(new Date(), parseISO(leave.expected_return_date!)) : 0;
 
     return (
       <div
         key={leave.id}
-        className="rounded-xl border bg-card p-4 transition-all hover:shadow-md"
+        className={`rounded-xl border bg-card p-4 transition-all hover:shadow-md ${isOverdue ? 'border-orange-400 ring-1 ring-orange-300/50' : ''}`}
       >
         {/* Top row: student info + badges */}
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -267,6 +301,11 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
             <Badge variant="secondary" className="text-xs">
               {getStatusLabel(leave.status)}
             </Badge>
+            {isOverdue && overdueDays > 0 && (
+              <Badge className="text-xs bg-orange-500 hover:bg-orange-600 text-white">
+                {overdueDays}d overdue
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -397,7 +436,7 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
 
         <CardContent className="space-y-4">
           {/* Filter tabs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
