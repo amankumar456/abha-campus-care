@@ -199,6 +199,25 @@ const HealthRecordsSection = () => {
       status: l.status === 'on_leave' || l.status === 'return_pending' ? 'approved' as const : 'completed' as const,
       validUntil: l.expected_return_date || undefined,
     })),
+    // Lab reports
+    ...labReports.map((lr: any) => ({
+      id: `lab-${lr.id}`,
+      title: `Lab: ${lr.test_name}`,
+      date: lr.created_at,
+      type: 'Lab Report' as const,
+      student: lr.students?.full_name || 'Unknown',
+      studentRoll: lr.students?.roll_number || 'N/A',
+      doctor: lr.medical_officers?.name ? `Dr. ${lr.medical_officers.name}` : 'Health Centre',
+      department: lr.medical_officers?.designation || 'General Medicine',
+      summary: `${lr.test_name} — ${lr.status === 'completed' ? 'Report Ready' : 'Pending'}`,
+      details: [
+        `Test: ${lr.test_name}`,
+        `Status: ${lr.status === 'completed' ? 'Completed' : 'Pending'}`,
+        ...(lr.notes ? [`Notes: ${lr.notes}`] : []),
+        ...(lr.report_file_url ? [`Report available for download`] : []),
+      ],
+      status: lr.status === 'completed' ? 'completed' as const : 'pending' as const,
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleView = (record: HealthRecord) => {
