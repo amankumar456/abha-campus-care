@@ -409,7 +409,7 @@ export default function Auth() {
           if (userType === "pharmacy") navigate("/");
           else if (userType === "lab_officer") navigate("/");
           else if (userType === "medical_staff") navigate("/staff/home");
-          else if (userType === "mentor") navigate("/mentor/dashboard");
+          else if (userType === "mentor") navigate("/mentor/home");
           else navigate("/");
         }
       }
