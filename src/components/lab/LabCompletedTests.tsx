@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Download, User, Calendar, Search, Printer } from "lucide-react";
+import { CheckCircle2, Download, User, Calendar, Search, Printer, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface LabReport {
   id: string;
