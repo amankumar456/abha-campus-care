@@ -647,14 +647,12 @@ export default function MedicalStaffDashboard() {
                                     location: leave.referral_hospital,
                                   },
                                   illnessDescription: leave.illness_description || leave.doctor_notes || "As per doctor's assessment",
-                                  leaveDays: leave.rest_days ?? parseInt(leave.expected_duration) || 1,
+                                  leaveDays: (leave.rest_days ?? parseInt(leave.expected_duration)) || 1,
                                   healthPriority: leave.health_priority || "medium",
                                   doctorNotes: leave.doctor_notes || undefined,
                                   doctorDetails: leave.doctor ? {
                                     name: leave.doctor.name,
-                                    designation: leave.doctor.designation || "Medical Officer",
-                                    qualification: leave.doctor.qualification || undefined,
-                                    isSenior: leave.doctor.is_senior || false,
+                                    designation: "Medical Officer",
                                   } : undefined,
                                   mentorDetails: verifiedStudent?.mentor_name ? {
                                     name: verifiedStudent.mentor_name,
