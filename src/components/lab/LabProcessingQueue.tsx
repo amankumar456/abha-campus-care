@@ -38,6 +38,12 @@ interface Props {
   onRefresh: () => void;
 }
 
+// Tests that are physical/printed — lab officer can only "Mark Complete"
+const PHYSICAL_TESTS = ["ecg", "x ray", "x-ray", "xray", "chest x ray", "chest x-ray", "electrocardiogram"];
+
+const isPhysicalTest = (testName: string) =>
+  PHYSICAL_TESTS.some(pt => testName.toLowerCase().includes(pt));
+
 const priorityFromAge = (createdAt: string) => {
   const hours = (Date.now() - new Date(createdAt).getTime()) / 3600000;
   if (hours > 24) return "high";
@@ -48,8 +54,10 @@ const priorityFromAge = (createdAt: string) => {
 export default function LabProcessingQueue({
   reports, onUpload, uploadingId, searchQuery, onSearchChange, testFilter, onTestFilterChange, onRefresh
 }: Props) {
+  const { toast } = useToast();
   const [resultDialogReport, setResultDialogReport] = useState<LabReport | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const testTypes = [...new Set(reports.map(r => r.test_name))];
 
