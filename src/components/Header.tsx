@@ -240,6 +240,18 @@ const Header = () => {
                     Medical Team
                   </Link>
                 </>
+              ) : isAdmin ? (
+                <>
+                  <Link to="/admin/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
