@@ -297,8 +297,15 @@ const HealthDashboard = () => {
   useEffect(() => {
     if (!roleLoading && !user) {
       navigate('/auth');
+      return;
     }
-  }, [user, roleLoading, navigate]);
+    // Redirect staff roles to their dedicated dashboards
+    if (!roleLoading && user) {
+      if (isLabOfficer) { navigate('/lab/dashboard', { replace: true }); return; }
+      if (isPharmacy) { navigate('/pharmacy/dashboard', { replace: true }); return; }
+      if (isMedicalStaff) { navigate('/staff/dashboard', { replace: true }); return; }
+    }
+  }, [user, roleLoading, navigate, isLabOfficer, isPharmacy, isMedicalStaff]);
 
   useEffect(() => {
     if (!roleLoading && user) {
