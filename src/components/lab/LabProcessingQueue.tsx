@@ -47,6 +47,7 @@ export default function LabProcessingQueue({
   reports, onUpload, uploadingId, searchQuery, onSearchChange, testFilter, onTestFilterChange, onRefresh
 }: Props) {
   const [resultDialogReport, setResultDialogReport] = useState<LabReport | null>(null);
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   const testTypes = [...new Set(reports.map(r => r.test_name))];
 
