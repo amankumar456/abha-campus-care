@@ -503,6 +503,7 @@ interface ApprovedLeaveInfo {
 }
 
 const DoctorReferralForm = () => {
+  const navigate = useNavigate();
   const { doctorId, isDoctor } = useUserRole();
   const queryClient = useQueryClient();
   const [foundStudent, setFoundStudent] = useState<Student | null>(null);
