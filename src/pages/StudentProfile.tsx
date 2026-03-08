@@ -911,6 +911,124 @@ const StudentProfile = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="followups" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarClock className="h-5 w-5 text-primary" />
+                  Follow-up Tracker
+                </CardTitle>
+                <CardDescription>
+                  Visits requiring follow-up and their current status
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  // Follow-ups from health visits
+                  const visitFollowups = visits.filter(v => v.follow_up_required);
+                  // Follow-ups from medical leaves (on_leave or returned)
+                  const leaveFollowups = medicalLeaves.filter(l => l.status === 'on_leave' || l.status === 'returned');
+                  
+                  if (visitFollowups.length === 0 && leaveFollowups.length === 0) {
+                    return (
+                      <div className="text-center py-12">
+                        <CalendarClock className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground">No follow-ups</h3>
+                        <p className="text-sm text-muted-foreground mt-1">No pending or past follow-ups for this student</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {visitFollowups.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <Activity className="h-4 w-4" />
+                            Visit Follow-ups ({visitFollowups.length})
+                          </h4>
+                          <div className="space-y-3">
+                            {visitFollowups.map(v => (
+                              <div key={v.id} className="p-3 rounded-lg border border-border bg-muted/30 flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {v.reason_category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(parseISO(v.visit_date), 'MMM d, yyyy')}
+                                    </span>
+                                  </div>
+                                  {v.diagnosis && <p className="text-sm text-foreground">{v.diagnosis}</p>}
+                                  {v.reason_notes && <p className="text-sm text-muted-foreground">{v.reason_notes}</p>}
+                                  <p className="text-xs text-muted-foreground">
+                                    By: {v.medical_officers?.name || 'Doctor'}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  {v.follow_up_date ? (
+                                    <div className="space-y-1">
+                                      <Badge variant={differenceInDays(parseISO(v.follow_up_date), new Date()) < 0 ? "destructive" : "outline"} className="text-xs">
+                                        {differenceInDays(parseISO(v.follow_up_date), new Date()) < 0 ? 'Overdue' : 'Scheduled'}
+                                      </Badge>
+                                      <p className="text-xs text-muted-foreground">{format(parseISO(v.follow_up_date), 'MMM d, yyyy')}</p>
+                                    </div>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">Pending</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {leaveFollowups.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <HeartPulse className="h-4 w-4" />
+                            Medical Leave Follow-ups ({leaveFollowups.length})
+                          </h4>
+                          <div className="space-y-3">
+                            {leaveFollowups.map(leave => (
+                              <div key={leave.id} className="p-3 rounded-lg border border-border bg-muted/30 flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-foreground">{leave.referral_hospital}</span>
+                                  </div>
+                                  {leave.illness_description && (
+                                    <p className="text-sm text-muted-foreground">{leave.illness_description}</p>
+                                  )}
+                                  {leave.doctor_notes && (
+                                    <p className="text-xs text-muted-foreground">Notes: {leave.doctor_notes}</p>
+                                  )}
+                                  <p className="text-xs text-muted-foreground">
+                                    By: {leave.medical_officers?.name || 'Doctor'} • {format(parseISO(leave.created_at), 'MMM d, yyyy')}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0 space-y-1">
+                                  <Badge variant={leave.status === 'on_leave' ? 'default' : 'secondary'} className="text-xs">
+                                    {leave.status === 'on_leave' ? 'On Leave' : 'Returned'}
+                                  </Badge>
+                                  {leave.expected_return_date && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Expected: {format(parseISO(leave.expected_return_date), 'MMM d')}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="analysis" className="mt-6">
             <VisitPatternAnalysis visits={visits} studentName={student?.full_name || ''} />
           </TabsContent>
