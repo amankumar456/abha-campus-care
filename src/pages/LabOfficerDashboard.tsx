@@ -75,9 +75,9 @@ export default function LabOfficerDashboard() {
       const { error: uploadError } = await supabase.storage.from("lab-reports").upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from("lab-reports").getPublicUrl(fileName);
+      // Store the storage path (not public URL) since bucket is private
       const { error: updateError } = await supabase.from("lab_reports").update({
-        report_file_url: urlData.publicUrl,
+        report_file_url: fileName,
         report_file_name: file.name,
         status: "completed",
         updated_at: new Date().toISOString(),
