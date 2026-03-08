@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getMentorUserId } from "@/lib/notifications/medical-leave-notifications";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
   User,
   GraduationCap,
   Building2,
@@ -33,6 +46,8 @@ import {
   Send,
   AlertCircle,
   AlertTriangle,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 
 interface Student {
@@ -339,22 +354,48 @@ const MedicalLeaveDialog = ({
                   <Building2 className="w-4 h-4" />
                   Referral Hospital (if any)
                 </Label>
-                <Select
-                  value={referralHospital}
-                  onValueChange={setReferralHospital}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="NIT Warangal Health Centre (default)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NIT Warangal Health Centre">NIT Warangal Health Centre</SelectItem>
-                    {hospitals.map((h) => (
-                      <SelectItem key={h.id} value={h.name}>
-                        {h.name} — {h.location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className="truncate">
+                        {referralHospital || "NIT Warangal Health Centre (default)"}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[350px] p-0 pointer-events-auto" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search hospital..." />
+                      <CommandEmpty>No hospital found.</CommandEmpty>
+                      <CommandGroup className="max-h-[200px] overflow-y-auto">
+                        <CommandItem
+                          value="NIT Warangal Health Centre"
+                          onSelect={() => setReferralHospital("NIT Warangal Health Centre")}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", referralHospital === "NIT Warangal Health Centre" ? "opacity-100" : "opacity-0")} />
+                          NIT Warangal Health Centre
+                        </CommandItem>
+                        {hospitals.map((h) => (
+                          <CommandItem
+                            key={h.id}
+                            value={`${h.name} ${h.location}`}
+                            onSelect={() => setReferralHospital(h.name)}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", referralHospital === h.name ? "opacity-100" : "opacity-0")} />
+                            <div className="flex flex-col">
+                              <span>{h.name}</span>
+                              <span className="text-xs text-muted-foreground">{h.location}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
