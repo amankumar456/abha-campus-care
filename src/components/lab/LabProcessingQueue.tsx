@@ -66,7 +66,12 @@ export default function LabProcessingQueue({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">🔬 Pending Lab Tests — Processing Queue</h2>
-        <Badge variant="outline" className="text-amber-600 border-amber-300">{filtered.length} pending</Badge>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setRegisterOpen(true)}>
+            <Plus className="w-4 h-4 mr-1" />Register New Sample
+          </Button>
+          <Badge variant="outline" className="text-amber-600 border-amber-300">{filtered.length} pending</Badge>
+        </div>
       </div>
 
       {/* Filters */}
