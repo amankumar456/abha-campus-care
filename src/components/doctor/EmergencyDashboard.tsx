@@ -92,7 +92,7 @@ const STATUS_CONFIGS = {
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive", icon: AlertTriangle }
 };
 
-// Quick contacts will be fetched from ambulance_service table
+// Contacts are now fetched dynamically inside the component
 
 const TEMPLATE_MESSAGES = [
   "Ambulance dispatched - ETA 10 min",
