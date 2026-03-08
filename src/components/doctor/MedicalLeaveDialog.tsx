@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getMentorUserId } from "@/lib/notifications/medical-leave-notifications";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
   User,
   GraduationCap,
   Building2,
@@ -33,6 +46,8 @@ import {
   Send,
   AlertCircle,
   AlertTriangle,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 
 interface Student {
