@@ -348,6 +348,33 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                       </>
+                    ) : isMedicalStaff ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/staff/home" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/staff/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Staff Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-team" className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />
+                            Medical Team
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     ) : (
                       <>
                         <DropdownMenuItem asChild>
