@@ -95,7 +95,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const MedicalLeave = () => {
-  const { user, isDoctor, isStudent, isMentor, isAdmin, loading: roleLoading, doctorId } = useUserRole();
+  const { user, isDoctor, isStudent, isMentor, isAdmin, isMedicalStaff, loading: roleLoading, doctorId } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("requests");
   const [showLeaveForm, setShowLeaveForm] = useState(false);
@@ -192,7 +192,7 @@ const MedicalLeave = () => {
       if (error) throw error;
       return (data || []) as LeaveRequest[];
     },
-    enabled: (isDoctor || isMentor || isAdmin) && !!user,
+    enabled: (isDoctor || isMentor || isAdmin || isMedicalStaff) && !!user,
   });
 
   useEffect(() => {
@@ -241,7 +241,8 @@ const MedicalLeave = () => {
               {isDoctor && "Refer students for external treatment and track leave requests"}
               {!isDoctor && isStudent && "Track and manage your off-campus medical leave"}
               {!isDoctor && !isStudent && isMentor && "Monitor your mentees' medical leave status"}
-              {isAdmin && !isDoctor && "Oversee all medical leave requests"}
+              {isMedicalStaff && !isDoctor && "View and manage all medical leave records"}
+              {isAdmin && !isDoctor && !isMedicalStaff && "Oversee all medical leave requests"}
             </p>
           </div>
         </div>
@@ -733,8 +734,11 @@ const MedicalLeave = () => {
           </>
         )}
 
-        {/* Mentor/Admin View */}
-        {(isMentor || isAdmin) && (
+        {/* Mentor/Admin/Medical Staff View */}
+        {(isMentor || isAdmin || isMedicalStaff) && !isDoctor && (
+          <>
+          {/* Medical Leave Students Overview */}
+          <MedicalLeaveStudentsOverview doctorId={null} />
           <Card className="bg-white/95 backdrop-blur-sm shadow-lg border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -877,6 +881,7 @@ const MedicalLeave = () => {
               )}
             </CardContent>
           </Card>
+          </>
         )}
       </div>
     </div>
