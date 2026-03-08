@@ -90,6 +90,28 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
   const [techNotes, setTechNotes] = useState("");
   const [sampleOk, setSampleOk] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [manualFile, setManualFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setFileError("Only PDF files are allowed");
+      setManualFile(null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError("File size must be under 10MB");
+      setManualFile(null);
+      return;
+    }
+    setManualFile(file);
+  };
 
   const updateResult = (name: string, value: string) => {
     setResults(prev => ({ ...prev, [name]: value }));
