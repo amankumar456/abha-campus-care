@@ -893,7 +893,17 @@ const StudentProfile = () => {
                                   {leave.health_priority || 'medium'}
                                 </Badge>
                                 {isOverdue && overdueDays > 0 && (
-                                  <Badge variant="destructive" className="flex items-center gap-1">
+                                  <Badge 
+                                    variant="destructive" 
+                                    className={`flex items-center gap-1 ${isDoctor && doctorId ? 'cursor-pointer hover:bg-destructive/80 transition-colors' : ''}`}
+                                    onClick={(e) => {
+                                      if (isDoctor && doctorId) {
+                                        e.stopPropagation();
+                                        setClearanceDialogOpen(leave.id);
+                                      }
+                                    }}
+                                    title={isDoctor ? 'Click to grant clearance' : undefined}
+                                  >
                                     <AlertTriangle className="h-3 w-3" />
                                     {overdueDays}d overdue
                                   </Badge>
@@ -964,7 +974,7 @@ const StudentProfile = () => {
                           )}
 
                           {/* Grant Clearance action for doctors */}
-                          {isDoctor && doctorId && !isCleared && (leave.status === 'returned' || leave.status === 'on_leave' || leave.status === 'return_pending') && (
+                          {isDoctor && doctorId && !isCleared && (leave.status === 'returned' || leave.status === 'on_leave' || leave.status === 'return_pending' || leave.status === 'student_form_pending' || leave.status === 'doctor_referred') && (
                             <Dialog open={clearanceDialogOpen === leave.id} onOpenChange={(open) => {
                               setClearanceDialogOpen(open ? leave.id : null);
                               if (!open) { setFitConfirmed(false); setClearanceNotes(''); }
