@@ -81,6 +81,7 @@ const followupTypes = [
 export default function ScheduleFollowupDialog({ trigger, doctorId }: ScheduleFollowupDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
+  const [patientSearch, setPatientSearch] = useState("");
   const [followupDate, setFollowupDate] = useState<Date>();
   const [followupTime, setFollowupTime] = useState("10:00");
   const [followupType, setFollowupType] = useState("");
