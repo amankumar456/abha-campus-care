@@ -106,6 +106,11 @@ const StudentSearchPanel = () => {
     );
   }, [allStudents, searchQuery]);
 
+  // Filter states
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
   // Fetch health visits for selected student
   const { data: healthVisits, isLoading: isLoadingVisits } = useQuery({
     queryKey: ["student-health-visits", selectedStudent?.id],
