@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import QuickBookCard from "@/components/appointments/QuickBookCard";
 import {
   Calendar,
   ClipboardList,
@@ -283,6 +284,9 @@ const StudentHomeDashboard = () => {
             </Button>
           </div>
         </div>
+
+        {/* Quick Book Appointment */}
+        <QuickBookCard />
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Upcoming Appointments */}
