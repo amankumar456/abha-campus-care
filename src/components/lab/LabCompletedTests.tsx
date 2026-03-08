@@ -30,6 +30,7 @@ interface Props {
   reports: LabReport[];
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  onRefresh?: () => void;
 }
 
 const getSignedUrl = async (storagePath: string): Promise<string | null> => {
