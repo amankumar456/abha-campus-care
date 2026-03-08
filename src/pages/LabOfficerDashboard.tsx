@@ -147,7 +147,7 @@ export default function LabOfficerDashboard() {
             recentUpdates={recentUpdates}
             allReports={labReports}
             pendingReports={pendingReports}
-            onNavigate={setActiveSection}
+            onNavigate={handleSectionChange}
             onRefresh={fetchLabReports}
           />
         );
