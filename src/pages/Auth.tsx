@@ -1007,17 +1007,14 @@ export default function Auth() {
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
 
-                  {/* Link to detailed registration for doctors only */}
+                  {/* Info note for doctor signup */}
                   {userType === "doctor" && (
-                    <div className="text-center pt-2">
+                    <div className="text-center pt-2 p-3 bg-muted rounded-lg">
                       <p className="text-sm text-muted-foreground">
-                        Need to complete full registration?{" "}
-                        <Link 
-                          to="/doctor/register" 
-                          className="text-primary hover:underline font-medium"
-                        >
-                          Doctor Registration
-                        </Link>
+                        After creating your account, you'll complete a 3-step registration process covering{" "}
+                        <span className="font-medium text-foreground">Personal Info</span>,{" "}
+                        <span className="font-medium text-foreground">Professional Details</span>, and{" "}
+                        <span className="font-medium text-foreground">Access Configuration</span>.
                       </p>
                     </div>
                   )}
