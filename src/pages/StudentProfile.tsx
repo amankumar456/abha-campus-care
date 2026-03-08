@@ -962,6 +962,87 @@ const StudentProfile = () => {
                               <span className="font-medium">Cleared on {format(parseISO(leave.doctor_clearance_date), 'MMM d, yyyy')}</span>
                             </div>
                           )}
+
+                          {/* Grant Clearance action for doctors */}
+                          {isDoctor && doctorId && !isCleared && (leave.status === 'returned' || leave.status === 'on_leave' || leave.status === 'return_pending') && (
+                            <Dialog open={clearanceDialogOpen === leave.id} onOpenChange={(open) => {
+                              setClearanceDialogOpen(open ? leave.id : null);
+                              if (!open) { setFitConfirmed(false); setClearanceNotes(''); }
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white">
+                                  <ShieldCheck className="h-4 w-4 mr-2" />
+                                  Grant Fitness Clearance
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <ShieldCheck className="h-5 w-5 text-green-600" />
+                                    Grant Fitness Clearance
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Confirm that {student?.full_name} is fit to resume classes
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="text-sm space-y-2 p-3 rounded-lg bg-muted/50 border">
+                                    <div className="flex items-center gap-2">
+                                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                                      <span>Hospital: <strong>{leave.referral_hospital}</strong></span>
+                                    </div>
+                                    {leave.illness_description && (
+                                      <p className="text-muted-foreground">Reason: {leave.illness_description}</p>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                                      <span>Health Centre Visit: </span>
+                                      {leave.health_centre_visited ? (
+                                        <Badge className="bg-green-100 text-green-800 text-xs">✓ Visited</Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="text-amber-700 text-xs">Not yet visited</Badge>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <label className="text-sm font-medium mb-1.5 block">Recovery Notes (optional)</label>
+                                    <Textarea
+                                      value={clearanceNotes}
+                                      onChange={(e) => setClearanceNotes(e.target.value)}
+                                      placeholder="Any notes about recovery, conditions, or follow-up needed..."
+                                      className="h-20"
+                                    />
+                                  </div>
+
+                                  <div className="flex items-start space-x-3 p-3 rounded-lg border bg-muted/30">
+                                    <Checkbox
+                                      id={`fit-confirm-${leave.id}`}
+                                      checked={fitConfirmed}
+                                      onCheckedChange={(v) => setFitConfirmed(v as boolean)}
+                                    />
+                                    <label htmlFor={`fit-confirm-${leave.id}`} className="text-sm leading-relaxed cursor-pointer">
+                                      I confirm that <strong>{student?.full_name}</strong> has been examined and is{' '}
+                                      <strong>fit to resume regular classes and academic activities</strong>.
+                                    </label>
+                                  </div>
+
+                                  <Button
+                                    onClick={() => handleGrantClearance(leave)}
+                                    disabled={!fitConfirmed || clearanceLoading}
+                                    className="w-full bg-green-600 hover:bg-green-700"
+                                  >
+                                    {clearanceLoading ? 'Processing...' : (
+                                      <>
+                                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                                        Issue Fitness Clearance
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                         </div>
                       );
                     })}
