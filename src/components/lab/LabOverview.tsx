@@ -48,7 +48,6 @@ export default function LabOverview({
   allReports, pendingReports, onNavigate, onRefresh
 }: LabOverviewProps) {
   const values = { totalToday, pending, completed, critical };
-  const [registerOpen, setRegisterOpen] = useState(false);
 
   // Test type distribution for all reports
   const testCounts = new Map<string, number>();
