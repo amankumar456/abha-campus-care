@@ -107,8 +107,15 @@ const Header = () => {
     if (isMentor) return '/mentor/dashboard';
     if (isLabOfficer) return '/lab/dashboard';
     if (isPharmacy) return '/pharmacy/dashboard';
-    if (isMedicalStaff) return '/staff/dashboard';
+    if (isMedicalStaff) return '/staff/home';
     return '/health-dashboard';
+  };
+
+  const getHomePath = () => {
+    if (isAdmin) return '/admin';
+    if (isMentor) return '/mentor/dashboard';
+    if (isMedicalStaff) return '/staff/home';
+    return '/';
   };
 
   return (
@@ -116,7 +123,7 @@ const Header = () => {
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between min-h-[72px]">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-3 shrink-0">
+          <Link to={getHomePath()} className="flex items-center gap-3 shrink-0">
             <img 
               src={nitwLogo} 
               alt="NIT Warangal Logo" 
@@ -197,6 +204,21 @@ const Header = () => {
                 <>
                   <Link to="/pharmacy/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                     Pharmacy Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                </>
+              ) : isMedicalStaff ? (
+                <>
+                  <Link to="/staff/home" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Home
+                  </Link>
+                  <Link to="/staff/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Staff Dashboard
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
                   </Link>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                     Medical Team

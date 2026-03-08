@@ -16,7 +16,7 @@ const BackNavigation = () => {
     if (isMentor) return '/mentor/dashboard';
     if (isLabOfficer) return '/';
     if (isPharmacy) return '/';
-    if (isMedicalStaff) return '/staff/dashboard';
+    if (isMedicalStaff) return '/staff/home';
     return '/';
   };
 
