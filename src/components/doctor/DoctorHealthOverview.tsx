@@ -352,7 +352,17 @@ export default function DoctorHealthOverview() {
               {recentVisits.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No recent visits</p>
               ) : (
-                recentVisits.map((visit) => (
+                (() => {
+                  // Deduplicate: show only the latest visit per student
+                  const latestPerStudent = new Map<string, typeof recentVisits[0]>();
+                  for (const visit of recentVisits) {
+                    const key = visit.students?.roll_number || visit.id;
+                    if (!latestPerStudent.has(key)) {
+                      latestPerStudent.set(key, visit);
+                    }
+                  }
+                  return Array.from(latestPerStudent.values());
+                })().map((visit) => (
                   <div
                     key={visit.id}
                     className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
