@@ -750,6 +750,7 @@ const DoctorReferralForm = () => {
       setReferredForTest(false);
       setApprovedLeave(null);
       setLeaveCheckDone(false);
+      setEmailAutoFilled(false);
       queryClient.invalidateQueries({ queryKey: ["medical-leave-requests"] });
     },
     onError: (error) => {
