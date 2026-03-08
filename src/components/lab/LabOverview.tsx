@@ -72,6 +72,12 @@ export default function LabOverview({
     ? Math.round((allReports.filter(r => r.status === "completed").length / allReports.length) * 100)
     : 0;
 
+  // Recent uploads for verification (last 5 completed reports)
+  const recentUploads = allReports
+    .filter(r => r.status === "completed")
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 5);
+
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
