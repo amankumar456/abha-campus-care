@@ -315,8 +315,8 @@ export default function DoctorDashboard() {
                     {/* Pending Follow-ups */}
                     <PendingFollowupsList doctorId={doctorId} />
 
-                    {/* Access Requests */}
-                    <PendingAccessRequests />
+
+
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg">Quick Actions</CardTitle>
