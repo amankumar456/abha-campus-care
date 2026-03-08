@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -448,8 +449,12 @@ interface Student {
   branch: string | null;
   email?: string | null;
   phone?: string | null;
+  photo_url?: string | null;
+  year_of_study?: string | null;
+  batch?: string | null;
   mentor_name?: string | null;
   mentor_contact?: string | null;
+  mentor_email?: string | null;
   emergencyContacts?: StudentEmergencyContacts;
 }
 
@@ -498,6 +503,7 @@ interface ApprovedLeaveInfo {
 }
 
 const DoctorReferralForm = () => {
+  const navigate = useNavigate();
   const { doctorId, isDoctor } = useUserRole();
   const queryClient = useQueryClient();
   const [foundStudent, setFoundStudent] = useState<Student | null>(null);
@@ -507,6 +513,8 @@ const DoctorReferralForm = () => {
   const [leaveCheckDone, setLeaveCheckDone] = useState(false);
   const [referredForTreatment, setReferredForTreatment] = useState(false);
   const [referredForTest, setReferredForTest] = useState(false);
+  const [isFetchingEmail, setIsFetchingEmail] = useState(false);
+  const [emailAutoFilled, setEmailAutoFilled] = useState(false);
 
   const form = useForm<ReferralFormData>({
     resolver: zodResolver(referralFormSchema),
@@ -531,7 +539,29 @@ const DoctorReferralForm = () => {
     ? getHospitalByName(selectedHospitalName) 
     : null;
 
-  // Search for student by roll number and email
+  // Fetch email from roll number
+  const fetchEmailFromRollNumber = async (rollNumber: string) => {
+    if (!rollNumber || rollNumber.trim().length < 2) return;
+    setIsFetchingEmail(true);
+    setEmailAutoFilled(false);
+    try {
+      const { data } = await supabase
+        .from("students")
+        .select("email")
+        .ilike("roll_number", rollNumber.trim())
+        .maybeSingle();
+      
+      if (data?.email) {
+        form.setValue("email", data.email);
+        setEmailAutoFilled(true);
+      }
+    } catch {
+      // silently fail - user can still type email
+    } finally {
+      setIsFetchingEmail(false);
+    }
+  };
+
   const searchStudent = async () => {
     const rollNumber = form.getValues("rollNumber").trim();
     const email = form.getValues("email").trim().toLowerCase();
@@ -551,8 +581,8 @@ const DoctorReferralForm = () => {
 
     try {
       const { data, error } = await supabase
-        .from("students_doctor_view")
-        .select("id, full_name, roll_number, program, branch")
+        .from("students")
+        .select("id, full_name, roll_number, program, branch, email, phone, photo_url, year_of_study, batch, mentor_name, mentor_contact, mentor_email")
         .ilike("roll_number", rollNumber)
         .limit(1)
         .maybeSingle();
@@ -564,14 +594,8 @@ const DoctorReferralForm = () => {
         return;
       }
 
-      // Verify email matches and get additional student info
-      const { data: studentWithEmail } = await supabase
-        .from("students")
-        .select("email, phone, mentor_name, mentor_contact")
-        .eq("id", data.id)
-        .maybeSingle();
-
-      if (studentWithEmail?.email && studentWithEmail.email.toLowerCase() !== email) {
+      // Verify email matches
+      if (data.email && data.email.toLowerCase() !== email) {
         setSearchError("Email does not match the student's registered email");
         return;
       }
@@ -590,17 +614,14 @@ const DoctorReferralForm = () => {
         fatherContact: profileData?.father_contact || undefined,
         motherName: profileData?.mother_name || undefined,
         motherContact: profileData?.mother_contact || undefined,
-        mentorName: studentWithEmail?.mentor_name || undefined,
-        mentorContact: studentWithEmail?.mentor_contact || undefined,
-        personalPhone: studentWithEmail?.phone || undefined,
+        mentorName: data.mentor_name || undefined,
+        mentorContact: data.mentor_contact || undefined,
+        personalPhone: data.phone || undefined,
       };
 
-      const studentResult = { 
+      const studentResult: Student = { 
         ...data, 
         email,
-        phone: studentWithEmail?.phone,
-        mentor_name: studentWithEmail?.mentor_name,
-        mentor_contact: studentWithEmail?.mentor_contact,
         emergencyContacts,
       };
       setFoundStudent(studentResult);
@@ -729,6 +750,7 @@ const DoctorReferralForm = () => {
       setReferredForTest(false);
       setApprovedLeave(null);
       setLeaveCheckDone(false);
+      setEmailAutoFilled(false);
       queryClient.invalidateQueries({ queryKey: ["medical-leave-requests"] });
     },
     onError: (error) => {
@@ -789,7 +811,7 @@ const DoctorReferralForm = () => {
                 Student Verification
               </Label>
               <p className="text-sm text-muted-foreground">
-                Enter the student's roll number and college email to verify their identity
+                Enter the student's roll number to auto-fetch their official email and verify identity
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -799,21 +821,43 @@ const DoctorReferralForm = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Roll Number</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="e.g., 21CS1045" 
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setFoundStudent(null);
-                            setSearchError(null);
-                            setApprovedLeave(null);
-                            setLeaveCheckDone(false);
-                            setReferredForTreatment(false);
-                            setReferredForTest(false);
-                          }}
-                        />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., 21CS1045" 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              setFoundStudent(null);
+                              setSearchError(null);
+                              setApprovedLeave(null);
+                              setLeaveCheckDone(false);
+                              setReferredForTreatment(false);
+                              setReferredForTest(false);
+                              setEmailAutoFilled(false);
+                              form.setValue("email", "");
+                            }}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              fetchEmailFromRollNumber(e.target.value);
+                            }}
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={isFetchingEmail || !field.value}
+                          onClick={() => fetchEmailFromRollNumber(field.value)}
+                        >
+                          {isFetchingEmail ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -827,12 +871,20 @@ const DoctorReferralForm = () => {
                       <FormLabel className="flex items-center gap-1">
                         <Mail className="h-3 w-3" />
                         College Email
+                        {emailAutoFilled && (
+                          <Badge variant="secondary" className="ml-1 text-xs py-0">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Auto-fetched
+                          </Badge>
+                        )}
                       </FormLabel>
                       <FormControl>
                         <Input 
                           type="email"
                           placeholder="student@student.nitw.ac.in" 
                           {...field}
+                          readOnly={emailAutoFilled}
+                          className={emailAutoFilled ? "bg-muted/50" : ""}
                           onChange={(e) => {
                             field.onChange(e);
                             setFoundStudent(null);
@@ -845,7 +897,7 @@ const DoctorReferralForm = () => {
                         />
                       </FormControl>
                       <FormDescription className="text-xs">
-                        Must be @nitw.ac.in or @student.nitw.ac.in
+                        {emailAutoFilled ? "Email fetched from student records" : "Must be @nitw.ac.in or @student.nitw.ac.in"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -882,16 +934,62 @@ const DoctorReferralForm = () => {
 
               {foundStudent && (
                 <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-primary">Student Verified</span>
+                    <span className="font-medium text-primary">Student Verified ✓</span>
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-foreground">{foundStudent.full_name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {foundStudent.roll_number} • {foundStudent.program}
-                      {foundStudent.branch && ` • ${foundStudent.branch}`}
-                    </p>
+                  <div className="flex items-start gap-4">
+                    {/* Student Photo */}
+                    <div className="shrink-0">
+                      {foundStudent.photo_url ? (
+                        <img 
+                          src={foundStudent.photo_url} 
+                          alt={foundStudent.full_name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-2 border-muted-foreground/20">
+                          <User className="w-7 h-7 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Student Details */}
+                    <div className="flex-1 space-y-1.5">
+                      <button
+                        type="button"
+                        className="font-semibold text-primary hover:underline text-left text-base"
+                        onClick={() => navigate(`/student-profile/${foundStudent.roll_number}`)}
+                      >
+                        {foundStudent.full_name}
+                      </button>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <GraduationCap className="h-3.5 w-3.5" />
+                          {foundStudent.roll_number}
+                        </span>
+                        <span>{foundStudent.program}{foundStudent.branch ? ` — ${foundStudent.branch}` : ''}</span>
+                        {foundStudent.year_of_study && <span>Year: {foundStudent.year_of_study}</span>}
+                        {foundStudent.batch && <span>Batch: {foundStudent.batch}</span>}
+                        {foundStudent.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3.5 w-3.5" />
+                            {foundStudent.email}
+                          </span>
+                        )}
+                        {foundStudent.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            {foundStudent.phone}
+                          </span>
+                        )}
+                        {foundStudent.mentor_name && (
+                          <span className="flex items-center gap-1 col-span-2">
+                            <Users className="h-3.5 w-3.5" />
+                            Mentor: {foundStudent.mentor_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
