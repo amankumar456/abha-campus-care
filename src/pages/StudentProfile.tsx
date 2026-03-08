@@ -893,7 +893,17 @@ const StudentProfile = () => {
                                   {leave.health_priority || 'medium'}
                                 </Badge>
                                 {isOverdue && overdueDays > 0 && (
-                                  <Badge variant="destructive" className="flex items-center gap-1">
+                                  <Badge 
+                                    variant="destructive" 
+                                    className={`flex items-center gap-1 ${isDoctor && doctorId ? 'cursor-pointer hover:bg-destructive/80 transition-colors' : ''}`}
+                                    onClick={(e) => {
+                                      if (isDoctor && doctorId) {
+                                        e.stopPropagation();
+                                        setClearanceDialogOpen(leave.id);
+                                      }
+                                    }}
+                                    title={isDoctor ? 'Click to grant clearance' : undefined}
+                                  >
                                     <AlertTriangle className="h-3 w-3" />
                                     {overdueDays}d overdue
                                   </Badge>
