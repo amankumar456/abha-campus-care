@@ -3,10 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, User, FileText, ExternalLink, Download, Printer, ArrowLeft, Calendar, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface LabReport {
   id: string;
@@ -38,10 +39,17 @@ interface StudentGroup {
   reports: LabReport[];
 }
 
+const getSignedUrl = async (storagePath: string): Promise<string | null> => {
+  if (storagePath.startsWith("http")) return storagePath;
+  const { data, error } = await supabase.storage.from("lab-reports").createSignedUrl(storagePath, 3600);
+  if (error) { console.error("Signed URL error:", error); return null; }
+  return data.signedUrl;
+};
+
 export default function LabStudentRecords({ reports, searchQuery, onSearchChange }: Props) {
   const [selectedStudent, setSelectedStudent] = useState<StudentGroup | null>(null);
+  const { toast } = useToast();
 
-  // Group by student
   const studentMap = new Map<string, StudentGroup>();
   reports.forEach(r => {
     if (!r.student) return;
@@ -70,8 +78,32 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
     return s.student?.full_name?.toLowerCase().includes(q) || s.rollNumber.toLowerCase().includes(q);
   });
 
+  const handleViewFile = async (r: LabReport) => {
+    if (!r.report_file_url) return;
+    const url = await getSignedUrl(r.report_file_url);
+    if (url) window.open(url, "_blank");
+    else toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+  };
+
   const handlePrintReport = async (r: LabReport) => {
     const reportNo = `LR/${format(new Date(r.created_at), "yyyyMMdd")}/${r.id.slice(0, 6).toUpperCase()}`;
+
+    let fileEmbed = "";
+    if (r.report_file_url) {
+      const url = await getSignedUrl(r.report_file_url);
+      if (url) {
+        const isPdf = r.report_file_name?.toLowerCase().endsWith(".pdf");
+        const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(r.report_file_name || "");
+        if (isPdf) {
+          fileEmbed = `<div class="section"><div class="section-title">ATTACHED REPORT</div><iframe src="${url}" style="width:100%;height:600px;border:1px solid #ddd;border-radius:4px;" title="Lab Report"></iframe></div>`;
+        } else if (isImage) {
+          fileEmbed = `<div class="section"><div class="section-title">ATTACHED REPORT</div><img src="${url}" style="max-width:100%;border:1px solid #ddd;border-radius:4px;" alt="Lab Report" /></div>`;
+        } else {
+          fileEmbed = `<div class="section"><div class="section-title">ATTACHED REPORT</div><div class="info-box"><strong>File:</strong> ${r.report_file_name}<br/><a href="${url}" target="_blank">Download File</a></div></div>`;
+        }
+      }
+    }
+
     const bodyHtml = `
       ${getNitwHeaderHtml("LABORATORY REPORT")}
       <div class="doc-title">
@@ -92,17 +124,8 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
       <div class="section">
         <div class="section-title">TEST: ${r.test_name.toUpperCase()}</div>
         <div class="body-text" style="white-space:pre-line">${r.notes || "Results attached as file."}</div>
-        ${r.report_file_name ? `<div class="info-box"><strong>Attached File:</strong> ${r.report_file_name}</div>` : ""}
       </div>
-      ${r.report_file_url ? `
-      <div class="section">
-        <div class="section-title">UPLOADED REPORT</div>
-        <div class="body-text">
-          <p>The detailed lab report file has been uploaded and is available digitally.</p>
-          <p><strong>File:</strong> ${r.report_file_name || "Lab Report"}</p>
-          <p><strong>Uploaded on:</strong> ${format(new Date(r.updated_at), "dd MMM yyyy, hh:mm a")}</p>
-        </div>
-      </div>` : ""}
+      ${fileEmbed}
       <div class="signature-section">
         <div class="signature-box"><div class="signature-line">Lab Technician</div></div>
         <div class="signature-box"><div class="signature-line">Pathologist</div></div>
@@ -150,9 +173,9 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
                   </div>
                   <div className="flex items-center gap-2">
                     {r.report_file_url && (
-                      <a href={r.report_file_url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm"><Download className="w-3 h-3 mr-1" />View File</Button>
-                      </a>
+                      <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
+                        <Download className="w-3 h-3 mr-1" />View File
+                      </Button>
                     )}
                     {r.status === "completed" && (
                       <Button variant="ghost" size="sm" onClick={() => handlePrintReport(r)}>
