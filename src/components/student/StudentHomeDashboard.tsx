@@ -67,19 +67,21 @@ const StudentHomeDashboard = () => {
     queryKey: ["student-home-stats", student?.id],
     queryFn: async () => {
       if (!student) return null;
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-      const [visitsRes, appointmentsRes, leavesRes, prescriptionsRes] = await Promise.all([
+      const [healthVisitsRes, completedAppointmentsRes, upcomingAppointmentsRes, leavesRes, prescriptionsRes] = await Promise.all([
         supabase.from("health_visits").select("id", { count: "exact", head: true }).eq("student_id", student.id),
+        supabase.from("appointments").select("id", { count: "exact", head: true }).eq("patient_id", user!.id).eq("status", "completed"),
         supabase.from("appointments").select("id", { count: "exact", head: true }).eq("patient_id", user!.id).in("status", ["pending", "confirmed"]),
         supabase.from("medical_leave_requests").select("id", { count: "exact", head: true }).eq("student_id", student.id).in("status", ["doctor_referred", "student_form_pending", "on_leave", "return_pending"]),
         supabase.from("prescriptions").select("id", { count: "exact", head: true }).eq("student_id", student.id),
       ]);
 
+      // Total visits = health_visits + completed appointments (to match HealthDashboard logic)
+      const totalVisits = (healthVisitsRes.count || 0) + (completedAppointmentsRes.count || 0);
+
       return {
-        totalVisits: visitsRes.count || 0,
-        upcomingAppointments: appointmentsRes.count || 0,
+        totalVisits,
+        upcomingAppointments: upcomingAppointmentsRes.count || 0,
         activeLeaves: leavesRes.count || 0,
         totalPrescriptions: prescriptionsRes.count || 0,
       };
