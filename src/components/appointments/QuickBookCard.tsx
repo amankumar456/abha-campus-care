@@ -108,6 +108,8 @@ const QuickBookCard = ({ onQuickBook }: QuickBookCardProps) => {
       // Invalidate relevant queries so dashboards refresh
       queryClient.invalidateQueries({ queryKey: ['upcoming-appointments-home'] });
       queryClient.invalidateQueries({ queryKey: ['student-appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['student-home-appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['student-home-stats'] });
 
       onQuickBook?.(reasonId);
     } catch (err: any) {
