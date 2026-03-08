@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import DoctorHomeDashboard from "@/components/doctor/DoctorHomeDashboard";
 import LabOfficerHomeDashboard from "@/components/lab/LabOfficerHomeDashboard";
+import PharmacyHomeDashboard from "@/components/pharmacy/PharmacyHomeDashboard";
 
 const Index = () => {
   const { user, isDoctor, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, loading } = useUserRole();
@@ -23,14 +24,13 @@ const Index = () => {
   // Redirect staff roles (except lab officer) to their dedicated dashboards
   useEffect(() => {
     if (loading || !user) return;
-    if (isPharmacy) navigate('/pharmacy/dashboard', { replace: true });
-    else if (isMedicalStaff) navigate('/staff/dashboard', { replace: true });
+    if (isMedicalStaff) navigate('/staff/dashboard', { replace: true });
     else if (isAdmin) navigate('/admin', { replace: true });
     else if (isMentor) navigate('/mentor/dashboard', { replace: true });
-  }, [user, loading, isPharmacy, isMedicalStaff, isAdmin, isMentor, navigate]);
+  }, [user, loading, isMedicalStaff, isAdmin, isMentor, navigate]);
 
   // Don't render landing page for redirecting staff roles
-  if (user && (isPharmacy || isMedicalStaff || isAdmin || isMentor)) {
+  if (user && (isMedicalStaff || isAdmin || isMentor)) {
     return null;
   }
 
@@ -42,6 +42,8 @@ const Index = () => {
           <DoctorHomeDashboard />
         ) : isLabOfficer && user ? (
           <LabOfficerHomeDashboard />
+        ) : isPharmacy && user ? (
+          <PharmacyHomeDashboard />
         ) : (
           <>
             <WelcomeBanner />
