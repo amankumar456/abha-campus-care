@@ -226,6 +226,7 @@ export default function LabOfficerDashboard() {
           setRegisterOpen(false);
         }}
       />
+      </div>
     </div>
   );
 }
