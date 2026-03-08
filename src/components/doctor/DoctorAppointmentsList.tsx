@@ -54,31 +54,18 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
       const patientIds = [...new Set(data.map((apt) => apt.patient_id))];
       
       const { data: students, error: studentsError } = await supabase
-        .from("students_doctor_view")
-        .select("id, user_id, full_name, roll_number, program, branch, batch, year_of_study")
+        .from("students")
+        .select("id, user_id, full_name, roll_number, program, branch, batch, year_of_study, photo_url")
         .in("user_id", patientIds);
 
       if (studentsError) {
         console.error("Error fetching students:", studentsError);
       }
 
-      // Fetch photo_urls from students table
-      const studentIds = students?.map(s => s.id).filter(Boolean) || [];
-      const { data: photoData } = studentIds.length > 0 ? await supabase
-        .from("students")
-        .select("id, photo_url")
-        .in("id", studentIds) : { data: [] };
-
-      const photoMap = new Map<string, string | null>(photoData?.map(p => [p.id, p.photo_url] as [string, string | null]) || []);
-
       // Map students to appointments
       const appointmentsWithStudents = data.map((apt) => ({
         ...apt,
-        student: (() => {
-          const s = students?.find((s) => s.user_id === apt.patient_id);
-          if (!s) return undefined;
-          return { ...s, photo_url: photoMap.get(s.id) || null };
-        })(),
+        student: students?.find((s) => s.user_id === apt.patient_id),
       }));
 
       return appointmentsWithStudents;
