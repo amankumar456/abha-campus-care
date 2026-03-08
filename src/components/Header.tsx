@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText, ArrowLeft, Home } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, ShieldAlert, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText, ArrowLeft, Home } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -240,6 +240,18 @@ const Header = () => {
                     Medical Team
                   </Link>
                 </>
+              ) : isAdmin ? (
+                <>
+                  <Link to="/admin/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
@@ -281,6 +293,8 @@ const Header = () => {
                         <Stethoscope className="w-4 h-4" />
                       ) : getUserType() === 'mentor' ? (
                         <Users className="w-4 h-4" />
+                      ) : isAdmin ? (
+                        <Shield className="w-4 h-4" />
                       ) : isLabOfficer ? (
                         <Stethoscope className="w-4 h-4" />
                       ) : isPharmacy ? (
@@ -418,10 +432,43 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                       </>
+                    ) : isAdmin ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-team" className="flex items-center gap-2">
+                            <Stethoscope className="w-4 h-4" />
+                            Medical Team
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/admin/dashboard?tab=security" className="flex items-center gap-2">
+                            <ShieldAlert className="w-4 h-4" />
+                            Security
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     ) : (
                       <>
                         <DropdownMenuItem asChild>
-                          <Link to={isAdmin ? '/admin' : '/student/profile'} className="flex items-center gap-2">
+                          <Link to="/student/profile" className="flex items-center gap-2">
                             <User className="w-4 h-4" />
                             Profile
                           </Link>
@@ -614,6 +661,21 @@ const Header = () => {
                   </Link>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                     Medical Team
+                  </Link>
+                </>
+              ) : isAdmin ? (
+                <>
+                  <Link to="/admin/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Leave
+                  </Link>
+                  <Link to="/admin/dashboard?tab=security" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Security
                   </Link>
                 </>
               ) : (
