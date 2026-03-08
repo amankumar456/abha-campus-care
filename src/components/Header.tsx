@@ -184,6 +184,20 @@ const Header = () => {
                 <div className="w-20 h-9 bg-muted animate-pulse rounded-md" />
               ) : user ? (
                 <>
+                {isDoctor && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative"
+                    onClick={() => navigate('/doctor/dashboard')}
+                    title="Pending Access Requests"
+                  >
+                    <Shield className="w-5 h-5 text-muted-foreground" />
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
+                      3
+                    </span>
+                  </Button>
+                )}
                 <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
