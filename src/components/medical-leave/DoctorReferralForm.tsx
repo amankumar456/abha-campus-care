@@ -448,8 +448,12 @@ interface Student {
   branch: string | null;
   email?: string | null;
   phone?: string | null;
+  photo_url?: string | null;
+  year_of_study?: string | null;
+  batch?: string | null;
   mentor_name?: string | null;
   mentor_contact?: string | null;
+  mentor_email?: string | null;
   emergencyContacts?: StudentEmergencyContacts;
 }
 
