@@ -245,6 +245,8 @@ const Header = () => {
                         <Users className="w-4 h-4" />
                       ) : isLabOfficer ? (
                         <Stethoscope className="w-4 h-4" />
+                      ) : isPharmacy ? (
+                        <Pill className="w-4 h-4" />
                       ) : (
                         <GraduationCap className="w-4 h-4" />
                       )}
@@ -259,40 +261,71 @@ const Header = () => {
                       </p>
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to={
-                        isDoctor ? '/doctor/profile' : 
-                        isMentor ? '/mentor/profile' :
-                        isAdmin ? '/admin' :
-                        isLabOfficer ? '/lab/dashboard' :
-                        '/student/profile'
-                      } className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={getDashboardPath()} className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        My Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/my-appointments" className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        My Appointments
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={
-                        isDoctor ? '/doctor/profile?tab=settings' :
-                        isMentor ? '/mentor/profile?tab=settings' :
-                        '/student/profile?tab=settings'
-                      } className="flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
+                    {isPharmacy ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/pharmacy/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Pharmacy Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/pharmacy/dashboard?filter=pending" className="flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4" />
+                            Pending Prescriptions
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/pharmacy/dashboard?tab=inventory" className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Inventory
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to={
+                            isDoctor ? '/doctor/profile' : 
+                            isMentor ? '/mentor/profile' :
+                            isAdmin ? '/admin' :
+                            isLabOfficer ? '/lab/dashboard' :
+                            '/student/profile'
+                          } className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to={getDashboardPath()} className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            My Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/my-appointments" className="flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4" />
+                            My Appointments
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to={
+                            isDoctor ? '/doctor/profile?tab=settings' :
+                            isMentor ? '/mentor/profile?tab=settings' :
+                            '/student/profile?tab=settings'
+                          } className="flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Settings
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                       <LogOut className="w-4 h-4 mr-2" />
