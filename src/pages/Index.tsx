@@ -44,6 +44,8 @@ const Index = () => {
           <LabOfficerHomeDashboard />
         ) : isPharmacy && user ? (
           <PharmacyHomeDashboard />
+        ) : isMedicalStaff && user ? (
+          <MedicalStaffHomeDashboard />
         ) : (
           <>
             <WelcomeBanner />
