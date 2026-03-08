@@ -1,6 +1,6 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText, ArrowLeft, Home } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,7 @@ const Header = () => {
   const [isLoading, setIsLoading] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, isDoctor, isMentor, isAdmin, isLabOfficer, isPharmacy, isMedicalStaff, loading: roleLoading } = useUserRole();
 
@@ -658,6 +659,54 @@ const Header = () => {
           </nav>
         )}
       </div>
+      {/* Back & Home Navigation Bar */}
+      {(() => {
+        // Hide on public pages when not logged in
+        const publicOnlyPages = ["/auth", "/email-confirmation"];
+        if (!user && (location.pathname === "/" || publicOnlyPages.includes(location.pathname))) {
+          return null;
+        }
+
+        const homePath = getHomePath();
+        const homePages = ['/', '/mentor/home', '/admin', '/staff/home'];
+        const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
+
+        // Hide on user's home page
+        if (isOnHomePage) return null;
+
+        const handleBack = () => {
+          if (isLabOfficer || isPharmacy || isMedicalStaff || isAdmin) {
+            navigate(homePath);
+          } else {
+            navigate(-1);
+          }
+        };
+
+        return (
+          <div className="border-t border-border bg-card/80">
+            <div className="container mx-auto px-4 py-1.5 flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="text-primary hover:bg-primary/10 h-8"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(homePath)}
+                className="text-primary hover:bg-primary/10 h-8"
+              >
+                <Home className="h-4 w-4 mr-1" />
+                Home
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
     </header>
   );
 };
