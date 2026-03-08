@@ -76,32 +76,35 @@ interface Appointment {
 }
 
 const StudentSearchPanel = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   
-  // Filter states
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // Search students by name or roll number - using limited view for privacy
-  const { data: students, isLoading: isSearching } = useQuery({
-    queryKey: ["student-search", searchQuery],
+  // Fetch all students by default
+  const { data: allStudents, isLoading: isLoadingAll } = useQuery({
+    queryKey: ["all-students-records"],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
-      
-      // Use the limited view that excludes contact information
       const { data, error } = await supabase
         .from("students_doctor_view")
         .select("id, full_name, roll_number, program, batch, branch, year_of_study")
-        .or(`full_name.ilike.%${searchQuery}%,roll_number.ilike.%${searchQuery}%`)
-        .limit(10);
+        .order("full_name");
 
       if (error) throw error;
       return data as Student[];
     },
-    enabled: searchQuery.length >= 2,
   });
+
+  // Filter students based on search query
+  const filteredStudents = useMemo(() => {
+    if (!allStudents) return [];
+    if (!searchQuery || searchQuery.length < 2) return allStudents;
+    const q = searchQuery.toLowerCase();
+    return allStudents.filter(
+      (s) =>
+        s.full_name.toLowerCase().includes(q) ||
+        s.roll_number.toLowerCase().includes(q)
+    );
+  }, [allStudents, searchQuery]);
 
   // Fetch health visits for selected student
   const { data: healthVisits, isLoading: isLoadingVisits } = useQuery({
