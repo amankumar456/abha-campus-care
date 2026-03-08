@@ -106,7 +106,7 @@ const Header = () => {
   };
 
   const getDashboardPath = () => {
-    if (isAdmin) return '/admin';
+    if (isAdmin) return '/admin/dashboard';
     if (isDoctor) return '/doctor/dashboard';
     if (isMentor) return '/mentor/dashboard';
     if (isLabOfficer) return '/lab/dashboard';
