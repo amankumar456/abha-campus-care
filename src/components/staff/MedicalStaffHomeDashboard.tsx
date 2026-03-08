@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { format, startOfDay, isAfter } from "date-fns";
+import { useEffect } from "react";
 import {
   ShieldCheck,
   FileText,
@@ -21,11 +22,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 
 export default function MedicalStaffHomeDashboard() {
   const navigate = useNavigate();
   const { user } = useUserRole();
+  const queryClient = useQueryClient();
 
   const todayStart = startOfDay(new Date());
 
@@ -76,6 +77,36 @@ export default function MedicalStaffHomeDashboard() {
       return data || [];
     },
   });
+
+  // Realtime subscriptions
+  useEffect(() => {
+    const leaveChannel = supabase
+      .channel("staff-home-leaves-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "medical_leave_requests" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["staff-home-leaves"] });
+        }
+      )
+      .subscribe();
+
+    const apptChannel = supabase
+      .channel("staff-home-appts-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["staff-home-today-appointments"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(leaveChannel);
+      supabase.removeChannel(apptChannel);
+    };
+  }, [queryClient]);
 
   const isLoading = loadingLeaves || loadingStudents || loadingAppts || loadingDoctors;
 
@@ -191,6 +222,9 @@ export default function MedicalStaffHomeDashboard() {
             >
               <FileText className="w-4 h-4 mr-3 text-primary" />
               Issue Medical Leave
+              {doctorReferredCount > 0 && (
+                <Badge className="ml-auto mr-2 bg-primary/10 text-primary hover:bg-primary/20">{doctorReferredCount} pending</Badge>
+              )}
               <ArrowRight className="w-4 h-4 ml-auto" />
             </Button>
             <Button
@@ -209,6 +243,9 @@ export default function MedicalStaffHomeDashboard() {
             >
               <Clock className="w-4 h-4 mr-3 text-orange-600" />
               View Medical Leave Records
+              {allLeaves.length > 0 && (
+                <Badge className="ml-auto mr-2 bg-orange-100 text-orange-800 hover:bg-orange-200">{allLeaves.length} active</Badge>
+              )}
               <ArrowRight className="w-4 h-4 ml-auto" />
             </Button>
             <Button
@@ -218,6 +255,9 @@ export default function MedicalStaffHomeDashboard() {
             >
               <Stethoscope className="w-4 h-4 mr-3 text-blue-600" />
               View Medical Team
+              {allDoctors.length > 0 && (
+                <Badge className="ml-auto mr-2 bg-blue-100 text-blue-800 hover:bg-blue-200">{allDoctors.length}</Badge>
+              )}
               <ArrowRight className="w-4 h-4 ml-auto" />
             </Button>
           </CardContent>
@@ -230,7 +270,7 @@ export default function MedicalStaffHomeDashboard() {
               <FileText className="w-5 h-5 text-orange-600" />
               Leave Status Summary
             </CardTitle>
-            <CardDescription>Current medical leave breakdown</CardDescription>
+            <CardDescription>Current medical leave breakdown (live)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -272,6 +312,7 @@ export default function MedicalStaffHomeDashboard() {
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="w-5 h-5 text-muted-foreground" />
               Recent Medical Leave Requests
+              <Badge variant="outline" className="ml-2 text-xs font-normal">Live</Badge>
             </CardTitle>
             <CardDescription>Latest referrals requiring attention</CardDescription>
           </div>
