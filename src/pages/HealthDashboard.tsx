@@ -106,7 +106,7 @@ interface AttentionStudent {
 
 const HealthDashboard = () => {
   const navigate = useNavigate();
-  const { user, isDoctor, isMentor, loading: roleLoading, mentorId } = useUserRole();
+  const { user, isDoctor, isMentor, isLabOfficer, isPharmacy, isMedicalStaff, loading: roleLoading, mentorId } = useUserRole();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentVisits, setRecentVisits] = useState<RecentVisit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -297,8 +297,15 @@ const HealthDashboard = () => {
   useEffect(() => {
     if (!roleLoading && !user) {
       navigate('/auth');
+      return;
     }
-  }, [user, roleLoading, navigate]);
+    // Redirect staff roles to their dedicated dashboards
+    if (!roleLoading && user) {
+      if (isLabOfficer) { navigate('/lab/dashboard', { replace: true }); return; }
+      if (isPharmacy) { navigate('/pharmacy/dashboard', { replace: true }); return; }
+      if (isMedicalStaff) { navigate('/staff/dashboard', { replace: true }); return; }
+    }
+  }, [user, roleLoading, navigate, isLabOfficer, isPharmacy, isMedicalStaff]);
 
   useEffect(() => {
     if (!roleLoading && user) {
