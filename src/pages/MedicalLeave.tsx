@@ -192,7 +192,7 @@ const MedicalLeave = () => {
       if (error) throw error;
       return (data || []) as LeaveRequest[];
     },
-    enabled: (isDoctor || isMentor || isAdmin) && !!user,
+    enabled: (isDoctor || isMentor || isAdmin || isMedicalStaff) && !!user,
   });
 
   useEffect(() => {
