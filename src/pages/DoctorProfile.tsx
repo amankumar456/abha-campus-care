@@ -66,18 +66,18 @@ export default function DoctorProfile() {
       const { data: todayApts } = await supabase
         .from("appointments")
         .select("id")
-        .eq("medical_officer_id", doctorId)
+        
         .eq("appointment_date", today)
         .neq("status", "cancelled");
       const { data: pendingApts } = await supabase
         .from("appointments")
         .select("id")
-        .eq("medical_officer_id", doctorId)
+        
         .eq("status", "pending");
       const { data: allPatients } = await supabase
         .from("appointments")
         .select("patient_id")
-        .eq("medical_officer_id", doctorId);
+        ;
       const uniquePatients = new Set(allPatients?.map((a) => a.patient_id) || []);
       return {
         todayCount: todayApts?.length || 0,

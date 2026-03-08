@@ -50,7 +50,7 @@ export default function DoctorHomeDashboard() {
         .from("appointments")
         .select("id, appointment_time, status, reason, patient_id")
         .eq("appointment_date", today)
-        .eq("medical_officer_id", doctorId)
+        
         .order("appointment_time", { ascending: true });
       return data || [];
     },
@@ -83,7 +83,7 @@ export default function DoctorHomeDashboard() {
       const { count } = await supabase
         .from("appointments")
         .select("id", { count: "exact", head: true })
-        .eq("medical_officer_id", doctorId)
+        
         .eq("status", "pending");
       return count || 0;
     },
