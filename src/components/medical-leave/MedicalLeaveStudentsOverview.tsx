@@ -292,7 +292,10 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
               <User className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <h4 className="font-semibold text-foreground truncate text-base">
+              <h4
+                className="font-semibold text-foreground truncate text-base cursor-pointer hover:text-primary hover:underline transition-colors"
+                onClick={() => leave.student?.roll_number && navigate(`/student-profile/${leave.student.roll_number}`)}
+              >
                 {leave.student?.full_name || "Unknown"}
               </h4>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
