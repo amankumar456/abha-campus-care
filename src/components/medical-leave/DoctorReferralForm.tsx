@@ -516,6 +516,60 @@ const DoctorReferralForm = () => {
   const [isFetchingEmail, setIsFetchingEmail] = useState(false);
   const [emailAutoFilled, setEmailAutoFilled] = useState(false);
 
+  // Quick Lookup state
+  const [lookupRoll, setLookupRoll] = useState("");
+  const [lookupStudent, setLookupStudent] = useState<Student | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
+  const quickLookupStudent = async () => {
+    if (!lookupRoll.trim()) return;
+    setLookupLoading(true);
+    setLookupError(null);
+    setLookupStudent(null);
+    try {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name, roll_number, program, branch, email, phone, photo_url, year_of_study, batch, mentor_name, mentor_contact, mentor_email")
+        .ilike("roll_number", lookupRoll.trim())
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        setLookupError("No student found with this roll number");
+        return;
+      }
+      // Fetch profile data
+      const { data: profileData } = await supabase
+        .from("student_profiles")
+        .select("blood_group, known_allergies, current_medications, emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact")
+        .eq("student_id", data.id)
+        .maybeSingle();
+
+      setLookupStudent({
+        ...data,
+        emergencyContacts: {
+          emergencyContact: profileData?.emergency_contact || undefined,
+          emergencyRelationship: profileData?.emergency_relationship || undefined,
+          fatherName: profileData?.father_name || undefined,
+          fatherContact: profileData?.father_contact || undefined,
+          motherName: profileData?.mother_name || undefined,
+          motherContact: profileData?.mother_contact || undefined,
+          mentorName: data.mentor_name || undefined,
+          mentorContact: data.mentor_contact || undefined,
+          personalPhone: data.phone || undefined,
+        },
+        // store extra profile info as ad-hoc for display
+        _bloodGroup: profileData?.blood_group,
+        _allergies: profileData?.known_allergies,
+        _medications: profileData?.current_medications,
+      } as any);
+    } catch {
+      setLookupError("Failed to fetch student details");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
   const form = useForm<ReferralFormData>({
     resolver: zodResolver(referralFormSchema),
     defaultValues: {
