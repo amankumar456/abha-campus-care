@@ -174,9 +174,13 @@ export default function StudentProfilePage() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab === 'settings') setActiveTab('settings');
-    else if (tab === 'prescriptions' || tab === 'records') {
+    else if (['prescriptions', 'records', 'certificates', 'labtests', 'referrals'].includes(tab || '')) {
       setActiveTab('records');
-      setRecordsSubTab(tab === 'prescriptions' ? 'prescriptions' : 'visits');
+      if (tab === 'prescriptions') setRecordsSubTab('prescriptions');
+      else if (tab === 'certificates') setRecordsSubTab('certificates');
+      else if (tab === 'labtests') setRecordsSubTab('labtests');
+      else if (tab === 'referrals') setRecordsSubTab('referrals');
+      else setRecordsSubTab('visits');
     } else setActiveTab('profile');
   }, [searchParams]);
   const { user, loading: roleLoading } = useUserRole();
