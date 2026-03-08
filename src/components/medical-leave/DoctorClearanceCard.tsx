@@ -11,6 +11,7 @@ import { CheckCircle2, ShieldCheck, Stethoscope, User } from "lucide-react";
 import { format } from "date-fns";
 import { 
   notifyStudentOfStatusUpdate, 
+  notifyStudentOfCertificate,
   getStudentUserId 
 } from "@/lib/notifications/medical-leave-notifications";
 
