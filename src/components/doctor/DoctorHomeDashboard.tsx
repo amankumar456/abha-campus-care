@@ -92,9 +92,19 @@ export default function DoctorHomeDashboard() {
 
   const confirmedToday = todayAppointments?.filter((a) => a.status === "confirmed").length || 0;
   const pendingToday = todayAppointments?.filter((a) => a.status === "pending").length || 0;
-  const highPriorityLeaves = activeLeaves?.filter((l: any) => l.health_priority === "high").length || 0;
 
-  const isLoading = doctorLoading || apptLoading || leaveLoading;
+  // Deduplicate active leaves by student roll number
+  const uniqueActiveLeaves = (() => {
+    if (!activeLeaves?.length) return [];
+    const seen = new Map<string, any>();
+    for (const leave of activeLeaves) {
+      const key = leave.student?.roll_number || leave.id;
+      if (!seen.has(key)) seen.set(key, leave);
+    }
+    return Array.from(seen.values());
+  })();
+
+  const highPriorityLeaves = uniqueActiveLeaves.filter((l: any) => l.health_priority === "high").length;
 
   if (isLoading) {
     return (
