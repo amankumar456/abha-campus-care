@@ -170,6 +170,7 @@ export default function LabOfficerDashboard() {
             reports={completedReports}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onRefresh={fetchLabReports}
           />
         );
       case "students":
