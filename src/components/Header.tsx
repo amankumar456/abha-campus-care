@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText, ArrowLeft, Home } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, ShieldCheck, ShieldAlert, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText, ArrowLeft, Home } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
