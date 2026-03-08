@@ -1283,7 +1283,7 @@ export default function StudentProfilePage() {
                                     if (error) throw error;
                                     window.open(data.signedUrl, '_blank');
                                   } catch (err: any) {
-                                    toast('Could not open PDF: ' + (err.message || 'Unknown error'));
+                                    toast({ title: 'Error', description: 'Could not open PDF: ' + (err.message || 'Unknown error'), variant: 'destructive' });
                                   }
                                 }}
                               >
