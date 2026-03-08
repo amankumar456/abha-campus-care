@@ -32,6 +32,7 @@ const MedicalLeave = lazy(() => import("./pages/MedicalLeave"));
 const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
 const LabOfficerDashboard = lazy(() => import("./pages/LabOfficerDashboard"));
 const MedicalStaffDashboard = lazy(() => import("./pages/MedicalStaffDashboard"));
+const MedicalStaffHome = lazy(() => import("./pages/MedicalStaffHome"));
 const EmergencyPage = lazy(() => import("./pages/EmergencyPage"));
 
 const PageLoader = () => (
@@ -101,6 +102,7 @@ const App = () => (
             {/* Staff Dashboards */}
             <Route path="/pharmacy/dashboard" element={<ProtectedRoute><PharmacyDashboard /></ProtectedRoute>} />
             <Route path="/lab/dashboard" element={<ProtectedRoute><LabOfficerDashboard /></ProtectedRoute>} />
+            <Route path="/staff/home" element={<ProtectedRoute><MedicalStaffHome /></ProtectedRoute>} />
             <Route path="/staff/dashboard" element={<ProtectedRoute><MedicalStaffDashboard /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
