@@ -494,8 +494,11 @@ export default function MedicalLeaveTab() {
                               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                 <User className="h-5 w-5 text-primary" />
                               </div>
-                              <div>
-                                <h4 className="font-medium text-foreground">{request.student?.full_name}</h4>
+                              <div
+                                className="cursor-pointer hover:underline"
+                                onClick={() => request.student?.roll_number && navigate(`/student-profile/${request.student.roll_number}`)}
+                              >
+                                <h4 className="font-medium text-primary">{request.student?.full_name}</h4>
                                 <p className="text-sm text-muted-foreground">{request.student?.roll_number}</p>
                                 <div className="flex items-center gap-2 mt-2 text-sm">
                                   <Building2 className="h-4 w-4 text-muted-foreground" />
