@@ -13,6 +13,7 @@ interface LabSidebarProps {
 
 const menuItems = [
   { id: "overview", label: "Dashboard Home", icon: LayoutDashboard },
+  { id: "register", label: "Register Sample", icon: FlaskConical, highlight: true },
   { id: "processing", label: "Processing Queue", icon: TestTubes },
   { id: "completed", label: "Completed Tests", icon: ClipboardList },
   { id: "students", label: "Student Records", icon: Users },
