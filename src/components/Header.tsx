@@ -1,4 +1,4 @@
-import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, Pill, LayoutDashboard, Package, ClipboardList } from "lucide-react";
+import { Menu, X, Search, LogIn, UserPlus, GraduationCap, Stethoscope, LogOut, User, Users, Settings, Shield, Pill, LayoutDashboard, Package, ClipboardList, Calendar, FileText } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -261,7 +261,40 @@ const Header = () => {
                       </p>
                     </div>
                     <DropdownMenuSeparator />
-                    {isPharmacy ? (
+                    {isDoctor ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/doctor/profile" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/doctor/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            My Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/doctor/dashboard" className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Today's Appointments
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/doctor/profile?tab=settings" className="flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Settings
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    ) : isPharmacy ? (
                       <>
                         <DropdownMenuItem asChild>
                           <Link to="/" className="flex items-center gap-2">
@@ -292,7 +325,6 @@ const Header = () => {
                       <>
                         <DropdownMenuItem asChild>
                           <Link to={
-                            isDoctor ? '/doctor/profile' : 
                             isMentor ? '/mentor/profile' :
                             isAdmin ? '/admin' :
                             isLabOfficer ? '/lab/dashboard' :
@@ -316,7 +348,6 @@ const Header = () => {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link to={
-                            isDoctor ? '/doctor/profile?tab=settings' :
                             isMentor ? '/mentor/profile?tab=settings' :
                             '/student/profile?tab=settings'
                           } className="flex items-center gap-2">
