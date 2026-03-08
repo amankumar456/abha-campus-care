@@ -82,6 +82,31 @@ export const notifyStudentOfStatusUpdate = async (
 };
 
 /**
+ * Notify student that a certificate has been issued
+ */
+export const notifyStudentOfCertificate = async (
+  studentUserId: string,
+  certificateData: {
+    type: 'medical_leave' | 'fitness' | 'referral';
+    doctorName: string;
+    details: string;
+  }
+) => {
+  const titles: Record<string, string> = {
+    medical_leave: '📋 Medical Leave Certificate Issued',
+    fitness: '✅ Fitness Certificate Issued',
+    referral: '🏥 Referral Certificate Issued',
+  };
+
+  await createNotification({
+    userId: studentUserId,
+    title: titles[certificateData.type] || '📄 Certificate Issued',
+    message: `Dr. ${certificateData.doctorName} has issued a ${certificateData.type.replace('_', ' ')} certificate for you. ${certificateData.details} Tap to view and download.`,
+    type: 'certificate_issued',
+  });
+};
+
+/**
  * Notify mentor about student's medical leave
  */
 export const notifyMentorOfStudentLeave = async (
