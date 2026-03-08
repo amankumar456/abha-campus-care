@@ -118,6 +118,8 @@ interface MedicalLeaveRecord {
   accompanist_name: string | null;
   accompanist_type: string | null;
   referral_type: string[] | null;
+  rest_days: number | null;
+  student_id: string;
   medical_officers: { name: string } | null;
 }
 
