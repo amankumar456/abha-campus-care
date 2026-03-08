@@ -92,12 +92,7 @@ const STATUS_CONFIGS = {
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive", icon: AlertTriangle }
 };
 
-const QUICK_CONTACTS = [
-  { name: "Security Control Room", phone: "0870-246-2087", icon: Shield },
-  { name: "Campus Emergency", phone: "108", icon: Siren },
-  { name: "Ambulance Driver", phone: "0870-246-2088", icon: Ambulance },
-  { name: "Hospital Emergency", phone: "0870-246-1111", icon: Building2 },
-];
+// Contacts are now fetched dynamically inside the component
 
 const TEMPLATE_MESSAGES = [
   "Ambulance dispatched - ETA 10 min",
@@ -112,7 +107,49 @@ export default function EmergencyDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<AmbulanceRequest | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Fetch active ambulance requests
+  // Fetch real ambulance service contacts
+  const { data: ambulanceServices } = useQuery({
+    queryKey: ["ambulance-service-contacts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ambulance_service")
+        .select("id, phone_landline, phone_mobile, description, equipment, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch on-duty doctors count
+  const { data: onDutyDoctors } = useQuery({
+    queryKey: ["on-duty-doctors-count"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_officers")
+        .select("id, name")
+        .not("user_id", "is", null);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Build dynamic contacts list from ambulance_service
+  const dynamicContacts = [
+    ...(ambulanceServices?.map((svc, i) => ({
+      name: i === 0 ? "Campus Ambulance" : `Ambulance Service ${i + 1}`,
+      phone: svc.phone_mobile,
+      icon: Ambulance,
+    })) || []),
+    ...(ambulanceServices?.map((svc, i) => ({
+      name: i === 0 ? "Health Centre Landline" : `Ambulance Landline ${i + 1}`,
+      phone: svc.phone_landline,
+      icon: Building2,
+    })) || []),
+    { name: "National Emergency", phone: "108", icon: Siren },
+    { name: "Police Emergency", phone: "100", icon: Shield },
+  ];
+
   const { data: ambulanceRequests, isLoading, refetch } = useQuery({
     queryKey: ["emergency-ambulance-requests"],
     queryFn: async () => {
@@ -379,11 +416,11 @@ export default function EmergencyDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {QUICK_CONTACTS.map((contact) => {
+              {dynamicContacts.map((contact) => {
                 const Icon = contact.icon;
                 return (
                   <a
-                    key={contact.name}
+                    key={`${contact.name}-${contact.phone}`}
                     href={`tel:${contact.phone}`}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
                   >
@@ -426,7 +463,7 @@ export default function EmergencyDashboard() {
             </CardContent>
           </Card>
 
-          {/* Resource Status */}
+          {/* Resource Status - Dynamic */}
           <Card className="bg-muted/30">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -435,22 +472,46 @@ export default function EmergencyDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {/* Ambulance availability based on active dispatches */}
+              {(() => {
+                const dispatchedCount = ambulanceRequests?.filter(r => ["dispatched", "in_transit"].includes(r.status)).length || 0;
+                const totalAmbulances = ambulanceServices?.length || 0;
+                const available = Math.max(totalAmbulances - dispatchedCount, 0);
+                return (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-background">
+                    <span className="text-sm">Ambulances</span>
+                    <Badge variant="outline" className={available > 0 ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}>
+                      {available > 0 ? `${available} Available` : "All Dispatched"}
+                    </Badge>
+                  </div>
+                );
+              })()}
               <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">College Ambulance</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Available</Badge>
+                <span className="text-sm">Active Emergencies</span>
+                <Badge variant="outline" className={stats.totalActive > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}>
+                  {stats.totalActive > 0 ? `${stats.totalActive} Active` : "None"}
+                </Badge>
               </div>
               <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Emergency Bed</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">1 Free</Badge>
+                <span className="text-sm">Doctors On Duty</span>
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  {onDutyDoctors?.length || 0} Available
+                </Badge>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Doctor On Duty</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Present</Badge>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-background">
-                <span className="text-sm">Oxygen Supply</span>
-                <Badge variant="outline" className="bg-primary/10 text-primary">Full</Badge>
-              </div>
+              {/* Equipment from ambulance_service */}
+              {ambulanceServices?.[0]?.equipment && (
+                <div className="p-2 rounded-lg bg-background">
+                  <span className="text-sm font-medium block mb-1">Equipment Available</span>
+                  <div className="flex flex-wrap gap-1">
+                    {(ambulanceServices[0].equipment as string[]).slice(0, 4).map((eq) => (
+                      <Badge key={eq} variant="secondary" className="text-xs">{eq}</Badge>
+                    ))}
+                    {(ambulanceServices[0].equipment as string[]).length > 4 && (
+                      <Badge variant="secondary" className="text-xs">+{(ambulanceServices[0].equipment as string[]).length - 4} more</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
