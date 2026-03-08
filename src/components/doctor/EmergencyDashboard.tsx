@@ -92,12 +92,7 @@ const STATUS_CONFIGS = {
   cancelled: { label: "Cancelled", color: "bg-destructive/20 text-destructive", icon: AlertTriangle }
 };
 
-const QUICK_CONTACTS = [
-  { name: "Security Control Room", phone: "0870-246-2087", icon: Shield },
-  { name: "Campus Emergency", phone: "108", icon: Siren },
-  { name: "Ambulance Driver", phone: "0870-246-2088", icon: Ambulance },
-  { name: "Hospital Emergency", phone: "0870-246-1111", icon: Building2 },
-];
+// Quick contacts will be fetched from ambulance_service table
 
 const TEMPLATE_MESSAGES = [
   "Ambulance dispatched - ETA 10 min",
