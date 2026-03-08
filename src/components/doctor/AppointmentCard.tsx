@@ -213,18 +213,14 @@ const AppointmentCard = ({ appointment, doctorId }: AppointmentCardProps) => {
         console.error("Failed to create notification:", notifError);
       }
 
-      // Send notification email
-      try {
-        await supabase.functions.invoke('send-appointment-notification', {
-          body: {
-            appointmentId: appointment.id,
-            action: 'rejected',
-            reason: reason
-          }
-        });
-      } catch (emailError) {
-        console.error("Failed to send notification email:", emailError);
-      }
+      // Send notification email (fire-and-forget, non-blocking)
+      supabase.functions.invoke('send-appointment-notification', {
+        body: {
+          appointmentId: appointment.id,
+          action: 'rejected',
+          reason: reason
+        }
+      }).catch(() => {});
     },
     onSuccess: () => {
       toast.success("Appointment denied", {
