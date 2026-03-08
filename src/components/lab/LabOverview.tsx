@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   TestTubes, Clock, CheckCircle2, AlertTriangle, TrendingUp,
-  Plus, Upload, User, Stethoscope, ArrowRight,
+  Plus, User, Stethoscope, ArrowRight,
   FlaskConical, FileText, Bell
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
