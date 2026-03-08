@@ -1396,6 +1396,18 @@ export default function StudentProfilePage() {
                               >
                                 {ref.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                               </Badge>
+                              {ref.status === 'student_form_pending' && (
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/medical-leave?fill=${ref.id}`);
+                                  }}
+                                >
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  Fill Form
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
