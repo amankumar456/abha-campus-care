@@ -285,6 +285,9 @@ const StudentHomeDashboard = () => {
           </div>
         </div>
 
+        {/* Quick Book Appointment */}
+        <QuickBookCard />
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Upcoming Appointments */}
           <Card>
