@@ -67,7 +67,7 @@ export default function PendingFollowupsList({ doctorId }: PendingFollowupsListP
           visit_date,
           student:students(id, full_name, roll_number, program, branch)
         `)
-        .eq("doctor_id", doctorId)
+        
         .eq("follow_up_required", true)
         .gte("follow_up_date", today)
         .order("follow_up_date", { ascending: true })
