@@ -80,6 +80,7 @@ interface Props {
 }
 
 export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<FilterTab>("high");
   const [clearanceDialogOpen, setClearanceDialogOpen] = useState(false);
