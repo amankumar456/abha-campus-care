@@ -125,7 +125,20 @@ export default function Auth() {
     else if (isPharmacy || userType === 'pharmacy') navigate('/');
     else if (isLabOfficer || userType === 'lab_officer') navigate('/');
     else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/home');
-    else if (isDoctor || userType === 'doctor') navigate('/');
+    else if (isDoctor || userType === 'doctor') {
+      // Check if doctor has completed registration
+      const { data: doctorProfile } = await supabase
+        .from('medical_officers')
+        .select('id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      
+      if (doctorProfile) {
+        navigate('/');
+      } else {
+        navigate('/doctor/register');
+      }
+    }
     else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
     else navigate('/');
   };
