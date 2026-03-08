@@ -81,8 +81,23 @@ const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-500',
   doctor: 'bg-blue-500',
   mentor: 'bg-green-500',
-  student: 'bg-purple-500'
+  student: 'bg-purple-500',
+  lab_officer: 'bg-teal-600',
+  pharmacy: 'bg-orange-500',
+  medical_staff: 'bg-indigo-500',
 };
+
+const ROLE_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Users' },
+  { value: 'admin', label: 'Admins' },
+  { value: 'doctor', label: 'Doctors' },
+  { value: 'student', label: 'Students' },
+  { value: 'mentor', label: 'Mentors' },
+  { value: 'medical_staff', label: 'Medical Staff' },
+  { value: 'lab_officer', label: 'Lab Officers' },
+  { value: 'pharmacy', label: 'Pharmacy' },
+  { value: 'no_roles', label: 'No Roles' },
+];
 
 const AdminPanel = () => {
   const navigate = useNavigate();
