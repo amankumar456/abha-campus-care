@@ -616,7 +616,14 @@ const MedicalLeave = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {allLeaveRequests?.map((request) => (
+                      {[...(allLeaveRequests || [])].sort((a, b) => {
+                            const nameA = a.students?.full_name?.toLowerCase() || '';
+                            const nameB = b.students?.full_name?.toLowerCase() || '';
+                            if (nameA !== nameB) return nameA.localeCompare(nameB);
+                            const rollA = a.students?.roll_number?.toLowerCase() || '';
+                            const rollB = b.students?.roll_number?.toLowerCase() || '';
+                            return rollA.localeCompare(rollB);
+                          }).map((request) => (
                             <>
                               <TableRow 
                                 key={request.id} 
