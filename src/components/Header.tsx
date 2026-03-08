@@ -122,8 +122,38 @@ const Header = () => {
     return '/';
   };
 
+  // Determine if we're on the home page for this role
+  const homePath = getHomePath();
+  const homePages = ['/', '/mentor/home', '/admin', '/staff/home', '/admin/dashboard'];
+  const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
+  const publicOnlyPages = ["/auth", "/email-confirmation"];
+  const showBackHome = user && !publicOnlyPages.includes(location.pathname) && !isOnHomePage;
+
+  const handleBack = () => {
+    if (isLabOfficer || isPharmacy || isMedicalStaff || isAdmin) {
+      navigate(homePath);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
+      {/* Back / Home sub-bar */}
+      {showBackHome && (
+        <div className="border-b border-border bg-muted/40">
+          <div className="container mx-auto px-4 py-1 flex gap-2">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="h-7 text-xs text-primary hover:bg-primary/10">
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+              Back
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(homePath)} className="h-7 text-xs text-primary hover:bg-primary/10">
+              <Home className="h-3.5 w-3.5 mr-1" />
+              Home
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between min-h-[72px]">
           {/* Logo Section */}
