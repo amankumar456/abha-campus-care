@@ -195,6 +195,7 @@ export default function StudentProfilePage() {
   const [referralLetters, setReferralLetters] = useState<ReferralLetter[]>([]);
   const [certificates, setCertificates] = useState<MedicalCertificate[]>([]);
   const [previewCertificate, setPreviewCertificate] = useState<MedicalCertificate | null>(null);
+  const [viewingLabReport, setViewingLabReport] = useState<LabReport | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Edit state
