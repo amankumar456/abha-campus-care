@@ -116,7 +116,7 @@ const Header = () => {
 
   const getHomePath = () => {
     if (isAdmin) return '/admin';
-    if (isMentor) return '/mentor/dashboard';
+    if (isMentor) return '/mentor/home';
     if (isMedicalStaff) return '/staff/home';
     return '/';
   };
