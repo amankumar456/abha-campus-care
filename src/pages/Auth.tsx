@@ -375,19 +375,19 @@ export default function Auth() {
         }
       }
 
-      // Send registration confirmation email
-      try {
-        await supabase.functions.invoke('send-registration-email', {
-          body: {
-            email,
-            name: fullName,
-            userType: userType,
-            rollNumber: userType === "student" ? studentData.rollNumber : undefined,
-          }
-        });
-      } catch (emailError) {
-        console.log('Registration email could not be sent:', emailError);
-      }
+      // Send registration confirmation email (fire-and-forget, non-blocking)
+      supabase.functions.invoke('send-registration-email', {
+        body: {
+          email,
+          name: fullName,
+          userType: userType,
+          rollNumber: userType === "student" ? studentData.rollNumber : undefined,
+        }
+      }).then(({ error }) => {
+        if (error) console.log('Registration email could not be sent:', error.message);
+      }).catch(() => {
+        // Silently ignore — email is non-critical
+      });
 
       setIsLoading(false);
 

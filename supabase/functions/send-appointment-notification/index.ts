@@ -26,13 +26,13 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("Appointment notification request received");
 
-    // Verify API key
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY not configured");
-      return new Response(JSON.stringify({ error: "Email service not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    // Check API key — return 200 gracefully if not configured
+    if (!RESEND_API_KEY || RESEND_API_KEY.trim() === '') {
+      console.warn("RESEND_API_KEY not configured — skipping notification email");
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, message: "Email service not configured" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Verify JWT token
