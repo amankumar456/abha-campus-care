@@ -212,6 +212,18 @@ const Header = () => {
                     Medical Team
                   </Link>
                 </>
+              ) : isMentor ? (
+                <>
+                  <Link to="/mentor/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
+                  </Link>
+                </>
               ) : isMedicalStaff ? (
                 <>
                   <Link to="/staff/home" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
@@ -378,14 +390,37 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                       </>
+                    ) : isMentor ? (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link to="/mentor/profile" className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/mentor/dashboard" className="flex items-center gap-2">
+                            <LayoutDashboard className="w-4 h-4" />
+                            My Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/medical-leave" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Medical Leave
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/mentor/profile?tab=settings" className="flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Settings
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     ) : (
                       <>
                         <DropdownMenuItem asChild>
-                          <Link to={
-                            isMentor ? '/mentor/profile' :
-                            isAdmin ? '/admin' :
-                            '/student/profile'
-                          } className="flex items-center gap-2">
+                          <Link to={isAdmin ? '/admin' : '/student/profile'} className="flex items-center gap-2">
                             <User className="w-4 h-4" />
                             Profile
                           </Link>
@@ -403,10 +438,7 @@ const Header = () => {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link to={
-                            isMentor ? '/mentor/profile?tab=settings' :
-                            '/student/profile?tab=settings'
-                          } className="flex items-center gap-2">
+                          <Link to="/student/profile?tab=settings" className="flex items-center gap-2">
                             <Settings className="w-4 h-4" />
                             Settings
                           </Link>
