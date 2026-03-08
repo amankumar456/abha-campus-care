@@ -10,9 +10,9 @@ import LabCompletedTests from "@/components/lab/LabCompletedTests";
 import LabNotifications from "@/components/lab/LabNotifications";
 import LabStudentRecords from "@/components/lab/LabStudentRecords";
 import LabAnalytics from "@/components/lab/LabAnalytics";
+import LabSettings from "@/components/lab/LabSettings";
 import RegisterSampleDialog from "@/components/lab/RegisterSampleDialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings } from "lucide-react";
 
 interface LabReport {
   id: string;
@@ -186,12 +186,7 @@ export default function LabOfficerDashboard() {
       case "analytics":
         return <LabAnalytics reports={labReports} />;
       case "settings":
-        return (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Settings className="w-5 h-5" /> Settings</h2>
-            <Card><CardContent className="p-8 text-center text-muted-foreground">Lab settings will be available in a future update.</CardContent></Card>
-          </div>
-        );
+        return <LabSettings />;
       default:
         return null;
     }
