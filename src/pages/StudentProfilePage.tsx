@@ -238,7 +238,26 @@ export default function StudentProfilePage() {
           doctor_name: r.doctor_id ? doctorMap[r.doctor_id] || 'Doctor' : 'Health Centre',
         })));
 
-        // Combine health_visits and completed appointments into visit history
+        // Fetch referral letters
+        const { data: referralData } = await supabase
+          .from('medical_leave_requests')
+          .select('id, referral_hospital, illness_description, doctor_notes, expected_duration, leave_start_date, expected_return_date, status, health_priority, referral_date, referral_type, referring_doctor_id, created_at')
+          .eq('student_id', studentData.id)
+          .order('created_at', { ascending: false });
+
+        if (referralData) {
+          const refDoctorIds = referralData.filter(r => r.referring_doctor_id).map(r => r.referring_doctor_id!);
+          if (refDoctorIds.length > 0) {
+            const { data: refDocs } = await supabase.from('medical_officers').select('id, name').in('id', refDoctorIds);
+            refDocs?.forEach(d => { doctorMap[d.id] = d.name; });
+          }
+          setReferralLetters(referralData.map(r => ({
+            ...r,
+            referral_date: r.referral_date || r.created_at,
+            doctor_name: r.referring_doctor_id ? doctorMap[r.referring_doctor_id] || 'Doctor' : 'Health Centre',
+          })));
+        }
+
         const visitHistoryItems: VisitHistoryItem[] = visits.map((v: any) => ({
           id: v.id,
           visit_date: v.visit_date,
