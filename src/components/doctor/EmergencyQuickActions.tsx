@@ -24,13 +24,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// Contacts fetched dynamically from ambulance_service
-
 export default function EmergencyQuickActions() {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [onCallDialogOpen, setOnCallDialogOpen] = useState(false);
+
+  // Fetch real ambulance service contacts
+  const { data: ambulanceServices } = useQuery({
+    queryKey: ["ambulance-service-contacts"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ambulance_service")
+        .select("id, phone_landline, phone_mobile, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+      return data || [];
+    },
+  });
+
+  const ambulancePhone = ambulanceServices?.[0]?.phone_mobile || "108";
+  const healthCentrePhone = ambulanceServices?.[0]?.phone_landline || "0870-2462099";
 
   // Fetch on-call doctors
   const { data: onCallDoctors } = useQuery({
@@ -67,18 +81,18 @@ export default function EmergencyQuickActions() {
       color: "text-destructive",
       bg: "bg-destructive/10 hover:bg-destructive/20",
       onClick: () => {
-        window.location.href = `tel:${EMERGENCY_CONTACTS.ambulance.phone}`;
-        toast.info(`Calling campus ambulance: ${EMERGENCY_CONTACTS.ambulance.phone}`);
+        window.location.href = `tel:${ambulancePhone}`;
+        toast.info(`Calling campus ambulance: ${ambulancePhone}`);
       },
     },
     {
       icon: Building2,
-      label: "Alert Hospital ER",
+      label: "Alert Health Centre",
       color: "text-amber-600",
       bg: "bg-amber-500/10 hover:bg-amber-500/20",
       onClick: () => {
-        window.location.href = `tel:${EMERGENCY_CONTACTS.hospital.phone}`;
-        toast.info(`Calling hospital ER: ${EMERGENCY_CONTACTS.hospital.phone}`);
+        window.location.href = `tel:${healthCentrePhone}`;
+        toast.info(`Calling Health Centre: ${healthCentrePhone}`);
       },
     },
     {
@@ -94,8 +108,8 @@ export default function EmergencyQuickActions() {
       color: "text-secondary",
       bg: "bg-secondary/10 hover:bg-secondary/20",
       onClick: () => {
-        window.location.href = `tel:${EMERGENCY_CONTACTS.security.phone}`;
-        toast.info(`Calling security: ${EMERGENCY_CONTACTS.security.phone}`);
+        window.location.href = `tel:0870-2462087`;
+        toast.info("Calling Security Control Room");
       },
     },
     {
