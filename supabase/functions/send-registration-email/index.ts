@@ -101,10 +101,13 @@ const handler = async (req: Request): Promise<Response> => {
       return entities[char] || char;
     });
 
-    const userTypeLabels = {
+    const userTypeLabels: Record<string, string> = {
       student: "Student",
       doctor: "Medical Officer",
-      mentor: "Faculty Mentor"
+      mentor: "Faculty Mentor",
+      pharmacy: "Pharmacy Staff",
+      lab_officer: "Lab Officer",
+      medical_staff: "Medical Staff",
     };
 
     const welcomeMessages = {
