@@ -355,7 +355,7 @@ const MedicalLeaveDialog = ({
                   <Building2 className="w-4 h-4" />
                   Referral Hospital (if any)
                 </Label>
-                <Popover>
+                <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -371,29 +371,31 @@ const MedicalLeaveDialog = ({
                   <PopoverContent className="w-[350px] p-0 pointer-events-auto" align="start">
                     <Command>
                       <CommandInput placeholder="Search hospital..." />
-                      <CommandEmpty>No hospital found.</CommandEmpty>
-                      <CommandGroup className="max-h-[200px] overflow-y-auto">
-                        <CommandItem
-                          value="NIT Warangal Health Centre"
-                          onSelect={() => setReferralHospital("NIT Warangal Health Centre")}
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", referralHospital === "NIT Warangal Health Centre" ? "opacity-100" : "opacity-0")} />
-                          NIT Warangal Health Centre
-                        </CommandItem>
-                        {hospitals.map((h) => (
+                      <CommandList>
+                        <CommandEmpty>No hospital found.</CommandEmpty>
+                        <CommandGroup>
                           <CommandItem
-                            key={h.id}
-                            value={`${h.name} ${h.location}`}
-                            onSelect={() => setReferralHospital(h.name)}
+                            value="NIT Warangal Health Centre"
+                            onSelect={() => setReferralHospital("NIT Warangal Health Centre")}
                           >
-                            <Check className={cn("mr-2 h-4 w-4", referralHospital === h.name ? "opacity-100" : "opacity-0")} />
-                            <div className="flex flex-col">
-                              <span>{h.name}</span>
-                              <span className="text-xs text-muted-foreground">{h.location}</span>
-                            </div>
+                            <Check className={cn("mr-2 h-4 w-4", referralHospital === "NIT Warangal Health Centre" ? "opacity-100" : "opacity-0")} />
+                            NIT Warangal Health Centre
                           </CommandItem>
-                        ))}
-                      </CommandGroup>
+                          {hospitals.map((h) => (
+                            <CommandItem
+                              key={h.id}
+                              value={`${h.name} ${h.location}`}
+                              onSelect={() => setReferralHospital(h.name)}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", referralHospital === h.name ? "opacity-100" : "opacity-0")} />
+                              <div className="flex flex-col">
+                                <span>{h.name}</span>
+                                <span className="text-xs text-muted-foreground">{h.location}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
                     </Command>
                   </PopoverContent>
                 </Popover>
