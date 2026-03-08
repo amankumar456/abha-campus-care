@@ -67,7 +67,7 @@ export default function DoctorHomeDashboard() {
           id, status, health_priority, referral_hospital,
           student:student_id ( full_name, roll_number )
         `)
-        .eq("referring_doctor_id", doctorId)
+        
         .in("status", ["on_leave", "return_pending", "doctor_referred", "student_form_pending"])
         .order("created_at", { ascending: false })
         .limit(5);

@@ -77,7 +77,7 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
           appointments!prescriptions_appointment_id_fkey (appointment_date, appointment_time, reason, health_priority),
           prescription_items (medicine_name, dosage, frequency, duration, meal_timing)
         `)
-        .eq("doctor_id", doctorId)
+        
         .order("created_at", { ascending: false });
 
       // Fetch student details separately

@@ -87,7 +87,7 @@ export default function PendingFollowupsList({ doctorId }: PendingFollowupsListP
       const { count, error } = await supabase
         .from("health_visits")
         .select("id", { count: "exact", head: true })
-        .eq("doctor_id", doctorId)
+        
         .eq("follow_up_required", true)
         .lt("follow_up_date", today);
 
