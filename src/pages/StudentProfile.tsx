@@ -112,6 +112,7 @@ const StudentProfile = () => {
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [visits, setVisits] = useState<HealthVisit[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
