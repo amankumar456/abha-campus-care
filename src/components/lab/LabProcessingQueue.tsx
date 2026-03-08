@@ -163,9 +163,22 @@ export default function LabProcessingQueue({
 
                     {/* Actions */}
                     <div className="flex flex-col gap-2">
-                      <Button size="sm" variant="default" onClick={() => setResultDialogReport(r)}>
-                        Enter Results
-                      </Button>
+                      {isPhysicalTest(r.test_name) ? (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="bg-green-700 hover:bg-green-800"
+                          onClick={() => handleApprovePhysicalTest(r)}
+                          disabled={approvingId === r.id}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          {approvingId === r.id ? "Approving..." : "Approve Done"}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="default" onClick={() => setResultDialogReport(r)}>
+                          Enter Results
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
