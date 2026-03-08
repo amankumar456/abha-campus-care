@@ -17,7 +17,6 @@ const menuItems = [
   { id: "processing", label: "Processing Queue", icon: TestTubes },
   { id: "completed", label: "Completed Tests", icon: ClipboardList },
   { id: "students", label: "Student Records", icon: Users },
-  { id: "upload", label: "Upload Reports", icon: Upload },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "settings", label: "Settings", icon: Settings },
