@@ -139,7 +139,7 @@ export default function Auth() {
         navigate('/doctor/register');
       }
     }
-    else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
+    else if (isMentor || userType === 'mentor') navigate('/mentor/home');
     else navigate('/');
   };
 
