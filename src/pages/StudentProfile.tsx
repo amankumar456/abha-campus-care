@@ -134,6 +134,7 @@ const StudentProfile = () => {
   const [visits, setVisits] = useState<HealthVisit[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [labReports, setLabReports] = useState<LabReport[]>([]);
+  const [medicalLeaves, setMedicalLeaves] = useState<MedicalLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
