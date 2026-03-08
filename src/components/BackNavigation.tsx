@@ -38,7 +38,7 @@ const BackNavigation = () => {
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-primary/10 shadow-sm">
+    <div className="sticky top-[72px] z-40 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-2 flex gap-2">
         {!isOnHomeDashboard && (
           <Button

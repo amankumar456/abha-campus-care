@@ -582,6 +582,39 @@ const Header = () => {
                     Medical Team
                   </Link>
                 </>
+              ) : isMentor ? (
+                <>
+                  <Link to="/mentor/home" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Home
+                  </Link>
+                  <Link to="/mentor/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Leave
+                  </Link>
+                  <Link to="/mentor/profile" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Profile
+                  </Link>
+                </>
+              ) : isMedicalStaff ? (
+                <>
+                  <Link to="/staff/home" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Home
+                  </Link>
+                  <Link to="/staff/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Staff Dashboard
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Leave
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
