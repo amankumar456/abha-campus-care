@@ -133,6 +133,7 @@ export default function StudentProfilePage() {
   const [healthStats, setHealthStats] = useState({ totalVisits: 0, thisMonthVisits: 0, pendingFollowups: 0, lastVisitDate: null as string | null });
   const [prescriptions, setPrescriptions] = useState<StudentPrescription[]>([]);
   const [visitHistory, setVisitHistory] = useState<VisitHistoryItem[]>([]);
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit state
