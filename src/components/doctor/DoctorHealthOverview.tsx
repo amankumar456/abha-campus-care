@@ -10,7 +10,7 @@ import {
   Users, Calendar, AlertTriangle, Activity, Plus, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
-
+import HealthRecordsSection from '@/components/health/HealthRecordsSection';
 
 interface DashboardStats {
   totalStudents: number;
