@@ -47,17 +47,27 @@ const Header = () => {
   }, [roleLoading]);
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
-      });
-    } else {
+    try {
+      // Clear role cache before signing out
+      const { clearRoleCache } = await import('@/hooks/useUserRole');
+      clearRoleCache();
+      
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      // Even if server returns error (stale session), local sign out is fine
+      if (error) {
+        console.warn('Sign out server error (session cleared locally):', error.message);
+      }
       toast({
         title: "Signed Out",
         description: "You have been signed out successfully.",
+      });
+      navigate("/");
+    } catch (e) {
+      // Force local cleanup on any failure
+      localStorage.removeItem('sb-chsjhycuuwrlluwlumfb-auth-token');
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out.",
       });
       navigate("/");
     }
