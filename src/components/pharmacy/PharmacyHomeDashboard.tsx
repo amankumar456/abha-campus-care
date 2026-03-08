@@ -137,28 +137,40 @@ export default function PharmacyHomeDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-amber-200 bg-amber-50/50">
+        <Card
+          className="border-amber-200 bg-amber-50/50 cursor-pointer hover:shadow-md hover:border-amber-400 transition-all"
+          onClick={() => navigate("/pharmacy/dashboard?filter=pending")}
+        >
           <CardContent className="pt-5 pb-4 text-center">
             <Clock className="h-6 w-6 text-amber-600 mx-auto mb-1" />
             <p className="text-3xl font-bold text-foreground">{pendingCount}</p>
             <p className="text-sm text-muted-foreground">Pending</p>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200 bg-emerald-50/50">
+        <Card
+          className="border-emerald-200 bg-emerald-50/50 cursor-pointer hover:shadow-md hover:border-emerald-400 transition-all"
+          onClick={() => navigate("/pharmacy/dashboard?filter=dispensed")}
+        >
           <CardContent className="pt-5 pb-4 text-center">
             <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto mb-1" />
             <p className="text-3xl font-bold text-foreground">{dispensedCount}</p>
             <p className="text-sm text-muted-foreground">Dispensed</p>
           </CardContent>
         </Card>
-        <Card className="border-red-200 bg-red-50/50">
+        <Card
+          className="border-red-200 bg-red-50/50 cursor-pointer hover:shadow-md hover:border-red-400 transition-all"
+          onClick={() => navigate("/pharmacy/dashboard?filter=denied")}
+        >
           <CardContent className="pt-5 pb-4 text-center">
             <XCircle className="h-6 w-6 text-red-500 mx-auto mb-1" />
             <p className="text-3xl font-bold text-foreground">{deniedCount}</p>
             <p className="text-sm text-muted-foreground">Denied</p>
           </CardContent>
         </Card>
-        <Card className="border-blue-200 bg-blue-50/50">
+        <Card
+          className="border-blue-200 bg-blue-50/50 cursor-pointer hover:shadow-md hover:border-blue-400 transition-all"
+          onClick={() => navigate("/pharmacy/dashboard?tab=inventory")}
+        >
           <CardContent className="pt-5 pb-4 text-center">
             <Package className="h-6 w-6 text-blue-600 mx-auto mb-1" />
             <p className="text-3xl font-bold text-foreground">{allInventory.length}</p>

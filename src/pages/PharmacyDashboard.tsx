@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,10 +21,13 @@ type DateFilter = "all" | "today" | "yesterday" | "this_week" | "last_week" | "l
 export default function PharmacyDashboard() {
   const { toast } = useToast();
   const { user } = useUserRole();
+  const [searchParams] = useSearchParams();
   const [prescriptions, setPrescriptions] = useState<PrescriptionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("pending");
-  const [mainTab, setMainTab] = useState("prescriptions");
+  const initialFilter = searchParams.get("filter") || "pending";
+  const initialTab = searchParams.get("tab") || "prescriptions";
+  const [activeTab, setActiveTab] = useState(initialFilter);
+  const [mainTab, setMainTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
 
