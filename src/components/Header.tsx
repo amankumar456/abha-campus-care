@@ -169,15 +169,31 @@ const Header = () => {
             </div>
 
             <nav className="flex items-center gap-4 lg:gap-6">
-              <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Medical Team
-              </Link>
-              <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Appointments
-              </Link>
-              <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
-                Health Records
-              </Link>
+              {isDoctor ? (
+                <>
+                  <Link to="/doctor/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Leave
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                  <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Appointments
+                  </Link>
+                  <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Health Records
+                  </Link>
+                </>
+              )}
               
               {/* Auth Section */}
               {isLoading ? (
@@ -360,18 +376,34 @@ const Header = () => {
                 </div>
               )}
               
-              <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                Medical Team
-              </Link>
-              <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                Book Appointment
-              </Link>
-              <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                My Appointments
-              </Link>
-              <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
-                Health Records
-              </Link>
+              {isDoctor ? (
+                <>
+                  <Link to="/doctor/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                  <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Leave
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
+                  </Link>
+                  <Link to="/appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Book Appointment
+                  </Link>
+                  <Link to="/my-appointments" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    My Appointments
+                  </Link>
+                  <Link to="/student/profile?tab=records" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Health Records
+                  </Link>
+                </>
+              )}
               <div className="flex flex-col gap-2 pt-2">
                 {user ? (
                   <Button variant="destructive" className="w-full gap-2" onClick={handleSignOut}>
