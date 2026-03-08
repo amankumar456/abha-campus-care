@@ -310,9 +310,6 @@ const Header = () => {
                     title="Pending Access Requests"
                   >
                     <Shield className="w-5 h-5 text-muted-foreground" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground flex items-center justify-center animate-pulse">
-                      3
-                    </span>
                   </Button>
                 )}
                 <NotificationBell />
