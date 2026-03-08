@@ -125,7 +125,20 @@ export default function Auth() {
     else if (isPharmacy || userType === 'pharmacy') navigate('/');
     else if (isLabOfficer || userType === 'lab_officer') navigate('/');
     else if (isMedicalStaff || userType === 'medical_staff') navigate('/staff/home');
-    else if (isDoctor || userType === 'doctor') navigate('/');
+    else if (isDoctor || userType === 'doctor') {
+      // Check if doctor has completed registration
+      const { data: doctorProfile } = await supabase
+        .from('medical_officers')
+        .select('id')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      
+      if (doctorProfile) {
+        navigate('/');
+      } else {
+        navigate('/doctor/register');
+      }
+    }
     else if (isMentor || userType === 'mentor') navigate('/mentor/dashboard');
     else navigate('/');
   };
@@ -381,17 +394,24 @@ export default function Auth() {
       if (!data.session) {
         navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
       } else {
-        toast({
-          title: "Account Created!",
-          description: "Welcome to the Health Portal. Your profile has been set up.",
-        });
-        // Redirect based on role
-        if (userType === "pharmacy") navigate("/");
-        else if (userType === "lab_officer") navigate("/");
-        else if (userType === "medical_staff") navigate("/staff/home");
-        else if (userType === "doctor") navigate("/");
-        else if (userType === "mentor") navigate("/mentor/dashboard");
-        else navigate("/");
+        // For doctors, redirect to 3-step registration to complete profile
+        if (userType === "doctor") {
+          toast({
+            title: "Account Created!",
+            description: "Please complete your medical staff registration to activate your profile.",
+          });
+          navigate("/doctor/register");
+        } else {
+          toast({
+            title: "Account Created!",
+            description: "Welcome to the Health Portal. Your profile has been set up.",
+          });
+          if (userType === "pharmacy") navigate("/");
+          else if (userType === "lab_officer") navigate("/");
+          else if (userType === "medical_staff") navigate("/staff/home");
+          else if (userType === "mentor") navigate("/mentor/dashboard");
+          else navigate("/");
+        }
       }
     } else {
       setIsLoading(false);
@@ -1000,17 +1020,14 @@ export default function Auth() {
                     {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
 
-                  {/* Link to detailed registration for doctors only */}
+                  {/* Info note for doctor signup */}
                   {userType === "doctor" && (
-                    <div className="text-center pt-2">
+                    <div className="text-center pt-2 p-3 bg-muted rounded-lg">
                       <p className="text-sm text-muted-foreground">
-                        Need to complete full registration?{" "}
-                        <Link 
-                          to="/doctor/register" 
-                          className="text-primary hover:underline font-medium"
-                        >
-                          Doctor Registration
-                        </Link>
+                        After creating your account, you'll complete a 3-step registration process covering{" "}
+                        <span className="font-medium text-foreground">Personal Info</span>,{" "}
+                        <span className="font-medium text-foreground">Professional Details</span>, and{" "}
+                        <span className="font-medium text-foreground">Access Configuration</span>.
                       </p>
                     </div>
                   )}
