@@ -248,6 +248,13 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
       activeClass: "bg-secondary/15 border-secondary ring-1 ring-secondary/30",
     },
     {
+      key: "awaiting_clearance",
+      label: "Awaiting Clearance",
+      icon: <UserCheck className="h-5 w-5" />,
+      color: "text-orange-600 dark:text-orange-400",
+      activeClass: "bg-orange-100/60 border-orange-400 ring-1 ring-orange-400/50 dark:bg-orange-900/30 dark:border-orange-700",
+    },
+    {
       key: "cleared",
       label: "Cleared",
       icon: <ShieldCheck className="h-5 w-5" />,
