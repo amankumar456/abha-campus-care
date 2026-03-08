@@ -152,7 +152,6 @@ export default function LabOfficerDashboard() {
           />
         );
       case "processing":
-      case "upload":
         return (
           <LabProcessingQueue
             reports={pendingReports}
