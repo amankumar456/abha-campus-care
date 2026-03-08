@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Printer, Save, User, FlaskConical } from "lucide-react";
+import { Printer, Save, User, FlaskConical, Upload, FileText, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -90,6 +90,28 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
   const [techNotes, setTechNotes] = useState("");
   const [sampleOk, setSampleOk] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [manualFile, setManualFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      setFileError("Only PDF files are allowed");
+      setManualFile(null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError("File size must be under 10MB");
+      setManualFile(null);
+      return;
+    }
+    setManualFile(file);
+  };
 
   const updateResult = (name: string, value: string) => {
     setResults(prev => ({ ...prev, [name]: value }));
@@ -118,69 +140,86 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
   const handleSaveResults = async () => {
     setSaving(true);
     try {
-      // Build structured result text for notes field
-      const resultText = params.map(p => {
-        const val = results[p.name] || "-";
-        const flag = getFlagForValue(val, p.refRange);
-        return `${p.name}: ${val} ${p.unit} (Ref: ${p.refRange})${flag === "high" ? " ↑ HIGH" : flag === "low" ? " ↓ LOW" : ""}`;
-      }).join("\n");
+      let pdfFileName: string;
+      let fullNotes: string;
 
-      const fullNotes = `LAB RESULTS:\n${resultText}\n\nTechnician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
+      if (manualFile) {
+        // Manual PDF upload path
+        pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+        const { error: uploadError } = await supabase.storage
+          .from("lab-reports")
+          .upload(pdfFileName, manualFile, { contentType: "application/pdf" });
+        if (uploadError) throw uploadError;
+        fullNotes = `Manual PDF upload.\nTechnician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
+      } else if (params.length > 0) {
+        // Auto-generated PDF from template
+        const resultText = params.map(p => {
+          const val = results[p.name] || "-";
+          const flag = getFlagForValue(val, p.refRange);
+          return `${p.name}: ${val} ${p.unit} (Ref: ${p.refRange})${flag === "high" ? " ↑ HIGH" : flag === "low" ? " ↓ LOW" : ""}`;
+        }).join("\n");
 
-      // Generate PDF
-      const pdfParams = params.map(p => ({
-        name: p.name,
-        value: results[p.name] || "-",
-        unit: p.unit,
-        refRange: p.refRange,
-        flag: getFlagForValue(results[p.name] || "", p.refRange),
-      }));
+        fullNotes = `LAB RESULTS:\n${resultText}\n\nTechnician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
 
-      const pdfBlob = generateLabReportPdf({
-        reportId: report.id,
-        testName: report.test_name,
-        studentName: report.student?.full_name || "N/A",
-        rollNumber: report.student?.roll_number || "N/A",
-        program: report.student?.program || "N/A",
-        branch: report.student?.branch || "N/A",
-        doctorName: report.doctor?.name || "N/A",
-        testDate: report.created_at,
-        parameters: pdfParams,
-        techNotes: techNotes || "",
-        sampleOk,
-      });
+        const pdfParams = params.map(p => ({
+          name: p.name,
+          value: results[p.name] || "-",
+          unit: p.unit,
+          refRange: p.refRange,
+          flag: getFlagForValue(results[p.name] || "", p.refRange),
+        }));
 
-      // Upload PDF to storage
-      const pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("lab-reports")
-        .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+        const pdfBlob = generateLabReportPdf({
+          reportId: report.id,
+          testName: report.test_name,
+          studentName: report.student?.full_name || "N/A",
+          rollNumber: report.student?.roll_number || "N/A",
+          program: report.student?.program || "N/A",
+          branch: report.student?.branch || "N/A",
+          doctorName: report.doctor?.name || "N/A",
+          testDate: report.created_at,
+          parameters: pdfParams,
+          techNotes: techNotes || "",
+          sampleOk,
+        });
 
-      if (uploadError) throw uploadError;
+        pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+        const { error: uploadError } = await supabase.storage
+          .from("lab-reports")
+          .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+        if (uploadError) throw uploadError;
+      } else {
+        // No template, no file - just save notes
+        fullNotes = `Technician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
+        pdfFileName = "";
+      }
 
       // Update the lab report record
-      const { error } = await supabase.from("lab_reports").update({
+      const updateData: Record<string, any> = {
         notes: fullNotes,
-        report_file_url: pdfFileName,
-        report_file_name: `${report.test_name}_Report.pdf`,
         status: "completed",
         updated_at: new Date().toISOString(),
-      }).eq("id", report.id);
+      };
+      if (pdfFileName) {
+        updateData.report_file_url = pdfFileName;
+        updateData.report_file_name = manualFile?.name || `${report.test_name}_Report.pdf`;
+      }
 
+      const { error } = await supabase.from("lab_reports").update(updateData).eq("id", report.id);
       if (error) throw error;
 
       // Notify student
-      const { data: student } = await supabase.from("students").select("user_id").eq("id", report.student_id).single();
+      const { data: student } = await supabase.from("students").select("user_id, full_name").eq("id", report.student_id).single();
       if (student?.user_id) {
         await supabase.from("notifications").insert({
           user_id: student.user_id,
           title: "🔬 Lab Report Ready",
-          message: `Your ${report.test_name} report PDF is ready. Please check your health records.`,
+          message: `Your ${report.test_name} report is ready. Please check your health records.`,
           type: "lab_report",
         });
       }
 
-      toast({ title: "✅ Results Saved & PDF Generated", description: `${report.test_name} report PDF uploaded for ${report.student?.full_name}` });
+      toast({ title: "✅ Results Saved", description: `${report.test_name} completed for ${report.student?.full_name}` });
       onRefresh();
       onClose();
     } catch (err: any) {
@@ -313,8 +352,43 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
             </table>
           </div>
         ) : (
-          <div className="border rounded-lg p-4 text-center text-muted-foreground text-sm">
-            <p>No predefined template for "{report.test_name}". Use the notes field below or upload a file.</p>
+          <div className="border rounded-lg p-4 space-y-3">
+            <p className="text-center text-muted-foreground text-sm">No predefined template for "{report.test_name}".</p>
+            
+            {/* Manual PDF Upload */}
+            <div className="border-2 border-dashed rounded-lg p-4 text-center space-y-2">
+              <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+              <p className="text-sm font-medium">Upload Lab Report PDF</p>
+              <p className="text-xs text-muted-foreground">PDF only, max 10MB</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-3 h-3 mr-1" />
+                Choose PDF File
+              </Button>
+              {manualFile && (
+                <div className="flex items-center justify-center gap-2 text-sm text-primary">
+                  <FileText className="w-4 h-4" />
+                  <span>{manualFile.name}</span>
+                  <span className="text-xs text-muted-foreground">({(manualFile.size / 1024 / 1024).toFixed(1)} MB)</span>
+                </div>
+              )}
+              {fileError && (
+                <div className="flex items-center justify-center gap-1 text-sm text-destructive">
+                  <AlertCircle className="w-3 h-3" />
+                  {fileError}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
