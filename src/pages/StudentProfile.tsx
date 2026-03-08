@@ -135,7 +135,7 @@ const MEAL_LABELS: Record<string, string> = {
 const StudentProfile = () => {
   const { rollNumber } = useParams<{ rollNumber: string }>();
   const navigate = useNavigate();
-  const { user, isDoctor, isMentor, loading: roleLoading } = useUserRole();
+  const { user, isDoctor, isMentor, doctorId, loading: roleLoading } = useUserRole();
   const [student, setStudent] = useState<Student | null>(null);
   const [profile, setProfile] = useState<StudentProfileData | null>(null);
   const [visits, setVisits] = useState<HealthVisit[]>([]);
@@ -144,6 +144,58 @@ const StudentProfile = () => {
   const [medicalLeaves, setMedicalLeaves] = useState<MedicalLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [clearanceDialogOpen, setClearanceDialogOpen] = useState<string | null>(null);
+  const [fitConfirmed, setFitConfirmed] = useState(false);
+  const [clearanceNotes, setClearanceNotes] = useState('');
+  const [clearanceLoading, setClearanceLoading] = useState(false);
+
+  const handleGrantClearance = async (leave: MedicalLeaveRecord) => {
+    if (!doctorId) return;
+    setClearanceLoading(true);
+    try {
+      const { error } = await supabase
+        .from('medical_leave_requests')
+        .update({
+          doctor_clearance: true,
+          doctor_clearance_date: new Date().toISOString(),
+          cleared_by_doctor_id: doctorId,
+          follow_up_notes: clearanceNotes || null,
+        })
+        .eq('id', leave.id);
+
+      if (error) throw error;
+
+      // Notify student
+      const studentUserId = await getStudentUserId(leave.student_id);
+      if (studentUserId) {
+        await notifyStudentOfStatusUpdate(
+          studentUserId,
+          'returned',
+          'Your doctor has confirmed you are fit to resume classes. Your medical leave cycle is now complete.'
+        );
+      }
+
+      toast.success('Fitness clearance granted', {
+        description: `${student?.full_name} has been cleared for classes.`,
+      });
+
+      // Update local state
+      setMedicalLeaves(prev =>
+        prev.map(l =>
+          l.id === leave.id
+            ? { ...l, doctor_clearance: true, doctor_clearance_date: new Date().toISOString() }
+            : l
+        )
+      );
+      setClearanceDialogOpen(null);
+      setFitConfirmed(false);
+      setClearanceNotes('');
+    } catch (err) {
+      toast.error('Failed to grant clearance');
+    } finally {
+      setClearanceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!roleLoading && !user) {
