@@ -1315,6 +1315,216 @@ export default function StudentProfilePage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Certificates Sub-tab */}
+            {recordsSubTab === 'certificates' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Award className="w-4 h-4 text-primary" />
+                    Medical Leave Certificates
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {certificates.length} certificate{certificates.length !== 1 ? 's' : ''} on record
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {certificates.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Award className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="font-medium">No certificates yet</p>
+                      <p className="text-sm">Medical leave certificates will appear here once issued.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {certificates.map((cert) => (
+                        <div key={cert.id} className="p-4 rounded-lg border hover:bg-muted/30 transition-colors space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10">
+                                <Award className="w-5 h-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">Medical Leave Certificate — {cert.referral_hospital}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Issued by Dr. {cert.doctor_name} · {format(new Date(cert.created_at), 'MMM d, yyyy')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  cert.status === 'returned' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' :
+                                  cert.status === 'on_leave' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' :
+                                  'bg-muted text-muted-foreground'
+                                }
+                              >
+                                {cert.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPreviewCertificate(cert)}
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                Preview
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePrintCertificate(cert)}
+                              >
+                                <Printer className="w-3 h-3 mr-1" />
+                                Print
+                              </Button>
+                            </div>
+                          </div>
+                          {cert.illness_description && (
+                            <p className="text-sm text-muted-foreground pl-13">
+                              <span className="font-medium">Illness:</span> {cert.illness_description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pl-13">
+                            <span>Duration: {cert.expected_duration}</span>
+                            {cert.leave_start_date && (
+                              <span>From: {format(new Date(cert.leave_start_date), 'MMM d, yyyy')}</span>
+                            )}
+                            {cert.expected_return_date && (
+                              <span>Until: {format(new Date(cert.expected_return_date), 'MMM d, yyyy')}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Certificate Preview Dialog */}
+            {previewCertificate && (
+              <Dialog open={!!previewCertificate} onOpenChange={(open) => { if (!open) setPreviewCertificate(null); }}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-primary" />
+                      Certificate Preview
+                    </DialogTitle>
+                    <DialogDescription>
+                      Medical Leave Certificate — {previewCertificate.referral_hospital}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="border rounded-lg p-8 bg-white text-black">
+                    {/* Official Header */}
+                    <div className="border-b-2 border-[#1e3a5f] pb-6 mb-6">
+                      <div className="flex items-start gap-4">
+                        <img src="/nitw-emblem.png" alt="NIT Warangal" className="w-20 h-24 object-contain flex-shrink-0" />
+                        <div className="flex-1 text-center">
+                          <h1 className="text-xl font-bold text-[#1e3a5f] tracking-wide">NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+                          <p className="text-lg font-semibold text-[#1e3a5f] mt-1">WARANGAL</p>
+                          <p className="text-xs text-gray-500 mt-1">(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+                          <p className="text-xs text-gray-500">Warangal, Telangana - 506004</p>
+                          <div className="mt-3 pt-2 border-t border-gray-200">
+                            <p className="text-base font-semibold text-[#0066cc]">HEALTH CENTRE</p>
+                            <p className="text-xs text-gray-500">Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Certificate Title */}
+                    <div className="text-center mb-8">
+                      <h2 className="text-lg font-bold uppercase tracking-wide border-b-2 border-gray-300 inline-block pb-1 text-[#003366]">
+                        MEDICAL LEAVE CERTIFICATE
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Certificate No: MLC/{format(new Date(previewCertificate.created_at), 'yyyyMMdd')}/{previewCertificate.id.slice(0, 6).toUpperCase()}
+                      </p>
+                    </div>
+
+                    {/* Student Details */}
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2 mb-4">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <p><span className="font-semibold">Name:</span> {student?.full_name}</p>
+                        <p><span className="font-semibold">Roll Number:</span> {student?.roll_number}</p>
+                        <p><span className="font-semibold">Program:</span> {student?.program}</p>
+                        <p><span className="font-semibold">Branch:</span> {student?.branch || '—'}</p>
+                      </div>
+                    </div>
+
+                    {/* Certificate Body */}
+                    <div className="space-y-4 text-sm leading-relaxed">
+                      <p>This is to certify that <strong>{student?.full_name}</strong> (Roll No: <strong>{student?.roll_number}</strong>) was referred to <strong>{previewCertificate.referral_hospital}</strong> for medical treatment.</p>
+
+                      {previewCertificate.illness_description && (
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                          <p className="font-semibold text-sm">Illness / Condition:</p>
+                          <p>{previewCertificate.illness_description}</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <p><span className="font-semibold">Hospital:</span> {previewCertificate.referral_hospital}</p>
+                        <p><span className="font-semibold">Duration:</span> {previewCertificate.expected_duration}</p>
+                        {previewCertificate.leave_start_date && (
+                          <p><span className="font-semibold">Leave From:</span> {format(new Date(previewCertificate.leave_start_date), 'PPP')}</p>
+                        )}
+                        {previewCertificate.expected_return_date && (
+                          <p><span className="font-semibold">Expected Return:</span> {format(new Date(previewCertificate.expected_return_date), 'PPP')}</p>
+                        )}
+                        {previewCertificate.actual_return_date && (
+                          <p><span className="font-semibold">Actual Return:</span> {format(new Date(previewCertificate.actual_return_date), 'PPP')}</p>
+                        )}
+                      </div>
+
+                      {previewCertificate.doctor_notes && (
+                        <div className="bg-amber-50 border-l-4 border-amber-400 p-3 italic text-sm">
+                          <strong>Doctor's Notes:</strong> {previewCertificate.doctor_notes}
+                        </div>
+                      )}
+
+                      <p>The student is hereby granted medical leave for the above-mentioned period as per the medical assessment.</p>
+                    </div>
+
+                    {/* Signature */}
+                    <div className="mt-12 flex items-end justify-between">
+                      <div className="text-center">
+                        <img src="/nitw-emblem.png" alt="NITW Emblem" className="w-20 h-24 object-contain mx-auto" />
+                        <p className="text-[9px] text-gray-500 mt-1">Official Emblem</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl text-[#003366] mb-2" style={{ fontFamily: "'Brush Script MT', cursive" }}>
+                          {previewCertificate.doctor_name}
+                        </p>
+                        <p className="font-semibold">Dr. {previewCertificate.doctor_name}</p>
+                        <p className="text-sm text-gray-500">{previewCertificate.doctor_designation}</p>
+                        <p className="text-sm text-gray-500">{previewCertificate.doctor_qualification}</p>
+                        <p className="text-sm text-gray-500">Health Centre, NIT Warangal</p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-8 pt-4 border-t text-center">
+                      <p className="text-xs text-gray-500">Date of Issue: {format(new Date(), 'PPPP')}</p>
+                      <p className="text-xs text-gray-500 mt-1">This certificate is valid for official purposes. For verification, contact Health Centre, NIT Warangal.</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setPreviewCertificate(null)}>
+                      Close
+                    </Button>
+                    <Button onClick={() => { handlePrintCertificate(previewCertificate); }}>
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print Certificate
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </TabsContent>
 
           {/* ── SETTINGS TAB ── */}
