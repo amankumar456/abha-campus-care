@@ -349,6 +349,78 @@ export default function LabOverview({
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Uploads Verification Panel */}
+      {recentUploads.length > 0 && (
+        <Card className="border-t-4 border-t-primary">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              Recent Uploads — Verification
+              <Badge variant="outline" className="text-xs ml-1">{recentUploads.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pb-4">
+            <div className="space-y-2">
+              {recentUploads.map(r => (
+                <div key={r.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      r.report_file_url ? 'bg-emerald-100' : 'bg-amber-100'
+                    }`}>
+                      {r.report_file_url ? (
+                        <FileText className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{r.test_name} — {r.student?.full_name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {r.student?.roll_number} · {formatDistanceToNow(new Date(r.updated_at), { addSuffix: true })}
+                        {r.report_file_name && ` · 📎 ${r.report_file_name}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {r.report_file_url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        disabled={verifyingId === r.id}
+                        onClick={async () => {
+                          setVerifyingId(r.id);
+                          try {
+                            const path = r.report_file_url!;
+                            if (path.startsWith("http")) {
+                              window.open(path, "_blank");
+                            } else {
+                              const { data, error } = await supabase.storage.from("lab-reports").createSignedUrl(path, 3600);
+                              if (error) throw error;
+                              window.open(data.signedUrl, "_blank");
+                            }
+                            toast({ title: "✅ PDF Verified", description: "File opened successfully" });
+                          } catch (err: any) {
+                            toast({ title: "❌ Verification Failed", description: err.message, variant: "destructive" });
+                          } finally {
+                            setVerifyingId(null);
+                          }
+                        }}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        {verifyingId === r.id ? "Opening..." : "Verify PDF"}
+                      </Button>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">No file</Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
