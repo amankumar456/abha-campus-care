@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle } from "lucide-react";
+import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle, Plus } from "lucide-react";
 import { format } from "date-fns";
 import LabResultEntryDialog from "./LabResultEntryDialog";
+import RegisterSampleDialog from "./RegisterSampleDialog";
 
 interface LabReport {
   id: string;
@@ -46,6 +47,7 @@ export default function LabProcessingQueue({
   reports, onUpload, uploadingId, searchQuery, onSearchChange, testFilter, onTestFilterChange, onRefresh
 }: Props) {
   const [resultDialogReport, setResultDialogReport] = useState<LabReport | null>(null);
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   const testTypes = [...new Set(reports.map(r => r.test_name))];
 
@@ -64,7 +66,12 @@ export default function LabProcessingQueue({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">🔬 Pending Lab Tests — Processing Queue</h2>
-        <Badge variant="outline" className="text-amber-600 border-amber-300">{filtered.length} pending</Badge>
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setRegisterOpen(true)}>
+            <Plus className="w-4 h-4 mr-1" />Register New Sample
+          </Button>
+          <Badge variant="outline" className="text-amber-600 border-amber-300">{filtered.length} pending</Badge>
+        </div>
       </div>
 
       {/* Filters */}
@@ -186,6 +193,12 @@ export default function LabProcessingQueue({
           onRefresh={onRefresh}
         />
       )}
+
+      <RegisterSampleDialog
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onRegistered={onRefresh}
+      />
     </div>
   );
 }
