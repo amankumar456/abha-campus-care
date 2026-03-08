@@ -121,9 +121,15 @@ export default function DoctorHomeDashboard() {
                 <Stethoscope className="h-7 w-7 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Welcome, Dr. {doctorInfo?.name || user?.user_metadata?.full_name || "Doctor"}
-                </h1>
+                {(() => {
+                  const name = doctorInfo?.name || user?.user_metadata?.full_name || "Doctor";
+                  const displayName = name.replace(/^Dr\.?\s*/i, "").trim();
+                  return (
+                    <h1 className="text-2xl font-bold text-foreground">
+                      Welcome, Dr. {displayName}
+                    </h1>
+                  );
+                })()}
                 <p className="text-muted-foreground">
                   {doctorInfo?.designation || "Medical Officer"} • {doctorInfo?.qualification || ""}
                   {doctorInfo?.is_senior && (
