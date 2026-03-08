@@ -95,6 +95,27 @@ interface LabReport {
   medical_officers: { name: string; designation: string } | null;
 }
 
+interface MedicalLeaveRecord {
+  id: string;
+  status: string;
+  referral_hospital: string;
+  illness_description: string | null;
+  health_priority: string | null;
+  expected_duration: string;
+  leave_start_date: string | null;
+  expected_return_date: string | null;
+  actual_return_date: string | null;
+  doctor_clearance: boolean | null;
+  doctor_clearance_date: string | null;
+  doctor_notes: string | null;
+  created_at: string;
+  health_centre_visited: boolean | null;
+  accompanist_name: string | null;
+  accompanist_type: string | null;
+  referral_type: string[] | null;
+  medical_officers: { name: string } | null;
+}
+
 const MEAL_LABELS: Record<string, string> = {
   before_meal: 'Before Meal',
   after_meal: 'After Meal',
