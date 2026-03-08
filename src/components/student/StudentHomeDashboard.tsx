@@ -186,7 +186,7 @@ const StudentHomeDashboard = () => {
                 </p>
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link to="/health-dashboard">
+                <Link to="/medical-leave">
                   View Details
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
