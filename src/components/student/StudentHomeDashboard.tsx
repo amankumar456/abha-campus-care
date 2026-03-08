@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import { format, isPast, isToday, isTomorrow } from "date-fns";
 
 const StudentHomeDashboard = () => {
   const { user } = useUserRole();
+  const navigate = useNavigate();
 
   // Fetch student basic info
   const { data: student } = useQuery({
@@ -216,7 +217,7 @@ const StudentHomeDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {}}>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/my-appointments')}>
             <CardContent className="pt-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
                 <Calendar className="w-6 h-6 text-primary" />
@@ -225,7 +226,7 @@ const StudentHomeDashboard = () => {
               <p className="text-sm text-muted-foreground">Upcoming</p>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/student/profile?tab=records')}>
             <CardContent className="pt-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-full bg-secondary/10 flex items-center justify-center mb-3">
                 <Activity className="w-6 h-6 text-secondary" />
@@ -234,7 +235,7 @@ const StudentHomeDashboard = () => {
               <p className="text-sm text-muted-foreground">Total Visits</p>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/student/profile?tab=records&subtab=prescriptions')}>
             <CardContent className="pt-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-full bg-accent/50 flex items-center justify-center mb-3">
                 <Pill className="w-6 h-6 text-accent-foreground" />
@@ -243,7 +244,7 @@ const StudentHomeDashboard = () => {
               <p className="text-sm text-muted-foreground">Prescriptions</p>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/medical-leave')}>
             <CardContent className="pt-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-full bg-warning/10 flex items-center justify-center mb-3">
                 <FileText className="w-6 h-6 text-warning" />
