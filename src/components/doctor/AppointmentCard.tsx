@@ -37,6 +37,7 @@ interface Student {
   year_of_study: string | null;
   email?: string | null;
   phone?: string | null;
+  photo_url?: string | null;
 }
 
 interface Appointment {
