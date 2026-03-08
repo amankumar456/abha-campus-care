@@ -32,6 +32,7 @@ const MedicalLeave = lazy(() => import("./pages/MedicalLeave"));
 const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
 const LabOfficerDashboard = lazy(() => import("./pages/LabOfficerDashboard"));
 const MedicalStaffDashboard = lazy(() => import("./pages/MedicalStaffDashboard"));
+const MedicalStaffHome = lazy(() => import("./pages/MedicalStaffHome"));
 const EmergencyPage = lazy(() => import("./pages/EmergencyPage"));
 
 const PageLoader = () => (
