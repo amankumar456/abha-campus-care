@@ -656,6 +656,32 @@ export default function MedicalStaffDashboard() {
 
           {/* Certificate Tab */}
           <TabsContent value="certificate" className="mt-4 space-y-4">
+            {/* Direct Certificate Issuance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="w-5 h-5" />
+                  Medical Certificates
+                </CardTitle>
+                <CardDescription>
+                  Generate and print official medical certificates for students. Search for a student, select certificate type, and print.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <IssueCertificateDialog
+                  trigger={
+                    <Button variant="outline" className="w-full h-14 text-base border-2 hover:border-primary">
+                      <FileText className="w-5 h-5 mr-2" />
+                      Issue Medical Certificate
+                    </Button>
+                  }
+                  doctorId={null}
+                  doctorProfile={null}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Optional: Verify student first flow */}
             {renderVerificationForm(
               certRollNumber,
               certEmail,
@@ -666,74 +692,35 @@ export default function MedicalStaffDashboard() {
               setCertEmail,
               verifyCertStudent,
               clearCertVerification,
-              "Enter the student's roll number to auto-fetch their official email and verify identity before issuing certificates"
+              "Optionally verify a student's identity before issuing certificates"
             )}
 
             {certVerifiedStudent && (
-              <>
-                <Card className="border-green-200 bg-green-50/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Student Verified</span>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <Avatar className="w-14 h-14">
-                        {certVerifiedStudent.photo_url && <AvatarImage src={certVerifiedStudent.photo_url} alt={certVerifiedStudent.full_name} />}
-                        <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                          {certVerifiedStudent.full_name.split(" ").map(n => n[0]).join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-lg">{certVerifiedStudent.full_name}</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-1">
-                          <div><p className="text-muted-foreground">Roll Number</p><p className="font-medium">{certVerifiedStudent.roll_number}</p></div>
-                          <div><p className="text-muted-foreground">Branch</p><p className="font-medium">{certVerifiedStudent.branch || "N/A"}</p></div>
-                          <div><p className="text-muted-foreground">Programme</p><p className="font-medium">{certVerifiedStudent.program}</p></div>
-                          <div><p className="text-muted-foreground">Batch</p><p className="font-medium">{certVerifiedStudent.batch}</p></div>
-                        </div>
+              <Card className="border-green-200 bg-green-50/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-800">Student Verified</span>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <Avatar className="w-14 h-14">
+                      {certVerifiedStudent.photo_url && <AvatarImage src={certVerifiedStudent.photo_url} alt={certVerifiedStudent.full_name} />}
+                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                        {certVerifiedStudent.full_name.split(" ").map(n => n[0]).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg">{certVerifiedStudent.full_name}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-1">
+                        <div><p className="text-muted-foreground">Roll Number</p><p className="font-medium">{certVerifiedStudent.roll_number}</p></div>
+                        <div><p className="text-muted-foreground">Branch</p><p className="font-medium">{certVerifiedStudent.branch || "N/A"}</p></div>
+                        <div><p className="text-muted-foreground">Programme</p><p className="font-medium">{certVerifiedStudent.program}</p></div>
+                        <div><p className="text-muted-foreground">Batch</p><p className="font-medium">{certVerifiedStudent.batch}</p></div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Issue Certificate</CardTitle>
-                    <CardDescription>Select the type of certificate to issue for this student</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button
-                        variant="outline"
-                        className="h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-primary"
-                        onClick={() => {
-                          toast({
-                            title: "Medical Certificate",
-                            description: `Medical certificate for ${certVerifiedStudent.full_name} can be generated from the Doctor Dashboard by the attending physician.`,
-                          });
-                        }}
-                      >
-                        <FileText className="w-6 h-6 text-primary" />
-                        <span className="font-medium">Medical Certificate</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-green-600"
-                        onClick={() => {
-                          toast({
-                            title: "Fitness Certificate",
-                            description: `Fitness certificate for ${certVerifiedStudent.full_name} can be generated from the Doctor Dashboard after medical clearance.`,
-                          });
-                        }}
-                      >
-                        <ClipboardCheck className="w-6 h-6 text-green-600" />
-                        <span className="font-medium">Fitness Certificate</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
         </Tabs>
