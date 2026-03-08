@@ -501,7 +501,7 @@ const StudentProfile = () => {
 
         {/* Tabs for Visit History, Prescriptions, and Analysis */}
         <Tabs defaultValue="history" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="history" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Visit History
@@ -510,9 +510,13 @@ const StudentProfile = () => {
               <Pill className="h-4 w-4" />
               Prescriptions
             </TabsTrigger>
+            <TabsTrigger value="labtests" className="flex items-center gap-2">
+              <TestTube className="h-4 w-4" />
+              Lab Tests ({labReports.length})
+            </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Pattern Analysis
+              Analysis
             </TabsTrigger>
           </TabsList>
 
