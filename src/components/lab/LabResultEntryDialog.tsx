@@ -335,8 +335,43 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
             </table>
           </div>
         ) : (
-          <div className="border rounded-lg p-4 text-center text-muted-foreground text-sm">
-            <p>No predefined template for "{report.test_name}". Use the notes field below or upload a file.</p>
+          <div className="border rounded-lg p-4 space-y-3">
+            <p className="text-center text-muted-foreground text-sm">No predefined template for "{report.test_name}".</p>
+            
+            {/* Manual PDF Upload */}
+            <div className="border-2 border-dashed rounded-lg p-4 text-center space-y-2">
+              <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+              <p className="text-sm font-medium">Upload Lab Report PDF</p>
+              <p className="text-xs text-muted-foreground">PDF only, max 10MB</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-3 h-3 mr-1" />
+                Choose PDF File
+              </Button>
+              {manualFile && (
+                <div className="flex items-center justify-center gap-2 text-sm text-primary">
+                  <FileText className="w-4 h-4" />
+                  <span>{manualFile.name}</span>
+                  <span className="text-xs text-muted-foreground">({(manualFile.size / 1024 / 1024).toFixed(1)} MB)</span>
+                </div>
+              )}
+              {fileError && (
+                <div className="flex items-center justify-center gap-1 text-sm text-destructive">
+                  <AlertCircle className="w-3 h-3" />
+                  {fileError}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
