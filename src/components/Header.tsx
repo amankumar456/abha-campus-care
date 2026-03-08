@@ -255,6 +255,7 @@ const Header = () => {
                         isDoctor ? '/doctor/profile' : 
                         isMentor ? '/mentor/profile' :
                         isAdmin ? '/admin' :
+                        isLabOfficer ? '/lab/dashboard' :
                         '/student/profile'
                       } className="flex items-center gap-2">
                         <User className="w-4 h-4" />
