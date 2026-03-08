@@ -339,12 +339,22 @@ const MedicalLeaveDialog = ({
                   <Building2 className="w-4 h-4" />
                   Referral Hospital (if any)
                 </Label>
-                <Input
-                  id="hospital"
-                  placeholder="Leave blank for Health Centre"
+                <Select
                   value={referralHospital}
-                  onChange={(e) => setReferralHospital(e.target.value)}
-                />
+                  onValueChange={setReferralHospital}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="NIT Warangal Health Centre (default)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">NIT Warangal Health Centre</SelectItem>
+                    {hospitals.map((h) => (
+                      <SelectItem key={h.id} value={h.name}>
+                        {h.name} — {h.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
