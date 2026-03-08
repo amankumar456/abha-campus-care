@@ -26,8 +26,8 @@ const validateName = (name: string): boolean => {
   return name.length >= 2 && name.length <= 100 && /^[a-zA-Z\s.'-]+$/.test(name);
 };
 
-const validateUserType = (type: string): type is "student" | "doctor" | "mentor" => {
-  return ["student", "doctor", "mentor"].includes(type);
+const validateUserType = (type: string): type is "student" | "doctor" | "mentor" | "pharmacy" | "lab_officer" | "medical_staff" => {
+  return ["student", "doctor", "mentor", "pharmacy", "lab_officer", "medical_staff"].includes(type);
 };
 
 const handler = async (req: Request): Promise<Response> => {
