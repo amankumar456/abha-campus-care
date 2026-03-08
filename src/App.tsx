@@ -11,31 +11,48 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Auto-retry dynamic imports on chunk load failure (stale deploy)
+function lazyRetry(importFn: () => Promise<any>) {
+  return lazy(() =>
+    importFn().catch(() => {
+      // Force reload once to get fresh chunks
+      const hasReloaded = sessionStorage.getItem("chunk_reload");
+      if (!hasReloaded) {
+        sessionStorage.setItem("chunk_reload", "1");
+        window.location.reload();
+        return new Promise(() => {}); // never resolves, page reloads
+      }
+      sessionStorage.removeItem("chunk_reload");
+      return importFn(); // retry once more
+    })
+  );
+}
+
 // Lazy load all dashboard pages for faster initial load
-const StudentRegistration = lazy(() => import("./pages/StudentRegistration"));
-const DoctorRegistration = lazy(() => import("./pages/DoctorRegistration"));
-const MentorRegistration = lazy(() => import("./pages/MentorRegistration"));
-const DoctorDashboard = lazy(() => import("./pages/DoctorDashboard"));
-const DoctorProfile = lazy(() => import("./pages/DoctorProfile"));
-const StudentProfilePage = lazy(() => import("./pages/StudentProfilePage"));
-const MedicalTeam = lazy(() => import("./pages/MedicalTeam"));
-const Appointments = lazy(() => import("./pages/Appointments"));
-const MyAppointments = lazy(() => import("./pages/MyAppointments"));
-const EmailConfirmation = lazy(() => import("./pages/EmailConfirmation"));
-const HealthDashboard = lazy(() => import("./pages/HealthDashboard"));
-const StudentProfile = lazy(() => import("./pages/StudentProfile"));
-const NewVisit = lazy(() => import("./pages/NewVisit"));
-const AdminPanel = lazy(() => import("./pages/AdminPanel"));
-const AdminHome = lazy(() => import("./pages/AdminHome"));
-const MentorDashboard = lazy(() => import("./pages/MentorDashboard"));
-const MentorHome = lazy(() => import("./pages/MentorHome"));
-const MentorProfile = lazy(() => import("./pages/MentorProfile"));
-const MedicalLeave = lazy(() => import("./pages/MedicalLeave"));
-const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
-const LabOfficerDashboard = lazy(() => import("./pages/LabOfficerDashboard"));
-const MedicalStaffDashboard = lazy(() => import("./pages/MedicalStaffDashboard"));
-const MedicalStaffHome = lazy(() => import("./pages/MedicalStaffHome"));
-const EmergencyPage = lazy(() => import("./pages/EmergencyPage"));
+const StudentRegistration = lazyRetry(() => import("./pages/StudentRegistration"));
+const DoctorRegistration = lazyRetry(() => import("./pages/DoctorRegistration"));
+const MentorRegistration = lazyRetry(() => import("./pages/MentorRegistration"));
+const DoctorDashboard = lazyRetry(() => import("./pages/DoctorDashboard"));
+const DoctorProfile = lazyRetry(() => import("./pages/DoctorProfile"));
+const StudentProfilePage = lazyRetry(() => import("./pages/StudentProfilePage"));
+const MedicalTeam = lazyRetry(() => import("./pages/MedicalTeam"));
+const Appointments = lazyRetry(() => import("./pages/Appointments"));
+const MyAppointments = lazyRetry(() => import("./pages/MyAppointments"));
+const EmailConfirmation = lazyRetry(() => import("./pages/EmailConfirmation"));
+const HealthDashboard = lazyRetry(() => import("./pages/HealthDashboard"));
+const StudentProfile = lazyRetry(() => import("./pages/StudentProfile"));
+const NewVisit = lazyRetry(() => import("./pages/NewVisit"));
+const AdminPanel = lazyRetry(() => import("./pages/AdminPanel"));
+const AdminHome = lazyRetry(() => import("./pages/AdminHome"));
+const MentorDashboard = lazyRetry(() => import("./pages/MentorDashboard"));
+const MentorHome = lazyRetry(() => import("./pages/MentorHome"));
+const MentorProfile = lazyRetry(() => import("./pages/MentorProfile"));
+const MedicalLeave = lazyRetry(() => import("./pages/MedicalLeave"));
+const PharmacyDashboard = lazyRetry(() => import("./pages/PharmacyDashboard"));
+const LabOfficerDashboard = lazyRetry(() => import("./pages/LabOfficerDashboard"));
+const MedicalStaffDashboard = lazyRetry(() => import("./pages/MedicalStaffDashboard"));
+const MedicalStaffHome = lazyRetry(() => import("./pages/MedicalStaffHome"));
+const EmergencyPage = lazyRetry(() => import("./pages/EmergencyPage"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background">
