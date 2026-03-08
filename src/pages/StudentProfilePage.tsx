@@ -329,6 +329,9 @@ export default function StudentProfilePage() {
               doctor_qualification: doc?.qualification || 'MBBS',
               created_at: r.created_at,
               approval_date: r.approval_date,
+              doctor_clearance: (r as any).doctor_clearance || null,
+              doctor_clearance_date: (r as any).doctor_clearance_date || null,
+              rest_days: (r as any).rest_days || null,
             };
           }));
         }
