@@ -184,6 +184,15 @@ const Header = () => {
                     Medical Leave
                   </Link>
                 </>
+              ) : isLabOfficer ? (
+                <>
+                  <Link to="/lab/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Lab Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Medical Team
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
@@ -225,6 +234,8 @@ const Header = () => {
                         <Stethoscope className="w-4 h-4" />
                       ) : getUserType() === 'mentor' ? (
                         <Users className="w-4 h-4" />
+                      ) : isLabOfficer ? (
+                        <Stethoscope className="w-4 h-4" />
                       ) : (
                         <GraduationCap className="w-4 h-4" />
                       )}
@@ -235,7 +246,7 @@ const Header = () => {
                     <div className="px-2 py-1.5">
                       <p className="text-sm font-medium">{getUserDisplayName()}</p>
                       <p className="text-xs text-muted-foreground">
-                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : 'Student'}
+                        {isDoctor ? 'Medical Officer' : isMentor ? 'Faculty Mentor' : isAdmin ? 'Admin' : isLabOfficer ? 'Lab Officer' : isPharmacy ? 'Pharmacy' : 'Student'}
                       </p>
                     </div>
                     <DropdownMenuSeparator />
@@ -244,6 +255,7 @@ const Header = () => {
                         isDoctor ? '/doctor/profile' : 
                         isMentor ? '/mentor/profile' :
                         isAdmin ? '/admin' :
+                        isLabOfficer ? '/lab/dashboard' :
                         '/student/profile'
                       } className="flex items-center gap-2">
                         <User className="w-4 h-4" />
@@ -389,6 +401,15 @@ const Header = () => {
                   </Link>
                   <Link to="/medical-leave" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
                     Medical Leave
+                  </Link>
+                </>
+              ) : isLabOfficer ? (
+                <>
+                  <Link to="/lab/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Lab Dashboard
+                  </Link>
+                  <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium py-2">
+                    Medical Team
                   </Link>
                 </>
               ) : (
