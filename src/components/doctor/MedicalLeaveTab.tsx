@@ -160,9 +160,15 @@ export default function MedicalLeaveTab() {
       }
     }
 
-    return Array.from(latestByStudent.values()).sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    return Array.from(latestByStudent.values()).sort((a, b) => {
+      const nameA = a.student?.full_name?.trim().toLowerCase() || "";
+      const nameB = b.student?.full_name?.trim().toLowerCase() || "";
+      if (nameA !== nameB) {
+        return nameA.localeCompare(nameB);
+      }
+
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   }, [referrals]);
 
   const filteredReferrals = useMemo(() => {
