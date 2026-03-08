@@ -36,24 +36,6 @@ const LabOfficerDashboard = lazy(() => import("./pages/LabOfficerDashboard"));
 const MedicalStaffDashboard = lazy(() => import("./pages/MedicalStaffDashboard"));
 const MedicalStaffHome = lazy(() => import("./pages/MedicalStaffHome"));
 const EmergencyPage = lazy(() => import("./pages/EmergencyPage"));
-const Header = lazy(() => import("./components/Header"));
-
-// Wrapper for EmergencyPage when used as standalone route
-const EmergencyPageWrapper = lazy(() => 
-  import("./pages/EmergencyPage").then(mod => ({
-    default: () => {
-      const HeaderComp = lazy(() => import("./components/Header"));
-      return (
-        <div className="min-h-screen bg-background">
-          <Suspense fallback={null}><HeaderComp /></Suspense>
-          <div className="container mx-auto px-4 py-6">
-            <mod.default />
-          </div>
-        </div>
-      );
-    }
-  }))
-);
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background">
