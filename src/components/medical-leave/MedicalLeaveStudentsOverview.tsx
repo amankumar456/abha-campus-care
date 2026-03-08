@@ -264,10 +264,15 @@ export default function MedicalLeaveStudentsOverview({ doctorId }: Props) {
   ];
 
   const renderStudentCard = (leave: MedicalLeaveStudent) => {
+    const days = getLeaveDays(leave);
     const isCleared = leave.doctor_clearance === true;
     const isOverdue = leave.expected_return_date && parseISO(leave.expected_return_date) < new Date() && !isCleared;
     const overdueDays = isOverdue ? differenceInDays(new Date(), parseISO(leave.expected_return_date!)) : 0;
-        className="rounded-xl border bg-card p-4 transition-all hover:shadow-md"
+
+    return (
+      <div
+        key={leave.id}
+        className={`rounded-xl border bg-card p-4 transition-all hover:shadow-md ${isOverdue ? 'border-orange-400 ring-1 ring-orange-300/50' : ''}`}
       >
         {/* Top row: student info + badges */}
         <div className="flex flex-wrap items-start justify-between gap-3">
