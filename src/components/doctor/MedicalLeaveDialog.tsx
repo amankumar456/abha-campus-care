@@ -74,6 +74,19 @@ const MedicalLeaveDialog = ({
   const [referredForTest, setReferredForTest] = useState(false);
   const [testDetails, setTestDetails] = useState("");
 
+  const { data: hospitals = [] } = useQuery({
+    queryKey: ["empanelled-hospitals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("empanelled_hospitals")
+        .select("id, name, location")
+        .eq("is_active", true)
+        .order("serial_number");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const createLeaveMutation = useMutation({
     mutationFn: async () => {
       const days = parseInt(restDays);
