@@ -10,7 +10,7 @@ import {
   Users, Calendar, AlertTriangle, Activity, Plus, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
-import HealthRecordsSection from '@/components/health/HealthRecordsSection';
+
 
 interface DashboardStats {
   totalStudents: number;
@@ -420,9 +420,6 @@ export default function DoctorHealthOverview() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Health Records Section */}
-      <HealthRecordsSection />
 
       {/* Today's Appointment Schedule */}
       <Card>
