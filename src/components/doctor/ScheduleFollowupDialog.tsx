@@ -151,6 +151,7 @@ export default function ScheduleFollowupDialog({ trigger, doctorId }: ScheduleFo
 
   const resetForm = () => {
     setSelectedPatient("");
+    setPatientSearch("");
     setFollowupDate(undefined);
     setFollowupTime("10:00");
     setFollowupType("");
