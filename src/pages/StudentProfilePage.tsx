@@ -987,6 +987,15 @@ export default function StudentProfilePage() {
                 <Building2 className="w-4 h-4" />
                 Referral Letters ({referralLetters.length})
               </Button>
+              <Button
+                variant={recordsSubTab === 'certificates' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setRecordsSubTab('certificates')}
+                className="flex items-center gap-2"
+              >
+                <Award className="w-4 h-4" />
+                Certificates ({certificates.length})
+              </Button>
             </div>
 
             {/* Visit History Sub-tab */}
