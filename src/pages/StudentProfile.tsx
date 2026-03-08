@@ -225,6 +225,7 @@ const StudentProfile = () => {
             expected_duration, leave_start_date, expected_return_date, actual_return_date,
             doctor_clearance, doctor_clearance_date, doctor_notes, created_at,
             health_centre_visited, accompanist_name, accompanist_type, referral_type,
+            rest_days, student_id,
             medical_officers:referring_doctor_id ( name )
           `)
           .eq('student_id', studentData.id)
