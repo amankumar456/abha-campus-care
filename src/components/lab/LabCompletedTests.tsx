@@ -54,11 +54,31 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
            r.test_name.toLowerCase().includes(q);
   });
 
+  const [pdfViewUrl, setPdfViewUrl] = useState<string | null>(null);
+  const [pdfViewTitle, setPdfViewTitle] = useState("");
+
   const handleViewFile = async (r: LabReport) => {
     if (!r.report_file_url) return;
     const url = await getSignedUrl(r.report_file_url);
-    if (url) window.open(url, "_blank");
-    else toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+    if (url) {
+      setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
+      setPdfViewUrl(url);
+    } else {
+      toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+    }
+  };
+
+  const handlePrintPdf = async (r: LabReport) => {
+    if (!r.report_file_url) { handlePrint(r); return; }
+    const url = await getSignedUrl(r.report_file_url);
+    if (url) {
+      const printWin = window.open(url, "_blank");
+      if (printWin) {
+        printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+      }
+    } else {
+      toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
+    }
   };
 
   const handlePrint = async (r: LabReport) => {
