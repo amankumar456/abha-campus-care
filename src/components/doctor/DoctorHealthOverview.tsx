@@ -421,9 +421,6 @@ export default function DoctorHealthOverview() {
         </Card>
       </div>
 
-      {/* Health Records Section */}
-      <HealthRecordsSection />
-
       {/* Today's Appointment Schedule */}
       <Card>
         <CardHeader>
