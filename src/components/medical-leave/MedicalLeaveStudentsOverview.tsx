@@ -72,7 +72,7 @@ interface MedicalLeaveStudent {
   } | null;
 }
 
-type FilterTab = "high" | "medium_low" | "on_leave" | "cleared";
+type FilterTab = "high" | "medium_low" | "on_leave" | "awaiting_clearance" | "cleared";
 
 interface Props {
   doctorId?: string | null;
