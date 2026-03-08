@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Download, User, Calendar, Search, Printer, Eye, RefreshCw } from "lucide-react";
+import { CheckCircle2, Download, User, Calendar, Search, Printer, Eye, RefreshCw, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
