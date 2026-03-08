@@ -104,7 +104,7 @@ export default function DoctorHomeDashboard() {
     return Array.from(seen.values());
   })();
 
-  const highPriorityLeaves = uniqueActiveLeaves.filter((l: any) => l.health_priority === "high").length;
+  const isLoading = doctorLoading || apptLoading || leaveLoading;
 
   if (isLoading) {
     return (
