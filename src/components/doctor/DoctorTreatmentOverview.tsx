@@ -58,7 +58,7 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
           status, created_at, rest_days, referral_date, health_priority,
           students!medical_leave_requests_student_id_fkey (full_name, roll_number, program, branch)
         `)
-        .eq("referring_doctor_id", doctorId)
+        
         .contains("referral_type", ["test_checkup"])
         .order("created_at", { ascending: false });
       return data || [];
