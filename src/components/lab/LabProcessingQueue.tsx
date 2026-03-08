@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle } from "lucide-react";
+import { Search, User, Stethoscope, Calendar, Upload, Clock, AlertTriangle, Plus } from "lucide-react";
 import { format } from "date-fns";
 import LabResultEntryDialog from "./LabResultEntryDialog";
+import RegisterSampleDialog from "./RegisterSampleDialog";
 
 interface LabReport {
   id: string;
