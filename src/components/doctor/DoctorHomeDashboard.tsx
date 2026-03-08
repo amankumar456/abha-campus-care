@@ -197,7 +197,7 @@ export default function DoctorHomeDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold text-foreground">{activeLeaves?.length || 0}</p>
+                <p className="text-2xl font-bold text-foreground">{uniqueActiveLeaves.length}</p>
                 <p className="text-sm text-muted-foreground">Active Leave Cases</p>
               </div>
               <ClipboardList className="h-8 w-8 text-secondary/60" />
