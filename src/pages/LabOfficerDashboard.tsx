@@ -69,6 +69,19 @@ export default function LabOfficerDashboard() {
 
   useEffect(() => { fetchLabReports(); }, []);
 
+  // Handle section changes - open register dialog or refresh data
+  const handleSectionChange = (section: string) => {
+    if (section === "register") {
+      setRegisterOpen(true);
+      return;
+    }
+    setActiveSection(section);
+    // Refresh data when switching back to overview or processing
+    if (section === "overview" || section === "processing" || section === "completed") {
+      fetchLabReports();
+    }
+  };
+
   const handleFileUpload = async (report: LabReport, file: File) => {
     if (!user) return;
     setUploadingId(report.id);
