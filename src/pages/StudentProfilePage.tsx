@@ -663,6 +663,7 @@ export default function StudentProfilePage() {
     await printDocument({ title: `Fitness Certificate — ${student?.full_name}`, bodyHtml, documentId: certNo, documentType: 'FITNESS CERTIFICATE' });
   };
 
+  const profileFields = student ? [
     { name: 'fullName', label: 'Full Name', filled: !!student.full_name, required: true },
     { name: 'rollNumber', label: 'Roll Number', filled: !!student.roll_number, required: true },
     { name: 'email', label: 'Email', filled: !!student.email, required: true },
