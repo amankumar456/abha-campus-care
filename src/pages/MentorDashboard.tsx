@@ -130,8 +130,8 @@ export default function MentorDashboard() {
         setStudents(allStudents);
 
         // Fetch recent health visits for assigned students
-        if (studentsData && studentsData.length > 0) {
-          const studentIds = studentsData.map(s => s.id);
+        if (allStudents.length > 0) {
+          const studentIds = allStudents.map(s => s.id);
           const { data: visitsData, error: visitsError } = await supabase
             .from('health_visits')
             .select('id, visit_date, reason_category, student_id, follow_up_required, follow_up_date')
