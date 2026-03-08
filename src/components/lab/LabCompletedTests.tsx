@@ -256,7 +256,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                         )}
                       </>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => r.report_file_url ? handleViewFile(r) : handlePrint(r)}>
+                    <Button variant="ghost" size="sm" onClick={() => handlePrintPdf(r)}>
                       <Printer className="w-3 h-3 mr-1" />Print
                     </Button>
                   </div>
