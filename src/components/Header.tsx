@@ -668,7 +668,7 @@ const Header = () => {
         }
 
         const homePath = getHomePath();
-        const homePages = ['/', '/mentor/home', '/admin', '/staff/home'];
+        const homePages = ['/', '/mentor/home', '/admin', '/staff/home', '/admin/dashboard'];
         const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
 
         // Hide on user's home page

@@ -27,7 +27,7 @@ const BackNavigation = () => {
   const homePath = getHomePath();
 
   // These are the "home" pages for each role — hide Back but show Home
-  const homePages = ['/', '/mentor/home', '/admin', '/staff/home'];
+  const homePages = ['/', '/mentor/home', '/admin', '/staff/home', '/admin/dashboard'];
   const isOnHomePage = homePages.includes(location.pathname) && location.pathname === homePath;
 
   // On the actual home page for the role, hide the entire bar
