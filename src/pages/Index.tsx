@@ -11,20 +11,36 @@ import HealthServicesSection from "@/components/HealthServicesSection";
 import HospitalIntegration from "@/components/HospitalIntegration";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import DoctorHomeDashboard from "@/components/doctor/DoctorHomeDashboard";
 
 const Index = () => {
-  const { user, isDoctor, loading } = useUserRole();
+  const { user, isDoctor, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, loading } = useUserRole();
+  const navigate = useNavigate();
+
+  // Redirect staff roles to their dedicated dashboards
+  useEffect(() => {
+    if (loading || !user) return;
+    if (isLabOfficer) navigate('/lab/dashboard', { replace: true });
+    else if (isPharmacy) navigate('/pharmacy/dashboard', { replace: true });
+    else if (isMedicalStaff) navigate('/staff/dashboard', { replace: true });
+    else if (isAdmin) navigate('/admin', { replace: true });
+    else if (isMentor) navigate('/mentor/dashboard', { replace: true });
+  }, [user, loading, isLabOfficer, isPharmacy, isMedicalStaff, isAdmin, isMentor, navigate]);
+
+  // Don't render landing page for staff roles while redirecting
+  if (user && (isLabOfficer || isPharmacy || isMedicalStaff || isAdmin || isMentor)) {
+    return null;
+  }
 
   return (
     <BackgroundWrapper>
       <Header />
       <main>
         {isDoctor && user ? (
-          // Doctor-specific home page
           <DoctorHomeDashboard />
         ) : (
-          // Default student/public home page
           <>
             <WelcomeBanner />
             <HeroSection />
