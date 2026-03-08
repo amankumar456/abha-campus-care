@@ -110,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
       medical_staff: "Medical Staff",
     };
 
-    const welcomeMessages = {
+    const welcomeMessages: Record<string, string> = {
       student: `
         <p>You now have access to:</p>
         <ul>
@@ -137,7 +137,34 @@ const handler = async (req: Request): Promise<Response> => {
           <li>🔔 Receive wellness alerts</li>
           <li>📊 Access mentee health reports</li>
         </ul>
-      `
+      `,
+      pharmacy: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>💊 Manage medicine inventory</li>
+          <li>📋 Process prescriptions</li>
+          <li>📦 Track stock and expiry</li>
+          <li>📊 View dispensing analytics</li>
+        </ul>
+      `,
+      lab_officer: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>🔬 Process lab test requests</li>
+          <li>📋 Upload and manage reports</li>
+          <li>🧪 Register and track samples</li>
+          <li>📊 View lab analytics</li>
+        </ul>
+      `,
+      medical_staff: `
+        <p>You now have access to:</p>
+        <ul>
+          <li>🏥 Access health centre operations</li>
+          <li>📋 View medical leave requests</li>
+          <li>📝 Manage administrative tasks</li>
+          <li>📊 Access operational reports</li>
+        </ul>
+      `,
     };
 
     const emailHtml = `
