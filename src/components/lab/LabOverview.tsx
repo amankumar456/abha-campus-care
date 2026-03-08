@@ -125,7 +125,7 @@ export default function LabOverview({
         </CardHeader>
         <CardContent className="pb-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => setRegisterOpen(true)}>
+            <Button variant="outline" className="h-auto py-3 flex flex-col gap-1" onClick={() => onNavigate("register")}>
               <Plus className="w-5 h-5 text-primary" />
               <span className="text-xs">New Sample</span>
             </Button>
