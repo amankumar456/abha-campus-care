@@ -54,10 +54,12 @@ export default function LabSidebar({ activeSection, onSectionChange }: LabSideba
               "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
               activeSection === item.id 
                 ? "bg-white/20 text-white font-medium" 
-                : "text-white/70 hover:bg-white/10 hover:text-white"
+                : item.highlight
+                  ? "text-orange-300 hover:bg-orange-500/20 hover:text-orange-200 font-medium"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
             )}
           >
-            <item.icon className="w-4 h-4 flex-shrink-0" />
+            <item.icon className={cn("w-4 h-4 flex-shrink-0", item.highlight && activeSection !== item.id && "text-orange-400")} />
             {!collapsed && <span>{item.label}</span>}
           </button>
         ))}

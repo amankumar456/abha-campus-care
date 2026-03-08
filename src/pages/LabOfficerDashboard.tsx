@@ -35,6 +35,7 @@ export default function LabOfficerDashboard() {
   const [labReports, setLabReports] = useState<LabReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("overview");
+  const [registerOpen, setRegisterOpen] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [testFilter, setTestFilter] = useState("all");
