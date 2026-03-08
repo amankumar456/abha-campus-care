@@ -537,7 +537,29 @@ const DoctorReferralForm = () => {
     ? getHospitalByName(selectedHospitalName) 
     : null;
 
-  // Search for student by roll number and email
+  // Fetch email from roll number
+  const fetchEmailFromRollNumber = async (rollNumber: string) => {
+    if (!rollNumber || rollNumber.trim().length < 2) return;
+    setIsFetchingEmail(true);
+    setEmailAutoFilled(false);
+    try {
+      const { data } = await supabase
+        .from("students")
+        .select("email")
+        .ilike("roll_number", rollNumber.trim())
+        .maybeSingle();
+      
+      if (data?.email) {
+        form.setValue("email", data.email);
+        setEmailAutoFilled(true);
+      }
+    } catch {
+      // silently fail - user can still type email
+    } finally {
+      setIsFetchingEmail(false);
+    }
+  };
+
   const searchStudent = async () => {
     const rollNumber = form.getValues("rollNumber").trim();
     const email = form.getValues("email").trim().toLowerCase();
