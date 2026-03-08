@@ -71,7 +71,7 @@ export default function DoctorDashboard() {
       const { data: pendingApts } = await supabase
         .from("appointments")
         .select("id")
-        .eq("medical_officer_id", doctorId)
+        
         .eq("status", "pending");
 
       const { data: allPatients } = await supabase
