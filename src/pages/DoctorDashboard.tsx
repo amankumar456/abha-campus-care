@@ -77,7 +77,7 @@ export default function DoctorDashboard() {
       const { data: allPatients } = await supabase
         .from("appointments")
         .select("patient_id")
-        .eq("medical_officer_id", doctorId);
+        ;
 
       const uniquePatients = new Set(allPatients?.map(a => a.patient_id) || []);
       const highPriorityCount = todayApts?.filter(a => a.health_priority === "high").length || 0;
