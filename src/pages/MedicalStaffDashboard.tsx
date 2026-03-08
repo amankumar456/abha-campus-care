@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import IssueCertificateDialog from "@/components/doctor/IssueCertificateDialog";
 import PrintableReferralLetter from "@/components/medical-leave/PrintableReferralLetter";
+import StaffReferralDetails from "@/components/staff/StaffReferralDetails";
 import {
   ShieldCheck, Search, FileText, ClipboardCheck, AlertTriangle, CheckCircle2,
   User, Calendar, Building, Loader2, Mail, Phone, Heart, Droplets, Pill,
