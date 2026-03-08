@@ -12,9 +12,11 @@ const BackNavigation = () => {
 
   const getHomePath = () => {
     if (isAdmin) return '/admin';
-    if (isDoctor) return '/doctor/dashboard';
+    if (isDoctor) return '/';
     if (isMentor) return '/mentor/dashboard';
-    if (isLabOfficer) return '/lab/dashboard';
+    if (isLabOfficer) return '/';
+    if (isPharmacy) return '/pharmacy/dashboard';
+    if (isMedicalStaff) return '/staff/dashboard';
     if (isPharmacy) return '/pharmacy/dashboard';
     if (isMedicalStaff) return '/staff/dashboard';
     return '/';
