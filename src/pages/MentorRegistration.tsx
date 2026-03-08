@@ -180,7 +180,7 @@ export default function MentorRegistration() {
         description: "Your mentor profile has been saved.",
       });
 
-      navigate("/mentor/dashboard");
+      navigate("/mentor/home");
     } catch (error: any) {
       console.error("Mentor registration error:", error);
       toast({

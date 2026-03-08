@@ -87,19 +87,51 @@ export default function MentorDashboard() {
         if (mentorError) throw mentorError;
         setMentorProfile(mentorData);
 
-        // Fetch students assigned to this mentor
-        const { data: studentsData, error: studentsError } = await supabase
+        // Fetch students assigned to this mentor (by mentor_id, mentor_email, or mentor_name)
+        let allStudents: Student[] = [];
+
+        // Query by mentor_id
+        const { data: byId } = await supabase
           .from('students')
           .select('id, full_name, roll_number, email, phone, program, batch, branch, year_of_study')
           .eq('mentor_id', mentorId)
           .order('full_name');
+        
+        allStudents = byId || [];
 
-        if (studentsError) throw studentsError;
-        setStudents(studentsData || []);
+        // Also query by mentor_email if mentor has email
+        if (mentorData?.email) {
+          const { data: byEmail } = await supabase
+            .from('students')
+            .select('id, full_name, roll_number, email, phone, program, batch, branch, year_of_study')
+            .eq('mentor_email', mentorData.email)
+            .order('full_name');
+          
+          if (byEmail) {
+            const existingIds = new Set(allStudents.map(s => s.id));
+            byEmail.forEach(s => { if (!existingIds.has(s.id)) allStudents.push(s); });
+          }
+        }
+
+        // Also query by mentor_name
+        if (mentorData?.name) {
+          const { data: byName } = await supabase
+            .from('students')
+            .select('id, full_name, roll_number, email, phone, program, batch, branch, year_of_study')
+            .ilike('mentor_name', mentorData.name)
+            .order('full_name');
+          
+          if (byName) {
+            const existingIds = new Set(allStudents.map(s => s.id));
+            byName.forEach(s => { if (!existingIds.has(s.id)) allStudents.push(s); });
+          }
+        }
+
+        setStudents(allStudents);
 
         // Fetch recent health visits for assigned students
-        if (studentsData && studentsData.length > 0) {
-          const studentIds = studentsData.map(s => s.id);
+        if (allStudents.length > 0) {
+          const studentIds = allStudents.map(s => s.id);
           const { data: visitsData, error: visitsError } = await supabase
             .from('health_visits')
             .select('id, visit_date, reason_category, student_id, follow_up_required, follow_up_date')
@@ -277,6 +309,7 @@ export default function MentorDashboard() {
                       key={student.id}
                       student={student}
                       visitCount={studentVisitCounts[student.id] || 0}
+                      onViewProfile={() => navigate(`/student-profile/${student.roll_number}`)}
                     />
                   ))}
                 </div>

@@ -27,6 +27,7 @@ const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const NewVisit = lazy(() => import("./pages/NewVisit"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const MentorDashboard = lazy(() => import("./pages/MentorDashboard"));
+const MentorHome = lazy(() => import("./pages/MentorHome"));
 const MentorProfile = lazy(() => import("./pages/MentorProfile"));
 const MedicalLeave = lazy(() => import("./pages/MedicalLeave"));
 const PharmacyDashboard = lazy(() => import("./pages/PharmacyDashboard"));
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/student-profile/:rollNumber" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
             <Route path="/new-visit" element={<ProtectedRoute><NewVisit /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="/mentor/home" element={<ProtectedRoute><MentorHome /></ProtectedRoute>} />
             <Route path="/mentor/register" element={<ProtectedRoute><MentorRegistration /></ProtectedRoute>} />
             <Route path="/mentor/dashboard" element={<ProtectedRoute><MentorDashboard /></ProtectedRoute>} />
             <Route path="/mentor/profile" element={<ProtectedRoute><MentorProfile /></ProtectedRoute>} />
