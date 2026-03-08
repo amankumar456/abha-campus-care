@@ -171,7 +171,7 @@ const StudentProfile = () => {
       setStudent(studentData as Student);
 
       // Fetch all data in parallel
-      const [visitsRes, profileRes, prescriptionsRes, completedApptsRes, labReportsRes] = await Promise.all([
+      const [visitsRes, profileRes, prescriptionsRes, completedApptsRes, labReportsRes, medicalLeavesRes] = await Promise.all([
         supabase
           .from('health_visits')
           .select(`
@@ -208,6 +208,17 @@ const StudentProfile = () => {
           .select(`
             id, test_name, status, notes, report_file_url, report_file_name, created_at, updated_at,
             medical_officers:doctor_id ( name, designation )
+          `)
+          .eq('student_id', studentData.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('medical_leave_requests')
+          .select(`
+            id, status, referral_hospital, illness_description, health_priority,
+            expected_duration, leave_start_date, expected_return_date, actual_return_date,
+            doctor_clearance, doctor_clearance_date, doctor_notes, created_at,
+            health_centre_visited, accompanist_name, accompanist_type, referral_type,
+            medical_officers:referring_doctor_id ( name )
           `)
           .eq('student_id', studentData.id)
           .order('created_at', { ascending: false }),
