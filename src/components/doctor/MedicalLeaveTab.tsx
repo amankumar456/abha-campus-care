@@ -128,7 +128,7 @@ export default function MedicalLeaveTab() {
             email
           )
         `)
-        .eq("referring_doctor_id", doctorId)
+        
         .order("created_at", { ascending: false });
 
       if (error) throw error;

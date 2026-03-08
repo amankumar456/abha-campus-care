@@ -39,7 +39,7 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
           status, created_at, rest_days, referral_date, health_priority,
           students!medical_leave_requests_student_id_fkey (full_name, roll_number, program, branch)
         `)
-        .eq("referring_doctor_id", doctorId)
+        
         .contains("referral_type", ["treatment"])
         .order("created_at", { ascending: false });
       return data || [];
@@ -58,7 +58,7 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
           status, created_at, rest_days, referral_date, health_priority,
           students!medical_leave_requests_student_id_fkey (full_name, roll_number, program, branch)
         `)
-        .eq("referring_doctor_id", doctorId)
+        
         .contains("referral_type", ["test_checkup"])
         .order("created_at", { ascending: false });
       return data || [];
@@ -77,7 +77,7 @@ export default function DoctorTreatmentOverview({ doctorId }: DoctorTreatmentOve
           appointments!prescriptions_appointment_id_fkey (appointment_date, appointment_time, reason, health_priority),
           prescription_items (medicine_name, dosage, frequency, duration, meal_timing)
         `)
-        .eq("doctor_id", doctorId)
+        
         .order("created_at", { ascending: false });
 
       // Fetch student details separately
