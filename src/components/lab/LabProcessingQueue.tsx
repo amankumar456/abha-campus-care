@@ -103,13 +103,13 @@ export default function LabProcessingQueue({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">🔬 Pending Lab Tests — Processing Queue</h2>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 className="text-xl font-bold flex items-center gap-2">🔬 Pending Lab Tests — Processing Queue</h2>
+        <div className="flex items-center gap-2 shrink-0">
           <Button size="sm" onClick={() => setRegisterOpen(true)}>
             <Plus className="w-4 h-4 mr-1" />Register New Sample
           </Button>
-          <Badge variant="outline" className="text-amber-600 border-amber-300">{filtered.length} pending</Badge>
+          <Badge variant="outline" className="text-amber-600 border-amber-300 whitespace-nowrap">{filtered.length} pending</Badge>
         </div>
       </div>
 
@@ -142,11 +142,11 @@ export default function LabProcessingQueue({
                 priority === "high" ? "border-l-red-500" : priority === "medium" ? "border-l-amber-500" : "border-l-blue-500"
               } hover:shadow-md transition-shadow`}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0 space-y-2">
                       {/* Patient info */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <User className="w-4 h-4 text-muted-foreground" />
+                        <User className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span className="font-semibold">{r.student?.full_name || "Unknown"}</span>
                         <Badge variant="outline" className="text-xs">{r.student?.roll_number}</Badge>
                         {r.student?.program && <Badge variant="secondary" className="text-[10px]">{r.student.program}</Badge>}
@@ -191,7 +191,7 @@ export default function LabProcessingQueue({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex sm:flex-col gap-2 shrink-0">
                       {isPhysicalTest(r.test_name) ? (
                         <Button 
                           size="sm" 
