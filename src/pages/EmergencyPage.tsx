@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 import {
   Siren,
   Activity,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import Header from "@/components/Header";
 import EmergencyDashboard from "@/components/doctor/EmergencyDashboard";
 import EmergencyHistory from "@/components/doctor/EmergencyHistory";
 import EmergencyReportsSection from "@/components/doctor/EmergencyReportsSection";
@@ -18,6 +20,8 @@ import EmergencyQuickActions from "@/components/doctor/EmergencyQuickActions";
 
 export default function EmergencyPage() {
   const [subTab, setSubTab] = useState("live");
+  const location = useLocation();
+  const isStandalone = location.pathname === "/emergency";
 
   // Get active count for badge
   const { data: activeCount } = useQuery({
@@ -32,7 +36,7 @@ export default function EmergencyPage() {
     refetchInterval: 30000,
   });
 
-  return (
+  const content = (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center gap-3">
@@ -86,4 +90,17 @@ export default function EmergencyPage() {
       </Tabs>
     </div>
   );
+
+  if (isStandalone) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-6">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return content;
 }
