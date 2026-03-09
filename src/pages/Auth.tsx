@@ -77,14 +77,15 @@ export default function Auth() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          await supabase.auth.signOut();
+          // Clear stale session locally without hitting server
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
           return;
         }
         if (session) {
           await redirectBasedOnRole(session.user);
         }
       } catch {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
       }
     };
 

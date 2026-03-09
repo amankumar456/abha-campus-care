@@ -104,20 +104,20 @@ export const useUserRole = (): UseUserRoleReturn => {
 
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const newUser = session?.user ?? null;
-      setUser(newUser);
-      if (newUser) {
-        // On sign in or token refresh, use cache or fetch
-        if (event === 'SIGNED_IN') {
-          fetchRoles(newUser.id);
-        } else if (event === 'TOKEN_REFRESHED') {
-          applyCache(newUser.id) || fetchRoles(newUser.id);
-        }
-      } else {
+      if (event === 'SIGNED_OUT' || !session) {
+        setUser(null);
         setRoles([]);
         setMentorId(null);
         setDoctorId(null);
         setLoading(false);
+        return;
+      }
+      const newUser = session.user;
+      setUser(newUser);
+      if (event === 'SIGNED_IN') {
+        fetchRoles(newUser.id);
+      } else if (event === 'TOKEN_REFRESHED') {
+        applyCache(newUser.id) || fetchRoles(newUser.id);
       }
     });
 
@@ -125,6 +125,12 @@ export const useUserRole = (): UseUserRoleReturn => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.warn('Session error:', error.message);
+        // Clear stale/invalid session locally
+        supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        setUser(null);
+        setRoles([]);
+        setMentorId(null);
+        setDoctorId(null);
         setLoading(false);
         return;
       }
