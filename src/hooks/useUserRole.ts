@@ -125,6 +125,12 @@ export const useUserRole = (): UseUserRoleReturn => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
         console.warn('Session error:', error.message);
+        // Clear stale/invalid session locally
+        supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+        setUser(null);
+        setRoles([]);
+        setMentorId(null);
+        setDoctorId(null);
         setLoading(false);
         return;
       }
