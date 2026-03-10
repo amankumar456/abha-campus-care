@@ -208,15 +208,19 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
       const { error } = await supabase.from("lab_reports").update(updateData).eq("id", report.id);
       if (error) throw error;
 
-      // Notify student
-      const { data: student } = await supabase.from("students").select("user_id, full_name").eq("id", report.student_id).single();
-      if (student?.user_id) {
-        await supabase.from("notifications").insert({
-          user_id: student.user_id,
-          title: "🔬 Lab Report Ready",
-          message: `Your ${report.test_name} report is ready. Please check your health records.`,
-          type: "lab_report",
-        });
+      // Notify student (non-blocking — don't let notification failures break the save)
+      try {
+        const { data: student } = await supabase.from("students").select("user_id, full_name").eq("id", report.student_id).single();
+        if (student?.user_id) {
+          await supabase.from("notifications").insert({
+            user_id: student.user_id,
+            title: "🔬 Lab Report Ready",
+            message: `Your ${report.test_name} report is ready. Please check your health records.`,
+            type: "lab_report",
+          });
+        }
+      } catch (notifErr) {
+        console.warn("Could not send lab report notification:", notifErr);
       }
 
       toast({ title: "✅ Results Saved", description: `${report.test_name} completed for ${report.student?.full_name}` });
