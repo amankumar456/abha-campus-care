@@ -56,9 +56,9 @@ export default function LabOverview({
 
   const uniqueStudents = new Set(allReports.map(r => r.student_id)).size;
 
-  // Oldest pending (most urgent)
+  // Latest pending first
   const urgentPending = pendingReports
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
   const priorityColor = (createdAt: string) => {
