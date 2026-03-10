@@ -819,9 +819,31 @@ const StudentProfile = () => {
                             {report.status === 'completed' ? 'Completed' : 'Pending'}
                           </Badge>
                           {report.status === 'completed' && report.report_file_url && (
-                            <Button variant="outline" size="sm" onClick={() => window.open(report.report_file_url!, '_blank')}>
+                            <Button variant="outline" size="sm" onClick={async () => {
+                              try {
+                                const path = report.report_file_url!;
+                                if (path.startsWith('http')) {
+                                  window.open(path, '_blank');
+                                  return;
+                                }
+                                const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                if (error) throw error;
+                                window.open(data.signedUrl, '_blank');
+                              } catch (err: any) {
+                                toast.error('Could not open PDF', { description: err.message });
+                              }
+                            }}>
                               <Download className="w-4 h-4 mr-1" />
-                              View Report
+                              View PDF
+                            </Button>
+                          )}
+                          {report.status === 'completed' && !report.report_file_url && report.notes && (
+                            <Button variant="outline" size="sm" onClick={() => {
+                              // Show notes in a simple alert for now
+                              toast.info(report.test_name, { description: 'Results available in text format (no PDF generated).' });
+                            }}>
+                              <FileText className="w-4 h-4 mr-1" />
+                              View Results
                             </Button>
                           )}
                         </div>
