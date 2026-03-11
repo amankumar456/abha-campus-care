@@ -9,7 +9,7 @@ import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { generateLabReportPdf } from "@/lib/print/generateLabReportPdf";
+import { generateLabReportHtmlBlob } from "@/lib/print/generateLabReportHtml";
 
 interface LabReport {
   id: string;
