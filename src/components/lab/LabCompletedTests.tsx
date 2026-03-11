@@ -68,7 +68,9 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
     }
   };
 
-  const handlePrintPdf = async (r: LabReport) => {
+  const isHtmlReport = (r: LabReport) => r.report_file_url?.endsWith(".html") || r.report_file_name?.endsWith(".html");
+
+  const handlePrintFile = async (r: LabReport) => {
     if (!r.report_file_url) { handlePrint(r); return; }
     const url = await getSignedUrl(r.report_file_url);
     if (url) {
