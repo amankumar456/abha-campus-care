@@ -166,7 +166,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
       const sampleOkMatch = r.notes.match(/Sample Quality:\s*(.+)/);
       const sampleOk = sampleOkMatch?.[1]?.trim() === "OK";
 
-      const pdfBlob = generateLabReportPdf({
+      const htmlBlob = await generateLabReportHtmlBlob({
         reportId: r.id,
         testName: r.test_name,
         studentName: r.student?.full_name || "N/A",
@@ -180,16 +180,16 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
         sampleOk,
       });
 
-      const pdfFileName = `${r.student_id}/${Date.now()}_${r.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+      const fileName = `${r.student_id}/${Date.now()}_${r.test_name.replace(/\s+/g, '_')}_Report.html`;
       const { error: uploadError } = await supabase.storage
         .from("lab-reports")
-        .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+        .upload(fileName, htmlBlob, { contentType: "text/html" });
 
       if (uploadError) throw uploadError;
 
       const { error } = await supabase.from("lab_reports").update({
-        report_file_url: pdfFileName,
-        report_file_name: `${r.test_name}_Report.pdf`,
+        report_file_url: fileName,
+        report_file_name: `${r.test_name}_Report.html`,
       }).eq("id", r.id);
 
       if (error) throw error;
