@@ -9,7 +9,7 @@ import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { generateLabReportPdf } from "@/lib/print/generateLabReportPdf";
+import { generateLabReportHtmlBlob } from "@/lib/print/generateLabReportHtml";
 
 interface LabReport {
   id: string;
@@ -68,7 +68,9 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
     }
   };
 
-  const handlePrintPdf = async (r: LabReport) => {
+  const isHtmlReport = (r: LabReport) => r.report_file_url?.endsWith(".html") || r.report_file_name?.endsWith(".html");
+
+  const handlePrintFile = async (r: LabReport) => {
     if (!r.report_file_url) { handlePrint(r); return; }
     const url = await getSignedUrl(r.report_file_url);
     if (url) {
@@ -164,7 +166,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
       const sampleOkMatch = r.notes.match(/Sample Quality:\s*(.+)/);
       const sampleOk = sampleOkMatch?.[1]?.trim() === "OK";
 
-      const pdfBlob = generateLabReportPdf({
+      const htmlBlob = await generateLabReportHtmlBlob({
         reportId: r.id,
         testName: r.test_name,
         studentName: r.student?.full_name || "N/A",
@@ -178,16 +180,16 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
         sampleOk,
       });
 
-      const pdfFileName = `${r.student_id}/${Date.now()}_${r.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+      const fileName = `${r.student_id}/${Date.now()}_${r.test_name.replace(/\s+/g, '_')}_Report.html`;
       const { error: uploadError } = await supabase.storage
         .from("lab-reports")
-        .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+        .upload(fileName, htmlBlob, { contentType: "text/html" });
 
       if (uploadError) throw uploadError;
 
       const { error } = await supabase.from("lab_reports").update({
-        report_file_url: pdfFileName,
-        report_file_name: `${r.test_name}_Report.pdf`,
+        report_file_url: fileName,
+        report_file_name: `${r.test_name}_Report.html`,
       }).eq("id", r.id);
 
       if (error) throw error;
@@ -236,7 +238,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                   <div className="flex items-center gap-2">
                     {r.report_file_url ? (
                       <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
-                        <Eye className="w-3 h-3 mr-1" />View PDF
+                        <Eye className="w-3 h-3 mr-1" />View Report
                       </Button>
                     ) : (
                       <>
@@ -256,7 +258,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                         )}
                       </>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => handlePrintPdf(r)}>
+                    <Button variant="ghost" size="sm" onClick={() => handlePrintFile(r)}>
                       <Printer className="w-3 h-3 mr-1" />Print
                     </Button>
                   </div>
@@ -320,22 +322,12 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
               </DialogTitle>
             </DialogHeader>
             <div className="flex-1 w-full rounded-lg border overflow-hidden bg-muted/30 relative">
-              <object
-                data={`${pdfViewUrl}#toolbar=1&navpanes=1`}
-                type="application/pdf"
-                className="w-full h-full"
-              >
-                {/* Fallback if object tag can't render PDF */}
-                <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
-                  <FileText className="w-16 h-16 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    PDF preview is not available in this browser.
-                  </p>
-                  <Button variant="default" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
-                    <Eye className="w-4 h-4 mr-1" />Open PDF in New Tab
-                  </Button>
-                </div>
-              </object>
+              <iframe
+                src={pdfViewUrl}
+                className="w-full h-full border-0"
+                title="Lab Report"
+                sandbox="allow-same-origin allow-scripts allow-popups"
+              />
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" size="sm" asChild>
