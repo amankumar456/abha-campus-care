@@ -238,7 +238,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                   <div className="flex items-center gap-2">
                     {r.report_file_url ? (
                       <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
-                        <Eye className="w-3 h-3 mr-1" />View PDF
+                        <Eye className="w-3 h-3 mr-1" />View Report
                       </Button>
                     ) : (
                       <>
