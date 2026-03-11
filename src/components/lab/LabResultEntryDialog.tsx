@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
-import { generateLabReportPdf } from "@/lib/print/generateLabReportPdf";
+import { generateLabReportHtmlBlob } from "@/lib/print/generateLabReportHtml";
 
 interface LabReport {
   id: string;
