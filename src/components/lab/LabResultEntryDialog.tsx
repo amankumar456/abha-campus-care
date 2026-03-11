@@ -161,7 +161,7 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
 
         fullNotes = `LAB RESULTS:\n${resultText}\n\nTechnician Notes: ${techNotes || "None"}\nSample Quality: ${sampleOk ? "OK" : "Issue noted"}`;
 
-        const pdfParams = params.map(p => ({
+        const htmlParams = params.map(p => ({
           name: p.name,
           value: results[p.name] || "-",
           unit: p.unit,
@@ -169,7 +169,7 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
           flag: getFlagForValue(results[p.name] || "", p.refRange),
         }));
 
-        const pdfBlob = generateLabReportPdf({
+        const htmlBlob = await generateLabReportHtmlBlob({
           reportId: report.id,
           testName: report.test_name,
           studentName: report.student?.full_name || "N/A",
@@ -178,12 +178,12 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
           branch: report.student?.branch || "N/A",
           doctorName: report.doctor?.name || "N/A",
           testDate: report.created_at,
-          parameters: pdfParams,
+          parameters: htmlParams,
           techNotes: techNotes || "",
           sampleOk,
         });
 
-        pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.pdf`;
+        pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.html`;
         const { error: uploadError } = await supabase.storage
           .from("lab-reports")
           .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
