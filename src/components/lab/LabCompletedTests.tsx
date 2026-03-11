@@ -322,22 +322,12 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
               </DialogTitle>
             </DialogHeader>
             <div className="flex-1 w-full rounded-lg border overflow-hidden bg-muted/30 relative">
-              <object
-                data={`${pdfViewUrl}#toolbar=1&navpanes=1`}
-                type="application/pdf"
-                className="w-full h-full"
-              >
-                {/* Fallback if object tag can't render PDF */}
-                <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
-                  <FileText className="w-16 h-16 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    PDF preview is not available in this browser.
-                  </p>
-                  <Button variant="default" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
-                    <Eye className="w-4 h-4 mr-1" />Open PDF in New Tab
-                  </Button>
-                </div>
-              </object>
+              <iframe
+                src={pdfViewUrl}
+                className="w-full h-full border-0"
+                title="Lab Report"
+                sandbox="allow-same-origin allow-scripts allow-popups"
+              />
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" size="sm" asChild>
