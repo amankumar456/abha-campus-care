@@ -202,7 +202,7 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
       };
       if (pdfFileName) {
         updateData.report_file_url = pdfFileName;
-        updateData.report_file_name = manualFile?.name || `${report.test_name}_Report.pdf`;
+        updateData.report_file_name = manualFile?.name || `${report.test_name}_Report.html`;
       }
 
       const { error } = await supabase.from("lab_reports").update(updateData).eq("id", report.id);
