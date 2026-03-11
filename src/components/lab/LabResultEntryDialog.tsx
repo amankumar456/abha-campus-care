@@ -186,7 +186,7 @@ export default function LabResultEntryDialog({ report, open, onClose, onUpload, 
         pdfFileName = `${report.student_id}/${Date.now()}_${report.test_name.replace(/\s+/g, '_')}_Report.html`;
         const { error: uploadError } = await supabase.storage
           .from("lab-reports")
-          .upload(pdfFileName, pdfBlob, { contentType: "application/pdf" });
+          .upload(pdfFileName, htmlBlob, { contentType: "text/html" });
         if (uploadError) throw uploadError;
       } else {
         // No template, no file - just save notes
