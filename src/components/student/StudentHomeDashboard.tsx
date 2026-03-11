@@ -71,7 +71,7 @@ const StudentHomeDashboard = () => {
       const [healthVisitsRes, completedAppointmentsRes, upcomingAppointmentsRes, leavesRes, prescriptionsRes] = await Promise.all([
         supabase.from("health_visits").select("id", { count: "exact", head: true }).eq("student_id", student.id),
         supabase.from("appointments").select("id", { count: "exact", head: true }).eq("patient_id", user!.id).eq("status", "completed"),
-        supabase.from("appointments").select("id", { count: "exact", head: true }).eq("patient_id", user!.id).in("status", ["pending", "confirmed"]),
+        supabase.from("appointments").select("id", { count: "exact", head: true }).eq("patient_id", user!.id).in("status", ["pending", "confirmed"]).gte("appointment_date", new Date().toISOString().split("T")[0]),
         supabase.from("medical_leave_requests").select("id", { count: "exact", head: true }).eq("student_id", student.id).in("status", ["doctor_referred", "student_form_pending", "on_leave", "return_pending"]),
         supabase.from("prescriptions").select("id", { count: "exact", head: true }).eq("student_id", student.id),
       ]);
