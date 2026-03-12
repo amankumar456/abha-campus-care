@@ -822,18 +822,25 @@ const StudentProfile = () => {
                             <Button variant="outline" size="sm" onClick={async () => {
                               try {
                                 const path = report.report_file_url!;
-                                if (path.startsWith('http')) {
-                                  window.open(path, '_blank');
-                                  return;
+                                let url = path;
+                                if (!path.startsWith('http')) {
+                                  const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                  if (error) throw error;
+                                  url = data.signedUrl;
                                 }
-                                const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                if (error) throw error;
-                                window.open(data.signedUrl, '_blank');
+                                if (path.endsWith('.html')) {
+                                  const res = await fetch(url);
+                                  const html = await res.text();
+                                  const blob = new Blob([html], { type: 'text/html' });
+                                  window.open(URL.createObjectURL(blob), '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
                               } catch (err: any) {
-                                toast.error('Could not open PDF', { description: err.message });
+                                toast.error('Could not open report', { description: err.message });
                               }
                             }}>
-                              <Download className="w-4 h-4 mr-1" />
+                              <Eye className="w-4 h-4 mr-1" />
                               View PDF
                             </Button>
                           )}
