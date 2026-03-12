@@ -54,17 +54,30 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
            r.test_name.toLowerCase().includes(q);
   });
 
+  const [pdfViewContent, setPdfViewContent] = useState<string | null>(null);
   const [pdfViewUrl, setPdfViewUrl] = useState<string | null>(null);
   const [pdfViewTitle, setPdfViewTitle] = useState("");
 
   const handleViewFile = async (r: LabReport) => {
     if (!r.report_file_url) return;
     const url = await getSignedUrl(r.report_file_url);
-    if (url) {
-      setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
-      setPdfViewUrl(url);
-    } else {
+    if (!url) {
       toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+      return;
+    }
+    setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
+    setPdfViewUrl(url);
+    // For HTML reports, fetch content and use srcdoc for proper rendering
+    if (isHtmlReport(r)) {
+      try {
+        const res = await fetch(url);
+        const html = await res.text();
+        setPdfViewContent(html);
+      } catch {
+        setPdfViewContent(null);
+      }
+    } else {
+      setPdfViewContent(null);
     }
   };
 
