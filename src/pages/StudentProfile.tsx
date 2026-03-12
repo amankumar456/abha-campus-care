@@ -151,6 +151,7 @@ const StudentProfile = () => {
   const [fitConfirmed, setFitConfirmed] = useState(false);
   const [clearanceNotes, setClearanceNotes] = useState('');
   const [clearanceLoading, setClearanceLoading] = useState(false);
+  const [viewingLabReport, setViewingLabReport] = useState<LabReport | null>(null);
 
   const handleGrantClearance = async (leave: MedicalLeaveRecord) => {
     if (!doctorId) return;
