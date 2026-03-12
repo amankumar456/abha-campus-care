@@ -1341,77 +1341,14 @@ export default function StudentProfilePage() {
               </Card>
             )}
 
-            {/* Lab Report View Dialog */}
+            {/* Lab Report Viewer Dialog */}
             {viewingLabReport && (
-              <Dialog open={!!viewingLabReport} onOpenChange={() => setViewingLabReport(null)}>
-                <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <TestTube className="w-5 h-5 text-emerald-600" />
-                      Lab Results — {viewingLabReport.test_name}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Calendar className="w-3 h-3" />
-                    Completed: {format(new Date(viewingLabReport.updated_at), 'dd MMM yyyy, hh:mm a')}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Prescribed by Dr. {viewingLabReport.doctor_name}
-                  </div>
-                  {viewingLabReport.notes ? (
-                    <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-muted/30 font-mono">
-                      {viewingLabReport.notes}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">No results available yet.</p>
-                  )}
-                  <div className="flex gap-2 justify-end">
-                    {viewingLabReport.report_file_url && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            const path = viewingLabReport.report_file_url!;
-                            if (path.startsWith('http')) { window.open(path, '_blank'); return; }
-                            const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                            if (error) throw error;
-                            window.open(data.signedUrl, '_blank');
-                          } catch { toast({ title: 'Error', description: 'Could not open PDF', variant: 'destructive' }); }
-                        }}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />Open PDF
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        const reportNo = `LR/${format(new Date(viewingLabReport.created_at), 'yyyyMMdd')}/${viewingLabReport.id.slice(0, 6).toUpperCase()}`;
-                        const bodyHtml = `
-                          ${getNitwHeaderHtml('LABORATORY REPORT')}
-                          <div class="doc-title">
-                            <h3>LABORATORY INVESTIGATION REPORT</h3>
-                            <div class="cert-no">Report No.: ${reportNo}</div>
-                          </div>
-                          <div class="section">
-                            <div class="section-title">TEST: ${viewingLabReport.test_name.toUpperCase()}</div>
-                            <div class="body-text" style="white-space:pre-line">${viewingLabReport.notes || 'No results.'}</div>
-                          </div>
-                          <div class="signature-section">
-                            <div class="signature-box"><div class="signature-line">Lab Technician</div></div>
-                            <div class="signature-box"><div class="signature-line">Pathologist</div></div>
-                          </div>
-                        `;
-                        await printDocument({ title: `Lab Report — ${viewingLabReport.test_name}`, bodyHtml, documentId: reportNo, documentType: 'LAB_REPORT' });
-                      }}
-                    >
-                      <Printer className="w-4 h-4 mr-1" />Print
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setViewingLabReport(null)}>Close</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <LabReportViewer
+                open={!!viewingLabReport}
+                onOpenChange={(open) => { if (!open) setViewingLabReport(null); }}
+                title={`${viewingLabReport.test_name} — ${student?.full_name} (${student?.roll_number})`}
+                reportFileUrl={viewingLabReport.report_file_url}
+              />
             )}
 
             {/* Referral Letters Sub-tab */}
