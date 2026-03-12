@@ -87,9 +87,20 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
     if (!r.report_file_url) { handlePrint(r); return; }
     const url = await getSignedUrl(r.report_file_url);
     if (url) {
-      const printWin = window.open(url, "_blank");
-      if (printWin) {
-        printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+      if (isHtmlReport(r)) {
+        try {
+          const res = await fetch(url);
+          const html = await res.text();
+          const blob = new Blob([html], { type: "text/html" });
+          const blobUrl = URL.createObjectURL(blob);
+          const printWin = window.open(blobUrl, "_blank");
+          if (printWin) printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+        } catch {
+          toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
+        }
+      } else {
+        const printWin = window.open(url, "_blank");
+        if (printWin) printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
       }
     } else {
       toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
