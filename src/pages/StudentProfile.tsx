@@ -18,6 +18,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import VisitPatternAnalysis from '@/components/health/VisitPatternAnalysis';
 import { notifyStudentOfStatusUpdate, getStudentUserId } from '@/lib/notifications/medical-leave-notifications';
+import LabReportViewer, { printLabReport } from '@/components/lab/LabReportViewer';
 
 interface Student {
   id: string;
