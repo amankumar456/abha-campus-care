@@ -175,12 +175,19 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
                   </div>
                   <div className="flex items-center gap-2">
                     {r.report_file_url && (
-                      <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
-                        <Download className="w-3 h-3 mr-1" />View File
+                      <Button variant="outline" size="sm" onClick={() => setViewingReport(r)}>
+                        <Eye className="w-3 h-3 mr-1" />View Report
                       </Button>
                     )}
                     {r.status === "completed" && (
-                      <Button variant="ghost" size="sm" onClick={() => handlePrintReport(r)}>
+                      <Button variant="ghost" size="sm" onClick={async () => {
+                        if (r.report_file_url) {
+                          const ok = await printLabReport(r.report_file_url);
+                          if (!ok) toast({ title: "Error", description: "Could not print", variant: "destructive" });
+                        } else {
+                          handlePrintReport(r);
+                        }
+                      }}>
                         <Printer className="w-3 h-3 mr-1" />Print
                       </Button>
                     )}
