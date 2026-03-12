@@ -1279,33 +1279,13 @@ export default function StudentProfilePage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.stopPropagation();
-                                  try {
-                                    const path = report.report_file_url!;
-                                    let url = path;
-                                    if (!path.startsWith('http')) {
-                                      const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                      if (error) throw error;
-                                      url = data.signedUrl;
-                                    }
-                                    // For HTML reports, fetch and open as blob for proper rendering
-                                    if (path.endsWith('.html')) {
-                                      const res = await fetch(url);
-                                      const html = await res.text();
-                                      const blob = new Blob([html], { type: 'text/html' });
-                                      const blobUrl = URL.createObjectURL(blob);
-                                      window.open(blobUrl, '_blank');
-                                    } else {
-                                      window.open(url, '_blank');
-                                    }
-                                  } catch (err: any) {
-                                    toast({ title: 'Error', description: 'Could not open report: ' + (err.message || 'Unknown error'), variant: 'destructive' });
-                                  }
+                                  setViewingLabReport(report);
                                 }}
                               >
                                 <Eye className="w-3 h-3 mr-1" />
-                                View PDF
+                                View Report
                               </Button>
                             )}
                             {report.status === 'completed' && !report.report_file_url && (
@@ -1325,35 +1305,9 @@ export default function StudentProfilePage() {
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   if (report.report_file_url) {
-                                    try {
-                                      const path = report.report_file_url;
-                                      let url = path;
-                                      if (!path.startsWith('http')) {
-                                        const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                        if (error) throw error;
-                                        url = data.signedUrl;
-                                      }
-                                      // For HTML reports, fetch content first for proper rendering
-                                      if (path.endsWith('.html')) {
-                                        const res = await fetch(url);
-                                        const html = await res.text();
-                                        const blob = new Blob([html], { type: 'text/html' });
-                                        const blobUrl = URL.createObjectURL(blob);
-                                        const printWindow = window.open(blobUrl, '_blank');
-                                        if (printWindow) {
-                                          printWindow.addEventListener('load', () => setTimeout(() => printWindow.print(), 500));
-                                        }
-                                      } else {
-                                        const printWindow = window.open(url, '_blank');
-                                        if (printWindow) {
-                                          printWindow.addEventListener('load', () => setTimeout(() => printWindow.print(), 500));
-                                        }
-                                      }
-                                    } catch {
-                                      toast({ title: 'Error', description: 'Could not print report', variant: 'destructive' });
-                                    }
+                                    const ok = await printLabReport(report.report_file_url);
+                                    if (!ok) toast({ title: 'Error', description: 'Could not print report', variant: 'destructive' });
                                   } else {
-                                    // Print from notes using NITW template
                                     const reportNo = `LR/${format(new Date(report.created_at), 'yyyyMMdd')}/${report.id.slice(0, 6).toUpperCase()}`;
                                     const bodyHtml = `
                                       ${getNitwHeaderHtml('LABORATORY REPORT')}
