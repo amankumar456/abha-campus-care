@@ -1282,15 +1282,24 @@ export default function StudentProfilePage() {
                                   e.stopPropagation();
                                   try {
                                     const path = report.report_file_url!;
-                                    if (path.startsWith('http')) {
-                                      window.open(path, '_blank');
-                                      return;
+                                    let url = path;
+                                    if (!path.startsWith('http')) {
+                                      const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                      if (error) throw error;
+                                      url = data.signedUrl;
                                     }
-                                    const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                    if (error) throw error;
-                                    window.open(data.signedUrl, '_blank');
+                                    // For HTML reports, fetch and open as blob for proper rendering
+                                    if (path.endsWith('.html')) {
+                                      const res = await fetch(url);
+                                      const html = await res.text();
+                                      const blob = new Blob([html], { type: 'text/html' });
+                                      const blobUrl = URL.createObjectURL(blob);
+                                      window.open(blobUrl, '_blank');
+                                    } else {
+                                      window.open(url, '_blank');
+                                    }
                                   } catch (err: any) {
-                                    toast({ title: 'Error', description: 'Could not open PDF: ' + (err.message || 'Unknown error'), variant: 'destructive' });
+                                    toast({ title: 'Error', description: 'Could not open report: ' + (err.message || 'Unknown error'), variant: 'destructive' });
                                   }
                                 }}
                               >
