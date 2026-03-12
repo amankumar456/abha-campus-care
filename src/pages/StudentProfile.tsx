@@ -854,6 +854,16 @@ const StudentProfile = () => {
             </Card>
           </TabsContent>
 
+          {/* Lab Report Viewer Dialog */}
+          {viewingLabReport && (
+            <LabReportViewer
+              open={!!viewingLabReport}
+              onOpenChange={(open) => { if (!open) setViewingLabReport(null); }}
+              title={`${viewingLabReport.test_name} — ${student?.full_name} (${student?.roll_number})`}
+              reportFileUrl={viewingLabReport.report_file_url}
+            />
+          )}
+
           <TabsContent value="medicalleave" className="mt-6">
             <Card>
               <CardHeader>
