@@ -738,6 +738,14 @@ This is a computer-generated document.
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Lab Report Viewer */}
+      <LabReportViewer
+        open={labReportViewerOpen}
+        onOpenChange={setLabReportViewerOpen}
+        title={labReportViewerData.title}
+        reportFileUrl={labReportViewerData.url}
+      />
     </>
   );
 };
