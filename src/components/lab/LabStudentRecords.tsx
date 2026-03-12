@@ -136,6 +136,15 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
     await printDocument({ title: `Lab Report — ${r.student?.full_name}`, bodyHtml, documentId: reportNo, documentType: "LAB_REPORT" });
   };
 
+  const labReportViewer = (
+    <LabReportViewer
+      open={!!viewingReport}
+      onOpenChange={(open) => { if (!open) setViewingReport(null); }}
+      title={viewingReport ? `${viewingReport.test_name} — ${viewingReport.student?.full_name} (${viewingReport.student?.roll_number})` : ''}
+      reportFileUrl={viewingReport?.report_file_url || null}
+    />
+  );
+
   if (selectedStudent) {
     return (
       <div className="space-y-4">
@@ -197,6 +206,7 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
             </Card>
           ))}
         </div>
+        {labReportViewer}
       </div>
     );
   }
@@ -238,6 +248,7 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
           ))}
         </div>
       )}
+      {labReportViewer}
     </div>
   );
 }
