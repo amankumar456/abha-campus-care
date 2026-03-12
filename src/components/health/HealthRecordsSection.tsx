@@ -63,6 +63,8 @@ const HealthRecordsSection = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [labReportViewerOpen, setLabReportViewerOpen] = useState(false);
+  const [labReportViewerData, setLabReportViewerData] = useState<{ title: string; url: string | null }>({ title: '', url: null });
 
   // Fetch real health visits
   const { data: healthVisits = [], isLoading: loadingVisits } = useQuery({
