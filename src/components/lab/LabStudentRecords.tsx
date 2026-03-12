@@ -49,6 +49,7 @@ const getSignedUrl = async (storagePath: string): Promise<string | null> => {
 
 export default function LabStudentRecords({ reports, searchQuery, onSearchChange }: Props) {
   const [selectedStudent, setSelectedStudent] = useState<StudentGroup | null>(null);
+  const [viewingReport, setViewingReport] = useState<LabReport | null>(null);
   const { toast } = useToast();
 
   const studentMap = new Map<string, StudentGroup>();
