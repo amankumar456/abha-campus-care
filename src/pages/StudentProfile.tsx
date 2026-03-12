@@ -18,6 +18,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import VisitPatternAnalysis from '@/components/health/VisitPatternAnalysis';
 import { notifyStudentOfStatusUpdate, getStudentUserId } from '@/lib/notifications/medical-leave-notifications';
+import LabReportViewer, { printLabReport } from '@/components/lab/LabReportViewer';
 
 interface Student {
   id: string;
@@ -150,6 +151,7 @@ const StudentProfile = () => {
   const [fitConfirmed, setFitConfirmed] = useState(false);
   const [clearanceNotes, setClearanceNotes] = useState('');
   const [clearanceLoading, setClearanceLoading] = useState(false);
+  const [viewingLabReport, setViewingLabReport] = useState<LabReport | null>(null);
 
   const handleGrantClearance = async (leave: MedicalLeaveRecord) => {
     if (!doctorId) return;
@@ -819,38 +821,28 @@ const StudentProfile = () => {
                             {report.status === 'completed' ? 'Completed' : 'Pending'}
                           </Badge>
                           {report.status === 'completed' && report.report_file_url && (
-                            <Button variant="outline" size="sm" onClick={async () => {
-                              try {
-                                const path = report.report_file_url!;
-                                let url = path;
-                                if (!path.startsWith('http')) {
-                                  const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                  if (error) throw error;
-                                  url = data.signedUrl;
-                                }
-                                if (path.endsWith('.html')) {
-                                  const res = await fetch(url);
-                                  const html = await res.text();
-                                  const blob = new Blob([html], { type: 'text/html' });
-                                  window.open(URL.createObjectURL(blob), '_blank');
-                                } else {
-                                  window.open(url, '_blank');
-                                }
-                              } catch (err: any) {
-                                toast.error('Could not open report', { description: err.message });
-                              }
-                            }}>
+                            <Button variant="outline" size="sm" onClick={() => setViewingLabReport(report)}>
                               <Eye className="w-4 h-4 mr-1" />
-                              View PDF
+                              View Report
                             </Button>
                           )}
                           {report.status === 'completed' && !report.report_file_url && report.notes && (
                             <Button variant="outline" size="sm" onClick={() => {
-                              // Show notes in a simple alert for now
                               toast.info(report.test_name, { description: 'Results available in text format (no PDF generated).' });
                             }}>
                               <FileText className="w-4 h-4 mr-1" />
                               View Results
+                            </Button>
+                          )}
+                          {report.status === 'completed' && (
+                            <Button variant="ghost" size="sm" onClick={async () => {
+                              if (report.report_file_url) {
+                                const ok = await printLabReport(report.report_file_url);
+                                if (!ok) toast.error('Could not print report');
+                              }
+                            }}>
+                              <Printer className="w-4 h-4 mr-1" />
+                              Print
                             </Button>
                           )}
                         </div>
@@ -861,6 +853,16 @@ const StudentProfile = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Lab Report Viewer Dialog */}
+          {viewingLabReport && (
+            <LabReportViewer
+              open={!!viewingLabReport}
+              onOpenChange={(open) => { if (!open) setViewingLabReport(null); }}
+              title={`${viewingLabReport.test_name} — ${student?.full_name} (${student?.roll_number})`}
+              reportFileUrl={viewingLabReport.report_file_url}
+            />
+          )}
 
           <TabsContent value="medicalleave" className="mt-6">
             <Card>

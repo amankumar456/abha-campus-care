@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Download, Eye, User, Calendar, Stethoscope, ClipboardList, Printer, Award, UserCheck, TestTube, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import LabReportViewer from '@/components/lab/LabReportViewer';
 
 interface HealthRecord {
   id: string;
@@ -62,6 +63,8 @@ const HealthRecordsSection = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [labReportViewerOpen, setLabReportViewerOpen] = useState(false);
+  const [labReportViewerData, setLabReportViewerData] = useState<{ title: string; url: string | null }>({ title: '', url: null });
 
   // Fetch real health visits
   const { data: healthVisits = [], isLoading: loadingVisits } = useQuery({
@@ -259,26 +262,12 @@ const HealthRecordsSection = () => {
       const labId = record.id.replace('lab-', '');
       const labReport = labReports.find((lr: any) => lr.id === labId);
       if (labReport?.report_file_url) {
-        try {
-          const path = labReport.report_file_url;
-          let url = path;
-          if (!path.startsWith('http')) {
-            const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-            if (error) throw error;
-            url = data.signedUrl;
-          }
-          if (path.endsWith('.html')) {
-            const res = await fetch(url);
-            const html = await res.text();
-            const blob = new Blob([html], { type: 'text/html' });
-            window.open(URL.createObjectURL(blob), '_blank');
-          } else {
-            window.open(url, '_blank');
-          }
-          return;
-        } catch {
-          // Fall through to text view
-        }
+        setLabReportViewerData({
+          title: `${labReport.test_name} — ${record.student} (${record.studentRoll})`,
+          url: labReport.report_file_url,
+        });
+        setLabReportViewerOpen(true);
+        return;
       }
     }
     setSelectedRecord(record);
@@ -749,6 +738,14 @@ This is a computer-generated document.
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Lab Report Viewer */}
+      <LabReportViewer
+        open={labReportViewerOpen}
+        onOpenChange={setLabReportViewerOpen}
+        title={labReportViewerData.title}
+        reportFileUrl={labReportViewerData.url}
+      />
     </>
   );
 };

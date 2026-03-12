@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, FileText, ExternalLink, Download, Printer, ArrowLeft, Calendar, CheckCircle2 } from "lucide-react";
+import { Search, User, FileText, ExternalLink, Download, Printer, ArrowLeft, Calendar, CheckCircle2, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LabReportViewer, { printLabReport } from "@/components/lab/LabReportViewer";
 
 interface LabReport {
   id: string;
@@ -48,6 +49,7 @@ const getSignedUrl = async (storagePath: string): Promise<string | null> => {
 
 export default function LabStudentRecords({ reports, searchQuery, onSearchChange }: Props) {
   const [selectedStudent, setSelectedStudent] = useState<StudentGroup | null>(null);
+  const [viewingReport, setViewingReport] = useState<LabReport | null>(null);
   const { toast } = useToast();
 
   const studentMap = new Map<string, StudentGroup>();
@@ -134,6 +136,15 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
     await printDocument({ title: `Lab Report — ${r.student?.full_name}`, bodyHtml, documentId: reportNo, documentType: "LAB_REPORT" });
   };
 
+  const labReportViewer = (
+    <LabReportViewer
+      open={!!viewingReport}
+      onOpenChange={(open) => { if (!open) setViewingReport(null); }}
+      title={viewingReport ? `${viewingReport.test_name} — ${viewingReport.student?.full_name} (${viewingReport.student?.roll_number})` : ''}
+      reportFileUrl={viewingReport?.report_file_url || null}
+    />
+  );
+
   if (selectedStudent) {
     return (
       <div className="space-y-4">
@@ -173,12 +184,19 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
                   </div>
                   <div className="flex items-center gap-2">
                     {r.report_file_url && (
-                      <Button variant="outline" size="sm" onClick={() => handleViewFile(r)}>
-                        <Download className="w-3 h-3 mr-1" />View File
+                      <Button variant="outline" size="sm" onClick={() => setViewingReport(r)}>
+                        <Eye className="w-3 h-3 mr-1" />View Report
                       </Button>
                     )}
                     {r.status === "completed" && (
-                      <Button variant="ghost" size="sm" onClick={() => handlePrintReport(r)}>
+                      <Button variant="ghost" size="sm" onClick={async () => {
+                        if (r.report_file_url) {
+                          const ok = await printLabReport(r.report_file_url);
+                          if (!ok) toast({ title: "Error", description: "Could not print", variant: "destructive" });
+                        } else {
+                          handlePrintReport(r);
+                        }
+                      }}>
                         <Printer className="w-3 h-3 mr-1" />Print
                       </Button>
                     )}
@@ -188,6 +206,7 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
             </Card>
           ))}
         </div>
+        {labReportViewer}
       </div>
     );
   }
@@ -229,6 +248,7 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
           ))}
         </div>
       )}
+      {labReportViewer}
     </div>
   );
 }
