@@ -262,26 +262,12 @@ const HealthRecordsSection = () => {
       const labId = record.id.replace('lab-', '');
       const labReport = labReports.find((lr: any) => lr.id === labId);
       if (labReport?.report_file_url) {
-        try {
-          const path = labReport.report_file_url;
-          let url = path;
-          if (!path.startsWith('http')) {
-            const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-            if (error) throw error;
-            url = data.signedUrl;
-          }
-          if (path.endsWith('.html')) {
-            const res = await fetch(url);
-            const html = await res.text();
-            const blob = new Blob([html], { type: 'text/html' });
-            window.open(URL.createObjectURL(blob), '_blank');
-          } else {
-            window.open(url, '_blank');
-          }
-          return;
-        } catch {
-          // Fall through to text view
-        }
+        setLabReportViewerData({
+          title: `${labReport.test_name} — ${record.student} (${record.studentRoll})`,
+          url: labReport.report_file_url,
+        });
+        setLabReportViewerOpen(true);
+        return;
       }
     }
     setSelectedRecord(record);
