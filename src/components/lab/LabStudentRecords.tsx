@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, FileText, ExternalLink, Download, Printer, ArrowLeft, Calendar, CheckCircle2 } from "lucide-react";
+import { Search, User, FileText, ExternalLink, Download, Printer, ArrowLeft, Calendar, CheckCircle2, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LabReportViewer, { printLabReport } from "@/components/lab/LabReportViewer";
 
 interface LabReport {
   id: string;
