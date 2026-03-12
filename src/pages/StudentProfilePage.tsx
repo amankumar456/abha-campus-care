@@ -24,6 +24,7 @@ import {
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { printDocument, getNitwHeaderHtml } from '@/lib/print/printDocument';
+import LabReportViewer, { openLabReport, printLabReport } from '@/components/lab/LabReportViewer';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfileCompletionIndicator from '@/components/profile/ProfileCompletionIndicator';
