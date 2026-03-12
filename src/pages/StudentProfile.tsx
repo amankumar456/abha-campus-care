@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp, Pill, FileText, Droplets, AlertCircle, Heart, Building2, Printer, TestTube, Download, Clock, FileCheck, HeartPulse, ShieldCheck, BadgeCheck, AlertTriangle, CalendarClock, CheckCircle2, Stethoscope } from 'lucide-react';
+import { ArrowLeft, User, Calendar, Phone, Mail, GraduationCap, Activity, TrendingUp, Pill, FileText, Droplets, AlertCircle, Heart, Building2, Printer, TestTube, Download, Clock, FileCheck, HeartPulse, ShieldCheck, BadgeCheck, AlertTriangle, CalendarClock, CheckCircle2, Stethoscope, Eye } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import VisitPatternAnalysis from '@/components/health/VisitPatternAnalysis';
@@ -822,18 +822,25 @@ const StudentProfile = () => {
                             <Button variant="outline" size="sm" onClick={async () => {
                               try {
                                 const path = report.report_file_url!;
-                                if (path.startsWith('http')) {
-                                  window.open(path, '_blank');
-                                  return;
+                                let url = path;
+                                if (!path.startsWith('http')) {
+                                  const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                  if (error) throw error;
+                                  url = data.signedUrl;
                                 }
-                                const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                if (error) throw error;
-                                window.open(data.signedUrl, '_blank');
+                                if (path.endsWith('.html')) {
+                                  const res = await fetch(url);
+                                  const html = await res.text();
+                                  const blob = new Blob([html], { type: 'text/html' });
+                                  window.open(URL.createObjectURL(blob), '_blank');
+                                } else {
+                                  window.open(url, '_blank');
+                                }
                               } catch (err: any) {
-                                toast.error('Could not open PDF', { description: err.message });
+                                toast.error('Could not open report', { description: err.message });
                               }
                             }}>
-                              <Download className="w-4 h-4 mr-1" />
+                              <Eye className="w-4 h-4 mr-1" />
                               View PDF
                             </Button>
                           )}

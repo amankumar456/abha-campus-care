@@ -54,17 +54,30 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
            r.test_name.toLowerCase().includes(q);
   });
 
+  const [pdfViewContent, setPdfViewContent] = useState<string | null>(null);
   const [pdfViewUrl, setPdfViewUrl] = useState<string | null>(null);
   const [pdfViewTitle, setPdfViewTitle] = useState("");
 
   const handleViewFile = async (r: LabReport) => {
     if (!r.report_file_url) return;
     const url = await getSignedUrl(r.report_file_url);
-    if (url) {
-      setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
-      setPdfViewUrl(url);
-    } else {
+    if (!url) {
       toast({ title: "Error", description: "Could not load file", variant: "destructive" });
+      return;
+    }
+    setPdfViewTitle(`${r.test_name} — ${r.student?.full_name} (${r.student?.roll_number})`);
+    setPdfViewUrl(url);
+    // For HTML reports, fetch content and use srcdoc for proper rendering
+    if (isHtmlReport(r)) {
+      try {
+        const res = await fetch(url);
+        const html = await res.text();
+        setPdfViewContent(html);
+      } catch {
+        setPdfViewContent(null);
+      }
+    } else {
+      setPdfViewContent(null);
     }
   };
 
@@ -74,9 +87,20 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
     if (!r.report_file_url) { handlePrint(r); return; }
     const url = await getSignedUrl(r.report_file_url);
     if (url) {
-      const printWin = window.open(url, "_blank");
-      if (printWin) {
-        printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+      if (isHtmlReport(r)) {
+        try {
+          const res = await fetch(url);
+          const html = await res.text();
+          const blob = new Blob([html], { type: "text/html" });
+          const blobUrl = URL.createObjectURL(blob);
+          const printWin = window.open(blobUrl, "_blank");
+          if (printWin) printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
+        } catch {
+          toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
+        }
+      } else {
+        const printWin = window.open(url, "_blank");
+        if (printWin) printWin.addEventListener("load", () => setTimeout(() => printWin.print(), 600));
       }
     } else {
       toast({ title: "Error", description: "Could not load file for printing", variant: "destructive" });
@@ -311,9 +335,9 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
         </Dialog>
       )}
 
-      {/* PDF Viewer Dialog */}
-      {pdfViewUrl && (
-        <Dialog open={!!pdfViewUrl} onOpenChange={() => setPdfViewUrl(null)}>
+      {/* PDF/HTML Viewer Dialog */}
+      {(pdfViewUrl || pdfViewContent) && (
+        <Dialog open={!!(pdfViewUrl || pdfViewContent)} onOpenChange={() => { setPdfViewUrl(null); setPdfViewContent(null); }}>
           <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-sm">
@@ -321,26 +345,50 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
                 {pdfViewTitle}
               </DialogTitle>
             </DialogHeader>
-            <div className="flex-1 w-full rounded-lg border overflow-hidden bg-muted/30 relative">
-              <iframe
-                src={pdfViewUrl}
-                className="w-full h-full border-0"
-                title="Lab Report"
-                sandbox="allow-same-origin allow-scripts allow-popups"
-              />
+            <div className="flex-1 w-full rounded-lg border overflow-hidden bg-white relative">
+              {pdfViewContent ? (
+                <iframe
+                  srcDoc={pdfViewContent}
+                  className="w-full h-full border-0"
+                  title="Lab Report"
+                />
+              ) : pdfViewUrl ? (
+                <iframe
+                  src={pdfViewUrl}
+                  className="w-full h-full border-0"
+                  title="Lab Report"
+                />
+              ) : null}
             </div>
             <div className="flex gap-2 justify-end pt-2">
-              <Button variant="outline" size="sm" asChild>
-                <a href={pdfViewUrl} download target="_blank" rel="noopener noreferrer">
-                  <Download className="w-4 h-4 mr-1" />Download
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => window.open(pdfViewUrl, "_blank")}>
+              {pdfViewUrl && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={pdfViewUrl} download target="_blank" rel="noopener noreferrer">
+                    <Download className="w-4 h-4 mr-1" />Download
+                  </a>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => {
+                if (pdfViewContent) {
+                  const blob = new Blob([pdfViewContent], { type: "text/html" });
+                  const url = URL.createObjectURL(blob);
+                  window.open(url, "_blank");
+                } else if (pdfViewUrl) {
+                  window.open(pdfViewUrl, "_blank");
+                }
+              }}>
                 <Eye className="w-4 h-4 mr-1" />Open in New Tab
               </Button>
               <Button variant="default" size="sm" onClick={() => {
-                const w = window.open(pdfViewUrl, "_blank");
-                if (w) w.addEventListener("load", () => setTimeout(() => w.print(), 600));
+                if (pdfViewContent) {
+                  const blob = new Blob([pdfViewContent], { type: "text/html" });
+                  const url = URL.createObjectURL(blob);
+                  const w = window.open(url, "_blank");
+                  if (w) w.addEventListener("load", () => setTimeout(() => w.print(), 600));
+                } else if (pdfViewUrl) {
+                  const w = window.open(pdfViewUrl, "_blank");
+                  if (w) w.addEventListener("load", () => setTimeout(() => w.print(), 600));
+                }
               }}>
                 <Printer className="w-4 h-4 mr-1" />Print
               </Button>

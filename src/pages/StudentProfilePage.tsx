@@ -1282,15 +1282,24 @@ export default function StudentProfilePage() {
                                   e.stopPropagation();
                                   try {
                                     const path = report.report_file_url!;
-                                    if (path.startsWith('http')) {
-                                      window.open(path, '_blank');
-                                      return;
+                                    let url = path;
+                                    if (!path.startsWith('http')) {
+                                      const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
+                                      if (error) throw error;
+                                      url = data.signedUrl;
                                     }
-                                    const { data, error } = await supabase.storage.from('lab-reports').createSignedUrl(path, 3600);
-                                    if (error) throw error;
-                                    window.open(data.signedUrl, '_blank');
+                                    // For HTML reports, fetch and open as blob for proper rendering
+                                    if (path.endsWith('.html')) {
+                                      const res = await fetch(url);
+                                      const html = await res.text();
+                                      const blob = new Blob([html], { type: 'text/html' });
+                                      const blobUrl = URL.createObjectURL(blob);
+                                      window.open(blobUrl, '_blank');
+                                    } else {
+                                      window.open(url, '_blank');
+                                    }
                                   } catch (err: any) {
-                                    toast({ title: 'Error', description: 'Could not open PDF: ' + (err.message || 'Unknown error'), variant: 'destructive' });
+                                    toast({ title: 'Error', description: 'Could not open report: ' + (err.message || 'Unknown error'), variant: 'destructive' });
                                   }
                                 }}
                               >
@@ -1323,14 +1332,24 @@ export default function StudentProfilePage() {
                                         if (error) throw error;
                                         url = data.signedUrl;
                                       }
-                                      const printWindow = window.open(url, '_blank');
-                                      if (printWindow) {
-                                        printWindow.addEventListener('load', () => {
-                                          setTimeout(() => printWindow.print(), 500);
-                                        });
+                                      // For HTML reports, fetch content first for proper rendering
+                                      if (path.endsWith('.html')) {
+                                        const res = await fetch(url);
+                                        const html = await res.text();
+                                        const blob = new Blob([html], { type: 'text/html' });
+                                        const blobUrl = URL.createObjectURL(blob);
+                                        const printWindow = window.open(blobUrl, '_blank');
+                                        if (printWindow) {
+                                          printWindow.addEventListener('load', () => setTimeout(() => printWindow.print(), 500));
+                                        }
+                                      } else {
+                                        const printWindow = window.open(url, '_blank');
+                                        if (printWindow) {
+                                          printWindow.addEventListener('load', () => setTimeout(() => printWindow.print(), 500));
+                                        }
                                       }
                                     } catch {
-                                      toast({ title: 'Error', description: 'Could not print PDF', variant: 'destructive' });
+                                      toast({ title: 'Error', description: 'Could not print report', variant: 'destructive' });
                                     }
                                   } else {
                                     // Print from notes using NITW template
