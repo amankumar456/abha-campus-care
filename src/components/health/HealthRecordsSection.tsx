@@ -240,7 +240,10 @@ const HealthRecordsSection = () => {
         details: [
           `Test: ${lr.test_name}`,
           `Status: ${lr.status === 'completed' ? 'Completed' : 'Pending'}`,
-          ...(lr.notes ? [`Notes: ${lr.notes}`] : []),
+          ...(lr.notes ? lr.notes.split("\n").filter((l: string) => l.trim()).map((l: string) => {
+            if (l.startsWith("LAB RESULTS:")) return null;
+            return l;
+          }).filter(Boolean) as string[] : []),
           ...(lr.report_file_url ? [`Report available for download`] : []),
         ],
         status: lr.status === 'completed' ? 'completed' as const : 'pending' as const,
