@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Printer, TestTube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface LabReportViewerProps {
   open: boolean;
@@ -11,6 +12,12 @@ interface LabReportViewerProps {
   title: string;
   reportFileUrl: string | null;
   reportFileName?: string | null;
+  /** Text notes to render if no file URL exists */
+  fallbackNotes?: string | null;
+  studentName?: string;
+  rollNumber?: string;
+  doctorName?: string;
+  testDate?: string;
 }
 
 const getSignedUrl = async (storagePath: string): Promise<string | null> => {
@@ -51,22 +58,129 @@ export async function printLabReport(reportFileUrl: string) {
   return true;
 }
 
-export default function LabReportViewer({ open, onOpenChange, title, reportFileUrl }: LabReportViewerProps) {
+/** Build a self-contained HTML document from text notes for display in iframe */
+function buildFallbackHtml(opts: {
+  title: string;
+  notes: string;
+  studentName?: string;
+  rollNumber?: string;
+  doctorName?: string;
+  testDate?: string;
+}): string {
+  const lines = opts.notes.split("\n").filter(l => l.trim());
+  const params: { name: string; value: string; unit: string; refRange: string; flag: string }[] = [];
+  let techNotes = "";
+
+  for (const line of lines) {
+    if (line.startsWith("LAB RESULTS:")) continue;
+    if (line.startsWith("Technician Notes:")) { techNotes = line.replace("Technician Notes:", "").trim(); continue; }
+    if (line.startsWith("Sample Quality:")) continue;
+    const match = line.match(/^(.+?):\s*(.+?)\s+(\S+)\s+\(Ref:\s*(.+?)\)\s*(.*)?$/);
+    if (match) {
+      const rawFlag = (match[5] || "").trim();
+      const flag = rawFlag.includes("HIGH") ? "high" : rawFlag.includes("LOW") ? "low" : rawFlag.includes("Normal") ? "normal" : "";
+      params.push({ name: match[1].trim(), value: match[2].trim(), unit: match[3].trim(), refRange: match[4].trim(), flag });
+    }
+  }
+
+  const dateStr = opts.testDate ? format(new Date(opts.testDate), "dd MMM yyyy") : "N/A";
+
+  const rowsHtml = params.length > 0 ? params.map(p => {
+    const flagHtml = p.flag === "high"
+      ? '<span style="color:red;font-weight:bold">↑ HIGH</span>'
+      : p.flag === "low"
+        ? '<span style="color:red;font-weight:bold">↓ LOW</span>'
+        : p.flag === "normal"
+          ? '<span style="color:green">✓ Normal</span>'
+          : "—";
+    return `<tr><td>${p.name}</td><td><strong>${p.value}</strong></td><td>${p.unit}</td><td>${p.refRange}</td><td>${flagHtml}</td></tr>`;
+  }).join("") : `<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Raw results below</td></tr>`;
+
+  const rawBlock = params.length === 0
+    ? `<div style="background:#f8f9fa;padding:16px;border-radius:8px;margin-top:16px;white-space:pre-line;font-size:13px;">${opts.notes}</div>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Lab Report</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Times New Roman',Georgia,serif;padding:40px;max-width:800px;margin:0 auto;color:#1a1a1a;line-height:1.6}
+  .header{text-align:center;border-bottom:2px solid #1e3a5f;padding-bottom:20px;margin-bottom:24px}
+  .header h1{font-size:20px;color:#1e3a5f;letter-spacing:1px}
+  .header h2{font-size:17px;color:#1e3a5f}
+  .header .subtitle{font-size:10px;color:#666}
+  .header .hc{margin-top:8px;padding-top:8px;border-top:1px solid #ddd}
+  .header .hc-title{font-size:14px;font-weight:600;color:#0066cc}
+  .doc-title{text-align:center;margin:20px 0}
+  .doc-title h3{font-size:18px;text-decoration:underline;color:#003366}
+  .section{margin-bottom:18px}
+  .section-title{font-weight:bold;color:#003366;font-size:13px;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:8px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .info-item{display:flex;font-size:12px}
+  .info-label{font-weight:bold;min-width:140px;color:#333}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+  th{background:#f0f4f8;text-align:left;padding:8px;border:1px solid #ddd;font-size:11px;color:#333}
+  td{padding:8px;border:1px solid #ddd}
+  .notes-box{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin:15px 0;font-size:12px;font-style:italic}
+  .sig{margin-top:40px;display:flex;justify-content:space-between}
+  .sig-box{text-align:center}
+  .sig-line{border-top:1px solid #333;margin-top:35px;padding-top:6px;font-size:11px}
+</style></head><body>
+  <div class="header">
+    <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+    <h2>WARANGAL</h2>
+    <p class="subtitle">(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+    <div class="hc"><p class="hc-title">HEALTH CENTRE — LABORATORY REPORT</p></div>
+  </div>
+  <div class="doc-title"><h3>LABORATORY INVESTIGATION REPORT</h3></div>
+  <div class="section">
+    <div class="section-title">PATIENT DETAILS</div>
+    <div class="info-grid">
+      <div class="info-item"><span class="info-label">Patient Name:</span><span>${opts.studentName || "N/A"}</span></div>
+      <div class="info-item"><span class="info-label">Roll Number:</span><span>${opts.rollNumber || "N/A"}</span></div>
+      <div class="info-item"><span class="info-label">Referring Doctor:</span><span>Dr. ${opts.doctorName || "N/A"}</span></div>
+      <div class="info-item"><span class="info-label">Test Date:</span><span>${dateStr}</span></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">TEST: ${opts.title.toUpperCase()}</div>
+    <table>
+      <thead><tr><th>Parameter</th><th>Result</th><th>Unit</th><th>Reference Range</th><th>Flag</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    ${rawBlock}
+  </div>
+  ${techNotes && techNotes !== "None" ? `<div class="notes-box"><strong>Technician Notes:</strong> ${techNotes}</div>` : ""}
+  <div class="sig">
+    <div class="sig-box"><div class="sig-line">Lab Technician</div></div>
+    <div class="sig-box"><div class="sig-line">Pathologist</div></div>
+  </div>
+</body></html>`;
+}
+
+export default function LabReportViewer({ open, onOpenChange, title, reportFileUrl, fallbackNotes, studentName, rollNumber, doctorName, testDate }: LabReportViewerProps) {
   const { toast } = useToast();
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Load content when dialog opens or reportFileUrl changes
   useEffect(() => {
-    if (open && reportFileUrl) {
-      loadContent();
+    if (open) {
+      if (reportFileUrl) {
+        loadContent();
+      } else if (fallbackNotes) {
+        // Generate formatted HTML from text notes
+        const testName = title.split("—")[0]?.trim() || title;
+        setHtmlContent(buildFallbackHtml({ title: testName, notes: fallbackNotes, studentName, rollNumber, doctorName, testDate }));
+        setSignedUrl(null);
+        setLoading(false);
+      }
     }
     if (!open) {
       setHtmlContent(null);
       setSignedUrl(null);
     }
-  }, [open, reportFileUrl]);
+  }, [open, reportFileUrl, fallbackNotes]);
 
   const loadContent = async () => {
     if (!reportFileUrl) return;
