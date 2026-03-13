@@ -64,7 +64,7 @@ const HealthRecordsSection = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [labReportViewerOpen, setLabReportViewerOpen] = useState(false);
-  const [labReportViewerData, setLabReportViewerData] = useState<{ title: string; url: string | null }>({ title: '', url: null });
+  const [labReportViewerData, setLabReportViewerData] = useState<{ title: string; url: string | null; notes?: string | null; studentName?: string; rollNumber?: string; doctorName?: string; testDate?: string }>({ title: '', url: null });
 
   // Fetch real health visits
   const { data: healthVisits = [], isLoading: loadingVisits } = useQuery({
@@ -264,10 +264,15 @@ const HealthRecordsSection = () => {
     if (record.id.startsWith('lab-')) {
       const labId = record.id.replace('lab-', '');
       const labReport = labReports.find((lr: any) => lr.id === labId);
-      if (labReport?.report_file_url) {
+      if (labReport) {
         setLabReportViewerData({
           title: `${labReport.test_name} — ${record.student} (${record.studentRoll})`,
-          url: labReport.report_file_url,
+          url: labReport.report_file_url || null,
+          notes: labReport.notes,
+          studentName: record.student,
+          rollNumber: record.studentRoll,
+          doctorName: labReport.medical_officers?.name,
+          testDate: labReport.created_at,
         });
         setLabReportViewerOpen(true);
         return;
@@ -748,6 +753,11 @@ This is a computer-generated document.
         onOpenChange={setLabReportViewerOpen}
         title={labReportViewerData.title}
         reportFileUrl={labReportViewerData.url}
+        fallbackNotes={labReportViewerData.notes}
+        studentName={labReportViewerData.studentName}
+        rollNumber={labReportViewerData.rollNumber}
+        doctorName={labReportViewerData.doctorName}
+        testDate={labReportViewerData.testDate}
       />
     </>
   );

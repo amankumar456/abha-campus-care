@@ -1288,14 +1288,14 @@ export default function StudentProfilePage() {
                                 View Report
                               </Button>
                             )}
-                            {report.status === 'completed' && !report.report_file_url && (
+                            {report.status === 'completed' && !report.report_file_url && report.notes && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setViewingLabReport(report)}
                               >
                                 <Eye className="w-3 h-3 mr-1" />
-                                View Report
+                                View Results
                               </Button>
                             )}
                             {report.status === 'completed' && (
@@ -1348,6 +1348,11 @@ export default function StudentProfilePage() {
                 onOpenChange={(open) => { if (!open) setViewingLabReport(null); }}
                 title={`${viewingLabReport.test_name} — ${student?.full_name} (${student?.roll_number})`}
                 reportFileUrl={viewingLabReport.report_file_url}
+                fallbackNotes={viewingLabReport.notes}
+                studentName={student?.full_name || ''}
+                rollNumber={student?.roll_number || ''}
+                doctorName={viewingLabReport.doctor_name}
+                testDate={viewingLabReport.created_at}
               />
             )}
 
