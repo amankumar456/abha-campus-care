@@ -237,11 +237,15 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
                     {r.notes && <FormattedLabNotes notes={r.notes} />}
                   </div>
                   <div className="flex items-center gap-2">
-                    {r.report_file_url && (
+                    {r.report_file_url ? (
                       <Button variant="outline" size="sm" onClick={() => setViewingReport(r)}>
                         <Eye className="w-3 h-3 mr-1" />View Report
                       </Button>
-                    )}
+                    ) : r.status === "completed" && r.notes ? (
+                      <Button variant="outline" size="sm" onClick={() => setViewingReport(r)}>
+                        <Eye className="w-3 h-3 mr-1" />View Results
+                      </Button>
+                    ) : null}
                     {r.status === "completed" && (
                       <Button variant="ghost" size="sm" onClick={async () => {
                         if (r.report_file_url) {

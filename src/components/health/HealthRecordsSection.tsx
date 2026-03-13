@@ -753,6 +753,11 @@ This is a computer-generated document.
         onOpenChange={setLabReportViewerOpen}
         title={labReportViewerData.title}
         reportFileUrl={labReportViewerData.url}
+        fallbackNotes={labReportViewerData.notes}
+        studentName={labReportViewerData.studentName}
+        rollNumber={labReportViewerData.rollNumber}
+        doctorName={labReportViewerData.doctorName}
+        testDate={labReportViewerData.testDate}
       />
     </>
   );
