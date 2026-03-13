@@ -10,6 +10,55 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import LabReportViewer, { printLabReport } from "@/components/lab/LabReportViewer";
 
+/** Formats raw lab notes into a styled summary */
+function FormattedLabNotes({ notes }: { notes: string }) {
+  if (!notes.startsWith("LAB RESULTS")) {
+    return <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{notes}</p>;
+  }
+  // Parse "Name: value unit (Ref: range)" entries
+  const lines = notes.split("\n").filter(l => l.trim());
+  const params: Array<{ name: string; value: string; rest: string; isHigh: boolean; isLow: boolean }> = [];
+  let techNotes = "";
+  let sampleQuality = "";
+  
+  for (const line of lines) {
+    if (line.startsWith("LAB RESULTS:")) continue;
+    if (line.startsWith("Technician Notes:")) { techNotes = line.replace("Technician Notes:", "").trim(); continue; }
+    if (line.startsWith("Sample Quality:")) { sampleQuality = line.replace("Sample Quality:", "").trim(); continue; }
+    const match = line.match(/^(.+?):\s*(.+?)\s+(\S+)\s+\(Ref:\s*(.+?)\)\s*(.*)?$/);
+    if (match) {
+      const isHigh = (match[5] || "").includes("HIGH");
+      const isLow = (match[5] || "").includes("LOW");
+      params.push({ name: match[1].trim(), value: match[2].trim(), rest: `${match[3]} (Ref: ${match[4]})`, isHigh, isLow });
+    }
+  }
+
+  if (params.length === 0) {
+    return <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{notes}</p>;
+  }
+
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {params.map((p, i) => (
+          <span key={i} className="text-xs">
+            <span className="text-muted-foreground">{p.name}:</span>{" "}
+            <span className={`font-semibold ${p.isHigh ? "text-red-600" : p.isLow ? "text-red-600" : "text-foreground"}`}>
+              {p.value}
+            </span>{" "}
+            <span className="text-muted-foreground/70">{p.rest}</span>
+            {p.isHigh && <span className="text-red-500 text-[10px] ml-0.5">↑</span>}
+            {p.isLow && <span className="text-red-500 text-[10px] ml-0.5">↓</span>}
+          </span>
+        ))}
+      </div>
+      {techNotes && techNotes !== "None" && (
+        <p className="text-xs text-muted-foreground italic">Notes: {techNotes}</p>
+      )}
+    </div>
+  );
+}
+
 interface LabReport {
   id: string;
   test_name: string;
