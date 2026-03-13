@@ -315,9 +315,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
               Completed: {format(new Date(viewReport.updated_at), "dd MMM yyyy, hh:mm a")}
             </div>
             {viewReport.notes ? (
-              <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-background">
-                {viewReport.notes}
-              </div>
+              <FormattedLabNotesBlock notes={viewReport.notes} />
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">No entered results. Check attached file.</p>
             )}
