@@ -180,7 +180,7 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
                       {r.status === "completed" && <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" />Verified</span>}
                     </div>
                     {r.report_file_name && <p className="text-xs text-muted-foreground mt-1">📎 {r.report_file_name}</p>}
-                    {r.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.notes}</p>}
+                    {r.notes && <FormattedLabNotes notes={r.notes} />}
                   </div>
                   <div className="flex items-center gap-2">
                     {r.report_file_url && (
