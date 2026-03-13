@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Eye, Download, Printer, TestTube } from "lucide-react";
+import { Eye, Printer, TestTube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -57,6 +57,17 @@ export default function LabReportViewer({ open, onOpenChange, title, reportFileU
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Load content when dialog opens or reportFileUrl changes
+  useEffect(() => {
+    if (open && reportFileUrl) {
+      loadContent();
+    }
+    if (!open) {
+      setHtmlContent(null);
+      setSignedUrl(null);
+    }
+  }, [open, reportFileUrl]);
+
   const loadContent = async () => {
     if (!reportFileUrl) return;
     setLoading(true);
@@ -78,12 +89,6 @@ export default function LabReportViewer({ open, onOpenChange, title, reportFileU
     }
   };
 
-  const handleOpenChange = (val: boolean) => {
-    if (val && reportFileUrl) loadContent();
-    if (!val) { setHtmlContent(null); setSignedUrl(null); }
-    onOpenChange(val);
-  };
-
   const handlePrint = () => {
     if (htmlContent) {
       const blob = new Blob([htmlContent], { type: "text/html" });
@@ -97,7 +102,7 @@ export default function LabReportViewer({ open, onOpenChange, title, reportFileU
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">

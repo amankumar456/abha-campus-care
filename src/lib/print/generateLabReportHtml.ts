@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { generateQRDataUrl } from "@/hooks/useQRCode";
-import { getNitwHeaderHtml } from "./printDocument";
 import { getFooterStyles, getFooterHtml } from "./generateVerificationQR";
 
 interface LabReportHtmlOptions {
@@ -18,6 +17,23 @@ interface LabReportHtmlOptions {
 }
 
 /**
+ * Convert the NITW emblem to a base64 data URL so it works inside blob: contexts.
+ */
+async function getEmblemBase64(): Promise<string> {
+  try {
+    const res = await fetch("/nitw-emblem.png");
+    const blob = await res.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return "/nitw-emblem.png";
+  }
+}
+
+/**
  * Generates a full self-contained HTML document for a lab report,
  * identical to the Print Report view. Returns a Blob that can be
  * stored in Supabase Storage and displayed in an iframe/object tag.
@@ -25,7 +41,10 @@ interface LabReportHtmlOptions {
 export async function generateLabReportHtmlBlob(opts: LabReportHtmlOptions): Promise<Blob> {
   const reportNo = `LR/${format(new Date(opts.testDate), "yyyyMMdd")}/${opts.reportId.slice(0, 6).toUpperCase()}`;
   const verificationUrl = `${window.location.origin}/verify?doc=LAB_REPORT&id=${encodeURIComponent(reportNo)}`;
-  const qrDataUrl = await generateQRDataUrl(verificationUrl, 80);
+  const [qrDataUrl, emblemBase64] = await Promise.all([
+    generateQRDataUrl(verificationUrl, 80),
+    getEmblemBase64(),
+  ]);
   const currentDate = format(new Date(), "PPP");
 
   const rowsHtml = opts.parameters.map(p => {
@@ -46,7 +65,19 @@ export async function generateLabReportHtmlBlob(opts: LabReportHtmlOptions): Pro
   }).join("");
 
   const bodyHtml = `
-    ${getNitwHeaderHtml("LABORATORY REPORT")}
+    <div class="nitw-header">
+      <img src="${emblemBase64}" alt="NIT Warangal Official Emblem" class="emblem" />
+      <div class="text">
+        <h1>NATIONAL INSTITUTE OF TECHNOLOGY</h1>
+        <h2>WARANGAL</h2>
+        <p class="subtitle">(An Institution of National Importance under Ministry of Education, Govt. of India)</p>
+        <p class="address">Warangal, Telangana - 506004</p>
+        <div class="health-centre">
+          <p class="hc-title">HEALTH CENTRE — LABORATORY REPORT</p>
+          <p class="hc-contact">Phone: 0870-2462022 | Email: healthcentre@nitw.ac.in</p>
+        </div>
+      </div>
+    </div>
     <div class="doc-title">
       <h3>LABORATORY INVESTIGATION REPORT</h3>
       <div class="cert-no">Report No.: ${reportNo}</div>
