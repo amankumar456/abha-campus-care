@@ -191,6 +191,11 @@ export default function LabStudentRecords({ reports, searchQuery, onSearchChange
       onOpenChange={(open) => { if (!open) setViewingReport(null); }}
       title={viewingReport ? `${viewingReport.test_name} — ${viewingReport.student?.full_name} (${viewingReport.student?.roll_number})` : ''}
       reportFileUrl={viewingReport?.report_file_url || null}
+      fallbackNotes={viewingReport?.notes}
+      studentName={viewingReport?.student?.full_name}
+      rollNumber={viewingReport?.student?.roll_number}
+      doctorName={viewingReport?.doctor?.name}
+      testDate={viewingReport?.created_at}
     />
   );
 
