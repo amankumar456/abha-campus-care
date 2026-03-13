@@ -11,6 +11,75 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { generateLabReportHtmlBlob } from "@/lib/print/generateLabReportHtml";
 
+/** Formatted lab notes block for the View Results dialog */
+function FormattedLabNotesBlock({ notes }: { notes: string }) {
+  if (!notes.startsWith("LAB RESULTS")) {
+    return <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-background">{notes}</div>;
+  }
+  const lines = notes.split("\n").filter(l => l.trim());
+  const params: Array<{ name: string; value: string; unit: string; ref: string; isHigh: boolean; isLow: boolean }> = [];
+  let techNotes = "";
+  let sampleQuality = "";
+
+  for (const line of lines) {
+    if (line.startsWith("LAB RESULTS:")) continue;
+    if (line.startsWith("Technician Notes:")) { techNotes = line.replace("Technician Notes:", "").trim(); continue; }
+    if (line.startsWith("Sample Quality:")) { sampleQuality = line.replace("Sample Quality:", "").trim(); continue; }
+    const match = line.match(/^(.+?):\s*(.+?)\s+(\S+)\s+\(Ref:\s*(.+?)\)\s*(.*)?$/);
+    if (match) {
+      params.push({
+        name: match[1].trim(), value: match[2].trim(), unit: match[3].trim(), ref: match[4].trim(),
+        isHigh: (match[5] || "").includes("HIGH"), isLow: (match[5] || "").includes("LOW"),
+      });
+    }
+  }
+
+  if (params.length === 0) {
+    return <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-background">{notes}</div>;
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden bg-background">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-muted/50 text-xs">
+            <th className="text-left p-2 font-medium">Parameter</th>
+            <th className="text-left p-2 font-medium">Result</th>
+            <th className="text-left p-2 font-medium">Unit</th>
+            <th className="text-left p-2 font-medium">Ref. Range</th>
+            <th className="text-left p-2 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {params.map((p, i) => (
+            <tr key={i} className={`border-t ${p.isHigh || p.isLow ? "bg-red-50 dark:bg-red-900/10" : ""}`}>
+              <td className="p-2 text-muted-foreground">{p.name}</td>
+              <td className="p-2 font-bold">{p.value}</td>
+              <td className="p-2 text-muted-foreground text-xs">{p.unit}</td>
+              <td className="p-2 text-muted-foreground text-xs">{p.ref}</td>
+              <td className="p-2">
+                {p.isHigh && <span className="text-red-600 font-semibold text-xs">↑ HIGH</span>}
+                {p.isLow && <span className="text-red-600 font-semibold text-xs">↓ LOW</span>}
+                {!p.isHigh && !p.isLow && <span className="text-green-600 text-xs">✓ Normal</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {(techNotes && techNotes !== "None") && (
+        <div className="border-t p-2 text-xs text-muted-foreground italic">
+          <strong>Technician Notes:</strong> {techNotes}
+        </div>
+      )}
+      {sampleQuality && (
+        <div className="border-t p-2 text-xs text-muted-foreground">
+          <strong>Sample Quality:</strong> {sampleQuality}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface LabReport {
   id: string;
   test_name: string;
@@ -315,9 +384,7 @@ export default function LabCompletedTests({ reports, searchQuery, onSearchChange
               Completed: {format(new Date(viewReport.updated_at), "dd MMM yyyy, hh:mm a")}
             </div>
             {viewReport.notes ? (
-              <div className="border rounded-lg p-4 text-sm whitespace-pre-line bg-background">
-                {viewReport.notes}
-              </div>
+              <FormattedLabNotesBlock notes={viewReport.notes} />
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">No entered results. Check attached file.</p>
             )}
