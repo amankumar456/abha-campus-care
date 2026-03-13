@@ -1348,6 +1348,11 @@ export default function StudentProfilePage() {
                 onOpenChange={(open) => { if (!open) setViewingLabReport(null); }}
                 title={`${viewingLabReport.test_name} — ${student?.full_name} (${student?.roll_number})`}
                 reportFileUrl={viewingLabReport.report_file_url}
+                fallbackNotes={viewingLabReport.notes}
+                studentName={student?.full_name || ''}
+                rollNumber={student?.roll_number || ''}
+                doctorName={viewingLabReport.doctor_name}
+                testDate={viewingLabReport.created_at}
               />
             )}
 
