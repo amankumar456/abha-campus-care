@@ -46,6 +46,7 @@ interface StudentEmergencyContacts {
   mentorName?: string;
   mentorContact?: string;
   personalPhone?: string;
+  aadharNumber?: string;
 }
 
 const EMPANELLED_HOSPITALS: Record<string, HospitalInfo[]> = {
