@@ -43,6 +43,7 @@ export default function StudentRegistration() {
   const form = useForm<FullRegistration>({
     resolver: zodResolver(fullRegistrationSchema),
     defaultValues: {
+      aadharNumber: "",
       fullName: "",
       rollNumber: "",
       officialEmail: "",
