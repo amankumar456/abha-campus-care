@@ -43,6 +43,23 @@ export function PersonalInfoStep({ form }: PersonalInfoStepProps) {
         </div>
 
         <div>
+          <Label htmlFor="aadharNumber">Aadhaar Card Number *</Label>
+          <Input
+            id="aadharNumber"
+            placeholder="12-digit Aadhaar number"
+            maxLength={12}
+            {...register("aadharNumber")}
+            className={errors.aadharNumber ? "border-destructive" : ""}
+          />
+          {errors.aadharNumber && (
+            <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {errors.aadharNumber.message}
+            </p>
+          )}
+        </div>
+
+        <div>
           <Label htmlFor="rollNumber">University Roll Number *</Label>
           <Input
             id="rollNumber"

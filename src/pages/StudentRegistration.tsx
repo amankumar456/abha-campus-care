@@ -267,6 +267,7 @@ export default function StudentRegistration() {
         disability_details: data.disabilityDetails || null,
         emergency_contact: data.emergencyContact || null,
         emergency_relationship: data.emergencyRelationship || null,
+        aadhar_number: data.aadharNumber || null,
         father_name: data.fatherName || null,
         father_contact: data.fatherContact || null,
         mother_name: data.motherName || null,
