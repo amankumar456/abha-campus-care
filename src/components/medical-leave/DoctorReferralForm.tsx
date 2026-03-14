@@ -542,7 +542,7 @@ const DoctorReferralForm = () => {
       // Fetch profile data
       const { data: profileData } = await supabase
         .from("student_profiles")
-        .select("blood_group, known_allergies, current_medications, emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact")
+        .select("blood_group, known_allergies, current_medications, emergency_contact, emergency_relationship, father_name, father_contact, mother_name, mother_contact, aadhar_number")
         .eq("student_id", data.id)
         .maybeSingle();
 
@@ -558,6 +558,7 @@ const DoctorReferralForm = () => {
           mentorName: data.mentor_name || undefined,
           mentorContact: data.mentor_contact || undefined,
           personalPhone: data.phone || undefined,
+          aadharNumber: profileData?.aadhar_number || undefined,
         },
         // store extra profile info as ad-hoc for display
         _bloodGroup: profileData?.blood_group,
