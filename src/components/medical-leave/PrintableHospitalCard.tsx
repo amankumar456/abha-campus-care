@@ -25,6 +25,7 @@ interface StudentEmergencyContacts {
   mentorName?: string;
   mentorContact?: string;
   personalPhone?: string;
+  aadharNumber?: string;
 }
 
 interface PrintableHospitalCardProps {
