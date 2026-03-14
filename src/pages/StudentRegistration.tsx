@@ -103,6 +103,7 @@ export default function StudentRegistration() {
 
         // Pre-fill form with existing data
         form.reset({
+          aadharNumber: profile?.aadhar_number || "",
           fullName: student.full_name || "",
           rollNumber: student.roll_number || "",
           officialEmail: student.email || "",
