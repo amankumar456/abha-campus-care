@@ -25,6 +25,7 @@ interface StudentEmergencyContacts {
   mentorName?: string;
   mentorContact?: string;
   personalPhone?: string;
+  aadharNumber?: string;
 }
 
 interface PrintableHospitalCardProps {
@@ -409,6 +410,8 @@ const PrintableHospitalCard = ({
               <h4>👤 Student Details</h4>
               ${studentName ? `<p><strong>Name:</strong> ${studentName}</p>` : ''}
               ${studentRollNumber ? `<p><strong>Roll No:</strong> ${studentRollNumber}</p>` : ''}
+              ${emergencyContacts?.aadharNumber ? `<p><strong>Aadhaar No:</strong> ${emergencyContacts.aadharNumber}</p>` : ''}
+              ${emergencyContacts?.fatherName ? `<p><strong>Father's Name:</strong> ${emergencyContacts.fatherName}</p>` : ''}
               ${studentProgram ? `<p><strong>Program:</strong> ${studentProgram}</p>` : ''}
               ${studentBranch ? `<p><strong>Branch:</strong> ${studentBranch}</p>` : ''}
               ${emergencyContacts?.personalPhone ? `<p><strong>Student Phone:</strong> ${emergencyContacts.personalPhone}</p>` : ''}

@@ -43,6 +43,7 @@ export default function StudentRegistration() {
   const form = useForm<FullRegistration>({
     resolver: zodResolver(fullRegistrationSchema),
     defaultValues: {
+      aadharNumber: "",
       fullName: "",
       rollNumber: "",
       officialEmail: "",
@@ -102,6 +103,7 @@ export default function StudentRegistration() {
 
         // Pre-fill form with existing data
         form.reset({
+          aadharNumber: profile?.aadhar_number || "",
           fullName: student.full_name || "",
           rollNumber: student.roll_number || "",
           officialEmail: student.email || "",
@@ -265,6 +267,7 @@ export default function StudentRegistration() {
         disability_details: data.disabilityDetails || null,
         emergency_contact: data.emergencyContact || null,
         emergency_relationship: data.emergencyRelationship || null,
+        aadhar_number: data.aadharNumber || null,
         father_name: data.fatherName || null,
         father_contact: data.fatherContact || null,
         mother_name: data.motherName || null,

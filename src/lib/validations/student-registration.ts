@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 export const personalInfoSchema = z.object({
+  aadharNumber: z
+    .string()
+    .trim()
+    .regex(/^\d{12}$/, "Aadhaar number must be exactly 12 digits"),
   fullName: z
     .string()
     .trim()

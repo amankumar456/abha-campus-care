@@ -1272,6 +1272,7 @@ export type Database = {
       }
       student_profiles: {
         Row: {
+          aadhar_number: string | null
           accuracy_confirmation: boolean | null
           blood_group: string | null
           code_of_conduct: boolean | null
@@ -1296,6 +1297,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aadhar_number?: string | null
           accuracy_confirmation?: boolean | null
           blood_group?: string | null
           code_of_conduct?: boolean | null
@@ -1320,6 +1322,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aadhar_number?: string | null
           accuracy_confirmation?: boolean | null
           blood_group?: string | null
           code_of_conduct?: boolean | null

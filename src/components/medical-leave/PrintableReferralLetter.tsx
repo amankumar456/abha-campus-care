@@ -39,6 +39,8 @@ interface ReferralLetterData {
   rollNumber: string;
   program?: string;
   branch?: string | null;
+  aadharNumber?: string;
+  fatherName?: string;
   hospital: HospitalInfo;
   illnessDescription: string;
   leaveDays: number;
@@ -357,6 +359,18 @@ const PrintableReferralLetter = ({ data }: PrintableReferralLetterProps) => {
                 <span class="info-label">Roll Number:</span>
                 <span>${data.rollNumber}</span>
               </div>
+              ${data.aadharNumber ? `
+              <div class="info-item">
+                <span class="info-label">Aadhaar No:</span>
+                <span>${data.aadharNumber}</span>
+              </div>
+              ` : ''}
+              ${data.fatherName ? `
+              <div class="info-item">
+                <span class="info-label">Father's Name:</span>
+                <span>${data.fatherName}</span>
+              </div>
+              ` : ''}
               ${data.program ? `
               <div class="info-item">
                 <span class="info-label">Program:</span>
