@@ -39,6 +39,8 @@ interface ReferralLetterData {
   rollNumber: string;
   program?: string;
   branch?: string | null;
+  aadharNumber?: string;
+  fatherName?: string;
   hospital: HospitalInfo;
   illnessDescription: string;
   leaveDays: number;
