@@ -343,6 +343,8 @@ const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, student
     leaveDays: number;
     healthPriority: string;
     doctorNotes?: string;
+    aadharNumber?: string;
+    fatherName?: string;
   };
 }) => (
   <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
