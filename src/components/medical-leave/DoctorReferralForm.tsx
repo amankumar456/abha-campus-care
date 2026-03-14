@@ -372,6 +372,8 @@ const HospitalDetailsCard = ({ hospital, studentName, studentRollNumber, student
                 rollNumber: studentRollNumber,
                 program: referralData.program,
                 branch: referralData.branch,
+                aadharNumber: referralData.aadharNumber || emergencyContacts?.aadharNumber,
+                fatherName: referralData.fatherName || emergencyContacts?.fatherName,
                 hospital,
                 illnessDescription: referralData.illnessDescription,
                 leaveDays: referralData.leaveDays,
