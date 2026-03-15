@@ -581,15 +581,20 @@ export default function Appointments() {
                       <div className="grid grid-cols-3 gap-2">
                         {timeSlots.map((time) => {
                           const isBooked = bookedTimes.has(time);
+                          const isToday = isSameDay(selectedDate, new Date());
+                          const now = new Date();
+                          const [slotH, slotM] = time.split(':').map(Number);
+                          const isPast = isToday && (slotH < now.getHours() || (slotH === now.getHours() && slotM <= now.getMinutes()));
+                          const isDisabled = isBooked || isPast;
                           return (
                             <Button
                               key={time}
                               variant={selectedTime === time ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => setSelectedTime(time)}
-                              className={`text-sm ${isBooked ? 'opacity-40 line-through' : ''}`}
-                              disabled={isBooked}
-                              title={isBooked ? 'This slot is already booked' : ''}
+                              className={`text-sm ${isDisabled ? 'opacity-40 line-through' : ''}`}
+                              disabled={isDisabled}
+                              title={isPast ? 'This time has already passed' : isBooked ? 'This slot is already booked' : ''}
                             >
                               {formatTime(time)}
                             </Button>
