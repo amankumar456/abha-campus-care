@@ -238,6 +238,60 @@ export type Database = {
           },
         ]
       }
+      doctor_shifts: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          end_time: string
+          id: string
+          is_modified: boolean | null
+          modified_by: string | null
+          notes: string | null
+          shift_date: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          end_time?: string
+          id?: string
+          is_modified?: boolean | null
+          modified_by?: string | null
+          notes?: string | null
+          shift_date: string
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          end_time?: string
+          id?: string
+          is_modified?: boolean | null
+          modified_by?: string | null
+          notes?: string | null
+          shift_date?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_shifts_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_shifts_modified_by_fkey"
+            columns: ["modified_by"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_handovers: {
         Row: {
           ambulance_request_id: string | null
@@ -1269,6 +1323,72 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      shift_exchanges: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          exchange_reason: string | null
+          id: string
+          new_end_time: string
+          new_start_time: string
+          original_doctor_id: string
+          original_end_time: string
+          original_start_time: string
+          replacement_doctor_id: string
+          shift_date: string
+          status: string
+          transferred_appointments_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          exchange_reason?: string | null
+          id?: string
+          new_end_time: string
+          new_start_time: string
+          original_doctor_id: string
+          original_end_time: string
+          original_start_time: string
+          replacement_doctor_id: string
+          shift_date: string
+          status?: string
+          transferred_appointments_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          exchange_reason?: string | null
+          id?: string
+          new_end_time?: string
+          new_start_time?: string
+          original_doctor_id?: string
+          original_end_time?: string
+          original_start_time?: string
+          replacement_doctor_id?: string
+          shift_date?: string
+          status?: string
+          transferred_appointments_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_exchanges_original_doctor_id_fkey"
+            columns: ["original_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_exchanges_replacement_doctor_id_fkey"
+            columns: ["replacement_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "medical_officers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_profiles: {
         Row: {
