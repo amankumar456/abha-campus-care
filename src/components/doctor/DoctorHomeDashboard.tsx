@@ -224,6 +224,9 @@ export default function DoctorHomeDashboard() {
         </Card>
       </div>
 
+      {/* Shift Exchange - Highlighted Section */}
+      <ShiftExchangeSection doctorId={doctorId} />
+
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Quick Actions */}
