@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Siren,
 } from "lucide-react";
+import ShiftExchangeSection from "./ShiftExchangeSection";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -222,6 +223,9 @@ export default function DoctorHomeDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Shift Exchange - Highlighted Section */}
+      <ShiftExchangeSection doctorId={doctorId} />
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
