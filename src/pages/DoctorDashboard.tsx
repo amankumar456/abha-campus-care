@@ -247,7 +247,8 @@ export default function DoctorDashboard() {
                 {/* Main Dashboard Grid */}
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Left Column - Appointments */}
-                  <div className="lg:col-span-2" id="doctor-appointments-section">
+                  <div className="lg:col-span-2 space-y-6" id="doctor-appointments-section">
+                    {doctorId && <ShiftExchangeAppointments doctorId={doctorId} />}
                     {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
                   </div>
 
