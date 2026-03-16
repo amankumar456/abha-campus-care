@@ -160,7 +160,7 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
         .from("appointments")
         .update({
           medical_officer_id: replacementDoctorId,
-          notes: `Transferred from shift exchange. Original doctor shift modified.`,
+          notes: `Transferred via shift exchange`,
         })
         .eq("medical_officer_id", doctorId)
         .eq("appointment_date", today)
