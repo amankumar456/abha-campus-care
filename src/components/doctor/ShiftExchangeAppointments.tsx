@@ -112,7 +112,7 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
         .select("id, patient_id, appointment_date, appointment_time, reason, status, health_priority, notes, denial_reason, approved_at, denied_at")
         .eq("medical_officer_id", doctorId)
         .eq("appointment_date", today)
-        .ilike("notes", "%shift exchange%")
+        .or("notes.ilike.%shift exchange%,notes.ilike.%Transferred via%")
         .order("appointment_time", { ascending: true });
 
       if (error) throw error;
