@@ -199,6 +199,8 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
       queryClient.invalidateQueries({ queryKey: ["doctor-shift"] });
       queryClient.invalidateQueries({ queryKey: ["recent-shift-exchanges"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-home-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-appointment-stats"] });
       setDialogOpen(false);
       resetForm();
     },
