@@ -39,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
+import ShiftExchangeAppointments from "@/components/doctor/ShiftExchangeAppointments";
 import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
 import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
@@ -246,7 +247,8 @@ export default function DoctorDashboard() {
                 {/* Main Dashboard Grid */}
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Left Column - Appointments */}
-                  <div className="lg:col-span-2" id="doctor-appointments-section">
+                  <div className="lg:col-span-2 space-y-6" id="doctor-appointments-section">
+                    {doctorId && <ShiftExchangeAppointments doctorId={doctorId} />}
                     {doctorId && <DoctorAppointmentsList doctorId={doctorId} />}
                   </div>
 
