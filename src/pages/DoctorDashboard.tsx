@@ -39,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentSearchPanel from "@/components/doctor/StudentSearchPanel";
 
 import DoctorAppointmentsList from "@/components/doctor/DoctorAppointmentsList";
+import ShiftExchangeAppointments from "@/components/doctor/ShiftExchangeAppointments";
 import PendingAccessRequests from "@/components/doctor/PendingAccessRequests";
 import MedicalLeaveTab from "@/components/doctor/MedicalLeaveTab";
 import ScheduleFollowupDialog from "@/components/doctor/ScheduleFollowupDialog";
