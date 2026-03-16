@@ -28,6 +28,24 @@ import { Separator } from "@/components/ui/separator";
 export default function DoctorHomeDashboard() {
   const navigate = useNavigate();
   const { user, doctorId } = useUserRole();
+  const queryClient = useQueryClient();
+
+  // Real-time: auto-refresh when appointments change (e.g. shift transfers)
+  useEffect(() => {
+    if (!doctorId) return;
+    const channel = supabase
+      .channel(`doctor-home-realtime-${doctorId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["doctor-home-appointments", doctorId] });
+          queryClient.invalidateQueries({ queryKey: ["doctor-home-pending", doctorId] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [doctorId, queryClient]);
 
   // Fetch doctor info
   const { data: doctorInfo, isLoading: doctorLoading } = useQuery({
