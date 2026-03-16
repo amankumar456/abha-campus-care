@@ -25,6 +25,23 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("today");
+  const queryClient = useQueryClient();
+
+  // Real-time subscription for appointment changes (transfers, new bookings)
+  useEffect(() => {
+    if (!doctorId) return;
+    const channel = supabase
+      .channel(`doctor-appointments-${doctorId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["doctor-appointments", doctorId] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [doctorId, queryClient]);
 
   // Fetch appointments for this doctor
   const { data: appointments, isLoading } = useQuery({
