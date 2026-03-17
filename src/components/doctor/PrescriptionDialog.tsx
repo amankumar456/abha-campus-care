@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { printDocument, getNitwHeaderHtml } from "@/lib/print/printDocument";
+import { MedicineCombobox } from "./MedicineCombobox";
 
 interface MedicineItem {
   id: string;
