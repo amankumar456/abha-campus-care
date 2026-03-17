@@ -471,12 +471,12 @@ export default function PrescriptionDialog({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Medicine Name *</Label>
-                    <Input
-                      placeholder="e.g., Paracetamol 500mg"
+                    <MedicineCombobox
                       value={med.medicine_name}
-                      onChange={(e) =>
-                        updateMedicine(med.id, "medicine_name", e.target.value)
+                      onChange={(val) =>
+                        updateMedicine(med.id, "medicine_name", val)
                       }
+                      placeholder="e.g., Paracetamol 500mg"
                     />
                   </div>
                   <div className="space-y-1.5">
