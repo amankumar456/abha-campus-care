@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Clock, User, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeftRight, User, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import AppointmentCard from "./AppointmentCard";
 
@@ -17,15 +16,15 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
 
-  // Fetch active shift exchanges where this doctor is the replacement
+  // Fetch active shift exchanges where this doctor is the replacement (today and future)
   const { data: activeExchanges } = useQuery({
-    queryKey: ["active-shift-exchanges-for-me", doctorId, today],
+    queryKey: ["active-shift-exchanges-for-me", doctorId],
     queryFn: async () => {
       const { data } = await supabase
         .from("shift_exchanges")
         .select("*, original_doctor:original_doctor_id(id, name)")
         .eq("replacement_doctor_id", doctorId)
-        .eq("shift_date", today)
+        .gte("shift_date", today)
         .eq("status", "approved");
       return (data as any[]) || [];
     },
@@ -34,7 +33,7 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
 
   // Fetch untransferred appointments from original doctors within exchange time ranges
   const { data: untransferredAppointments } = useQuery({
-    queryKey: ["untransferred-shift-appointments", doctorId, today, activeExchanges],
+    queryKey: ["untransferred-shift-appointments", doctorId, activeExchanges],
     queryFn: async () => {
       if (!activeExchanges?.length) return [];
 
@@ -44,7 +43,7 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
           .from("appointments")
           .select("id, patient_id, appointment_date, appointment_time, reason, status, health_priority, notes")
           .eq("medical_officer_id", exchange.original_doctor_id)
-          .eq("appointment_date", today)
+          .eq("appointment_date", exchange.shift_date)
           .in("status", ["pending", "confirmed"])
           .gte("appointment_time", exchange.new_start_time)
           .lte("appointment_time", exchange.new_end_time);
@@ -83,9 +82,9 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
     onSuccess: (count) => {
       if (count > 0) {
         toast.success(`${count} appointment(s) transferred to your dashboard`);
-        queryClient.invalidateQueries({ queryKey: ["doctor-appointments", doctorId] });
-        queryClient.invalidateQueries({ queryKey: ["doctor-home-appointments", doctorId] });
-        queryClient.invalidateQueries({ queryKey: ["doctor-appointment-stats", doctorId] });
+        queryClient.invalidateQueries({ queryKey: ["doctor-appointments"] });
+        queryClient.invalidateQueries({ queryKey: ["doctor-home-appointments"] });
+        queryClient.invalidateQueries({ queryKey: ["doctor-appointment-stats"] });
         queryClient.invalidateQueries({ queryKey: ["untransferred-shift-appointments"] });
       }
     },
@@ -102,23 +101,29 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
   }, [untransferredAppointments]);
 
   // Fetch appointments already transferred to this doctor via shift exchange
-  const { data: transferredAppointments, isLoading } = useQuery({
-    queryKey: ["transferred-shift-appointments", doctorId, today],
+  const { data: transferredAppointments } = useQuery({
+    queryKey: ["transferred-shift-appointments", doctorId, activeExchanges],
     queryFn: async () => {
       if (!activeExchanges?.length) return [];
 
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("id, patient_id, appointment_date, appointment_time, reason, status, health_priority, notes, denial_reason, approved_at, denied_at")
-        .eq("medical_officer_id", doctorId)
-        .eq("appointment_date", today)
-        .or("notes.ilike.%shift exchange%,notes.ilike.%Transferred via%")
-        .order("appointment_time", { ascending: true });
+      // Get all exchange dates
+      const dates = [...new Set(activeExchanges.map(e => e.shift_date))];
 
-      if (error) throw error;
+      const allTransferred: any[] = [];
+      for (const date of dates) {
+        const { data } = await supabase
+          .from("appointments")
+          .select("id, patient_id, appointment_date, appointment_time, reason, status, health_priority, notes, denial_reason, approved_at, denied_at")
+          .eq("medical_officer_id", doctorId)
+          .eq("appointment_date", date)
+          .or("notes.ilike.%shift exchange%,notes.ilike.%Transferred via%")
+          .order("appointment_time", { ascending: true });
+
+        if (data?.length) allTransferred.push(...data);
+      }
 
       // Fetch student details
-      const patientIds = [...new Set((data || []).map(a => a.patient_id))];
+      const patientIds = [...new Set(allTransferred.map(a => a.patient_id))];
       if (!patientIds.length) return [];
 
       const { data: students } = await supabase
@@ -126,7 +131,7 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
         .select("id, user_id, full_name, roll_number, program, branch, batch, year_of_study, photo_url")
         .in("user_id", patientIds);
 
-      return (data || []).map(apt => ({
+      return allTransferred.map(apt => ({
         ...apt,
         student: students?.find(s => s.user_id === apt.patient_id),
       }));
@@ -134,10 +139,10 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
     enabled: !!doctorId && !!activeExchanges?.length,
   });
 
-  // Also find the original doctor names for display
   const exchangeInfo = activeExchanges?.map(e => ({
     originalDoctor: e.original_doctor?.name || "Unknown",
     timeRange: `${formatTime(e.new_start_time)} - ${formatTime(e.new_end_time)}`,
+    date: format(new Date(e.shift_date), "MMM d"),
   })) || [];
 
   if (!activeExchanges?.length) return null;
@@ -170,7 +175,7 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
           <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-amber-50 border border-amber-200 text-sm">
             <User className="h-4 w-4 text-amber-600 shrink-0" />
             <span className="text-amber-800">
-              From <strong>{info.originalDoctor}</strong> • {info.timeRange}
+              From <strong>Dr. {info.originalDoctor}</strong> • {info.date} • {info.timeRange}
             </span>
           </div>
         ))}
