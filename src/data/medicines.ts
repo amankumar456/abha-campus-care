@@ -1,0 +1,160 @@
+export interface MedicineData {
+  name: string;
+  category: string;
+}
+
+export const MEDICINES_LIST: MedicineData[] = [
+  // 1. ANALGESICS & ANTIPYRETICS
+  { name: "Paracetamol", category: "Analgesic" },
+  { name: "Ibuprofen", category: "Analgesic" },
+  { name: "Diclofenac", category: "Analgesic" },
+  { name: "Mefenamic Acid", category: "Analgesic" },
+  { name: "Tramadol", category: "Analgesic" },
+  { name: "Nimesulide", category: "Analgesic" },
+  { name: "Aceclofenac", category: "Analgesic" },
+  { name: "Ketorolac", category: "Analgesic" },
+  { name: "Naproxen", category: "Analgesic" },
+  { name: "Buprenorphine", category: "Analgesic" },
+  { name: "Morphine", category: "Analgesic" },
+  { name: "Gabapentin", category: "Analgesic" },
+
+  // 2. ANTIBIOTICS
+  { name: "Amoxicillin", category: "Antibiotic" },
+  { name: "Amoxicillin + Clavulanic Acid", category: "Antibiotic" },
+  { name: "Cefixime", category: "Antibiotic" },
+  { name: "Cephalexin", category: "Antibiotic" },
+  { name: "Ceftriaxone", category: "Antibiotic" },
+  { name: "Azithromycin", category: "Antibiotic" },
+  { name: "Ciprofloxacin", category: "Antibiotic" },
+  { name: "Levofloxacin", category: "Antibiotic" },
+  { name: "Norfloxacin", category: "Antibiotic" },
+  { name: "Doxycycline", category: "Antibiotic" },
+  { name: "Clindamycin", category: "Antibiotic" },
+  { name: "Metronidazole", category: "Antibiotic" },
+  { name: "Tinidazole", category: "Antibiotic" },
+  { name: "Nitrofurantoin", category: "Antibiotic" },
+  { name: "Cotrimoxazole", category: "Antibiotic" },
+  { name: "Linezolid", category: "Antibiotic" },
+  { name: "Vancomycin", category: "Antibiotic" },
+  { name: "Meropenem", category: "Antibiotic" },
+  { name: "Amikacin", category: "Antibiotic" },
+
+  // 3. CARDIOVASCULAR DRUGS
+  { name: "Amlodipine", category: "Cardiovascular" },
+  { name: "Nifedipine", category: "Cardiovascular" },
+  { name: "Enalapril", category: "Cardiovascular" },
+  { name: "Ramipril", category: "Cardiovascular" },
+  { name: "Losartan", category: "Cardiovascular" },
+  { name: "Telmisartan", category: "Cardiovascular" },
+  { name: "Metoprolol", category: "Cardiovascular" },
+  { name: "Carvedilol", category: "Cardiovascular" },
+  { name: "Atenolol", category: "Cardiovascular" },
+  { name: "Furosemide", category: "Cardiovascular" },
+  { name: "Spironolactone", category: "Cardiovascular" },
+  { name: "Hydrochlorothiazide", category: "Cardiovascular" },
+  { name: "Digoxin", category: "Cardiovascular" },
+  { name: "Atorvastatin", category: "Cardiovascular" },
+  { name: "Rosuvastatin", category: "Cardiovascular" },
+  { name: "Clopidogrel", category: "Cardiovascular" },
+  { name: "Aspirin (Low dose)", category: "Cardiovascular" },
+  { name: "Nitroglycerin", category: "Cardiovascular" },
+  { name: "Warfarin", category: "Cardiovascular" },
+  { name: "Enoxaparin", category: "Cardiovascular" },
+
+  // 4. ANTI-DIABETIC DRUGS
+  { name: "Insulin Regular (Human)", category: "Anti-Diabetic" },
+  { name: "Insulin Isophane (NPH)", category: "Anti-Diabetic" },
+  { name: "Insulin Glargine", category: "Anti-Diabetic" },
+  { name: "Metformin", category: "Anti-Diabetic" },
+  { name: "Glimepiride", category: "Anti-Diabetic" },
+  { name: "Glibenclamide", category: "Anti-Diabetic" },
+  { name: "Pioglitazone", category: "Anti-Diabetic" },
+  { name: "Voglibose", category: "Anti-Diabetic" },
+  { name: "Dapagliflozin", category: "Anti-Diabetic" },
+  { name: "Linagliptin", category: "Anti-Diabetic" },
+  { name: "Sitagliptin", category: "Anti-Diabetic" },
+
+  // 5. GASTROINTESTINAL MEDICINES
+  { name: "Omeprazole", category: "Antacid" },
+  { name: "Pantoprazole", category: "Antacid" },
+  { name: "Ranitidine", category: "Antacid" },
+  { name: "Ondansetron", category: "Antacid" },
+  { name: "Domperidone", category: "Antacid" },
+  { name: "Loperamide", category: "Antacid" },
+  { name: "Lactulose", category: "Antacid" },
+  { name: "Ursodeoxycholic Acid", category: "Antacid" },
+  { name: "Mesalamine", category: "Antacid" },
+  { name: "Hyoscine Butylbromide", category: "Antacid" },
+
+  // 6. RESPIRATORY SYSTEM DRUGS
+  { name: "Salbutamol", category: "Respiratory" },
+  { name: "Ipratropium Bromide", category: "Respiratory" },
+  { name: "Budesonide", category: "Respiratory" },
+  { name: "Montelukast", category: "Respiratory" },
+  { name: "Fexofenadine", category: "Respiratory" },
+  { name: "Levocetirizine", category: "Respiratory" },
+  { name: "Cetirizine", category: "Respiratory" },
+  { name: "Ambroxol", category: "Respiratory" },
+  { name: "Acetylcysteine", category: "Respiratory" },
+  { name: "Dextromethorphan", category: "Respiratory" },
+  { name: "Prednisolone", category: "Respiratory" },
+
+  // 7. VITAMINS, MINERALS & NUTRITION
+  { name: "Ferrous Sulfate + Folic Acid", category: "Vitamin" },
+  { name: "Calcium + Vitamin D3", category: "Vitamin" },
+  { name: "Vitamin B Complex", category: "Vitamin" },
+  { name: "Vitamin B12", category: "Vitamin" },
+  { name: "Vitamin C", category: "Vitamin" },
+  { name: "Multivitamin Syrup/Tablets", category: "Vitamin" },
+  { name: "Zinc Sulfate", category: "Vitamin" },
+  { name: "Folic Acid", category: "Vitamin" },
+
+  // 8. TOPICAL PREPARATIONS (Skin)
+  { name: "Silver Sulfadiazine Cream", category: "Ointment" },
+  { name: "Povidone-Iodine", category: "Ointment" },
+  { name: "Clotrimazole Cream", category: "Ointment" },
+  { name: "Miconazole Cream", category: "Ointment" },
+  { name: "Mupirocin Ointment", category: "Ointment" },
+  { name: "Gentamicin Cream", category: "Ointment" },
+  { name: "Hydrocortisone Cream", category: "Ointment" },
+  { name: "Clobetasol Ointment", category: "Ointment" },
+  { name: "Calamine Lotion", category: "Ointment" },
+  { name: "Lidocaine Gel", category: "Ointment" },
+
+  // 9. NEUROLOGICAL & MENTAL HEALTH
+  { name: "Diazepam", category: "Neurological" },
+  { name: "Alprazolam", category: "Neurological" },
+  { name: "Clonazepam", category: "Neurological" },
+  { name: "Fluoxetine", category: "Neurological" },
+  { name: "Sertraline", category: "Neurological" },
+  { name: "Escitalopram", category: "Neurological" },
+  { name: "Olanzapine", category: "Neurological" },
+  { name: "Risperidone", category: "Neurological" },
+  { name: "Carbamazepine", category: "Neurological" },
+  { name: "Sodium Valproate", category: "Neurological" },
+  { name: "Levetiracetam", category: "Neurological" },
+  { name: "Phenytoin", category: "Neurological" },
+  { name: "Levodopa + Carbidopa", category: "Neurological" },
+
+  // 10. IV FLUIDS & ELECTROLYTES
+  { name: "Normal Saline (0.9% NaCl)", category: "IV Fluid" },
+  { name: "Ringer's Lactate", category: "IV Fluid" },
+  { name: "Dextrose 5% / 10% / 25%", category: "IV Fluid" },
+  { name: "Dextrose Normal Saline", category: "IV Fluid" },
+  { name: "Potassium Chloride", category: "IV Fluid" },
+  { name: "Sodium Bicarbonate", category: "IV Fluid" },
+  { name: "Mannitol", category: "IV Fluid" },
+
+  // 11. OTHER COMMONLY USED
+  { name: "Thyroxine", category: "General" },
+  { name: "Hydroxyurea", category: "General" },
+  { name: "Hydroxychloroquine", category: "General" },
+  { name: "Calamine Lotion", category: "General" },
+  { name: "Chlorpheniramine Maleate", category: "General" },
+  { name: "Adrenaline", category: "General" },
+  { name: "Atropine", category: "General" },
+  { name: "Naloxone", category: "General" },
+];
+
+// Deduplicated list of unique medicine names
+export const MEDICINE_NAMES = [...new Set(MEDICINES_LIST.map(m => m.name))];
