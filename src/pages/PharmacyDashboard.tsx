@@ -98,6 +98,24 @@ export default function PharmacyDashboard() {
         if (error) throw error;
       }
 
+      // Decrement inventory for each dispensed medicine
+      if (action === "approved" && prescription.items && prescription.items.length > 0) {
+        for (const item of prescription.items) {
+          const { data: inventoryItem } = await supabase
+            .from("pharmacy_inventory")
+            .select("id, quantity")
+            .ilike("medicine_name", item.medicine_name)
+            .maybeSingle();
+
+          if (inventoryItem && inventoryItem.quantity > 0) {
+            await supabase
+              .from("pharmacy_inventory")
+              .update({ quantity: inventoryItem.quantity - 1 })
+              .eq("id", inventoryItem.id);
+          }
+        }
+      }
+
       if (action === "approved") {
         const { data: student } = await supabase.from("students").select("user_id, full_name").eq("id", prescription.student_id).single();
         if (student?.user_id) {
