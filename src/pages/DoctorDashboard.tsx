@@ -183,27 +183,27 @@ export default function DoctorDashboard() {
           <TabsContent value="dashboard">
             {/* Sub-tabs: My Dashboard & Health Dashboard */}
             <div className="mb-6">
-              <div className="flex gap-2 border-b">
+              <div className="flex gap-1 sm:gap-2 border-b overflow-x-auto">
                 <button
                   onClick={() => setDashboardSubTab("my-dashboard")}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     dashboardSubTab === "my-dashboard"
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" />
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
                   My Dashboard
                 </button>
                 <button
                   onClick={() => setDashboardSubTab("health-dashboard")}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     dashboardSubTab === "health-dashboard"
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <HeartPulse className="w-4 h-4" />
+                  <HeartPulse className="w-4 h-4 shrink-0" />
                   Health Dashboard
                 </button>
               </div>
