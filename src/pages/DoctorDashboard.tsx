@@ -161,21 +161,21 @@ export default function DoctorDashboard() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Dashboard
+            <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <Activity className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="emergency" className="flex items-center gap-2">
-              <Siren className="w-4 h-4" />
-              Emergency
+            <TabsTrigger value="emergency" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <Siren className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Emergency</span>
             </TabsTrigger>
-            <TabsTrigger value="medical-leave" className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" />
-              Medical Leave
+            <TabsTrigger value="medical-leave" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <ClipboardList className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline text-nowrap">Medical Leave</span>
             </TabsTrigger>
-            <TabsTrigger value="student-search" className="flex items-center gap-2">
-              <UserSearch className="w-4 h-4" />
-              Records
+            <TabsTrigger value="student-search" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <UserSearch className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Records</span>
             </TabsTrigger>
           </TabsList>
 
