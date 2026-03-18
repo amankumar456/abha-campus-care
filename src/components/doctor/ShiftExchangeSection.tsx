@@ -306,14 +306,14 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
               Recent Exchanges
             </p>
             {recentExchanges.slice(0, 3).map((ex: any) => (
-              <div key={ex.id} className="flex items-center justify-between p-2 rounded-md bg-muted/40 text-sm">
+              <div key={ex.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-md bg-muted/40 text-sm gap-1 sm:gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <User className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="truncate">
+                  <span className="truncate text-xs sm:text-sm">
                     Dr. {ex.original_doctor?.name} → Dr. {ex.replacement_doctor?.name}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 pl-5 sm:pl-0">
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(ex.shift_date), "MMM d")} • {ex.transferred_appointments_count} apt
                   </span>
