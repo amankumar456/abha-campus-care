@@ -175,8 +175,8 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
       )}
 
       {/* Search and Filter */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex gap-2 sm:gap-3 flex-col sm:flex-row">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by name or roll number..."
@@ -186,7 +186,7 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
           />
         </div>
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
@@ -202,14 +202,14 @@ const DoctorAppointmentsList = ({ doctorId }: DoctorAppointmentsListProps) => {
       {/* Appointments Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="today" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
+          <TabsTrigger value="today" className="flex items-center gap-1.5 text-xs sm:text-sm px-2 sm:px-4">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             Today ({todayAppointments.length})
           </TabsTrigger>
-          <TabsTrigger value="upcoming">
+          <TabsTrigger value="upcoming" className="text-xs sm:text-sm px-2 sm:px-4">
             Upcoming ({upcomingAppointments.length})
           </TabsTrigger>
-          <TabsTrigger value="past">
+          <TabsTrigger value="past" className="text-xs sm:text-sm px-2 sm:px-4">
             Past ({pastAppointments.length})
           </TabsTrigger>
         </TabsList>

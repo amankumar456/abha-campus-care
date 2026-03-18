@@ -244,21 +244,21 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
   return (
     <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <ArrowLeftRight className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <CardTitle className="text-lg">Shift Exchange</CardTitle>
-              <CardDescription>Manage your shift & transfer appointments</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg">Shift Exchange</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Manage your shift & transfer appointments</CardDescription>
             </div>
           </div>
 
           {/* Date Picker for viewing shifts */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5 self-start sm:self-auto">
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {format(selectedDate, "EEE, MMM d")}
               </Button>
@@ -306,14 +306,14 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
               Recent Exchanges
             </p>
             {recentExchanges.slice(0, 3).map((ex: any) => (
-              <div key={ex.id} className="flex items-center justify-between p-2 rounded-md bg-muted/40 text-sm">
+              <div key={ex.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2 rounded-md bg-muted/40 text-sm gap-1 sm:gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <User className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="truncate">
+                  <span className="truncate text-xs sm:text-sm">
                     Dr. {ex.original_doctor?.name} → Dr. {ex.replacement_doctor?.name}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 pl-5 sm:pl-0">
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(ex.shift_date), "MMM d")} • {ex.transferred_appointments_count} apt
                   </span>
@@ -355,7 +355,7 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
               Request Shift Exchange
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <ArrowLeftRight className="h-5 w-5 text-primary" />

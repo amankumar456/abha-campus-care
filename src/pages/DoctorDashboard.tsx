@@ -161,21 +161,21 @@ export default function DoctorDashboard() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full max-w-2xl grid-cols-4 mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Dashboard
+            <TabsTrigger value="dashboard" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <Activity className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="emergency" className="flex items-center gap-2">
-              <Siren className="w-4 h-4" />
-              Emergency
+            <TabsTrigger value="emergency" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <Siren className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Emergency</span>
             </TabsTrigger>
-            <TabsTrigger value="medical-leave" className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" />
-              Medical Leave
+            <TabsTrigger value="medical-leave" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <ClipboardList className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline text-nowrap">Medical Leave</span>
             </TabsTrigger>
-            <TabsTrigger value="student-search" className="flex items-center gap-2">
-              <UserSearch className="w-4 h-4" />
-              Records
+            <TabsTrigger value="student-search" className="flex items-center gap-1.5 px-2 sm:px-4">
+              <UserSearch className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Records</span>
             </TabsTrigger>
           </TabsList>
 
@@ -183,27 +183,27 @@ export default function DoctorDashboard() {
           <TabsContent value="dashboard">
             {/* Sub-tabs: My Dashboard & Health Dashboard */}
             <div className="mb-6">
-              <div className="flex gap-2 border-b">
+              <div className="flex gap-1 sm:gap-2 border-b overflow-x-auto">
                 <button
                   onClick={() => setDashboardSubTab("my-dashboard")}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     dashboardSubTab === "my-dashboard"
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" />
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
                   My Dashboard
                 </button>
                 <button
                   onClick={() => setDashboardSubTab("health-dashboard")}
-                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 whitespace-nowrap ${
                     dashboardSubTab === "health-dashboard"
                       ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <HeartPulse className="w-4 h-4" />
+                  <HeartPulse className="w-4 h-4 shrink-0" />
                   Health Dashboard
                 </button>
               </div>
