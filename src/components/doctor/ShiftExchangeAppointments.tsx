@@ -151,19 +151,19 @@ export default function ShiftExchangeAppointments({ doctorId }: ShiftExchangeApp
   return (
     <Card className="border-2 border-amber-300/50 bg-gradient-to-br from-amber-50/50 to-background shadow-md">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
               <ArrowLeftRight className="h-5 w-5 text-amber-600" />
             </div>
-            <div>
-              <CardTitle className="text-lg text-foreground">Shift Exchange Appointments</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Appointments transferred to you via shift exchange
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg text-foreground">Shift Exchange Appointments</CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Appointments transferred via shift exchange
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="gap-1 border-amber-300 text-amber-700 bg-amber-50">
+          <Badge variant="outline" className="gap-1 border-amber-300 text-amber-700 bg-amber-50 self-start sm:self-auto shrink-0">
             <RefreshCw className="h-3 w-3" />
             {transferredAppointments?.length || 0} transferred
           </Badge>
