@@ -244,21 +244,21 @@ export default function ShiftExchangeSection({ doctorId }: ShiftExchangeProps) {
   return (
     <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <ArrowLeftRight className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <CardTitle className="text-lg">Shift Exchange</CardTitle>
-              <CardDescription>Manage your shift & transfer appointments</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg">Shift Exchange</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Manage your shift & transfer appointments</CardDescription>
             </div>
           </div>
 
           {/* Date Picker for viewing shifts */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5 self-start sm:self-auto">
                 <CalendarIcon className="h-3.5 w-3.5" />
                 {format(selectedDate, "EEE, MMM d")}
               </Button>
