@@ -61,15 +61,15 @@ const DisclaimerSection = () => {
             {/* Key Points */}
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
                 <span>This is <strong>my own personal project</strong></span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
                 <span>Data = <strong>public data</strong> from NIT Warangal website</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
                 <span>Roll numbers & phones = <strong>dummy / fake data</strong></span>
               </div>
               <div className="flex items-center gap-2 text-sm">
