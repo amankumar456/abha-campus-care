@@ -9,6 +9,7 @@ import BackgroundWrapper from "@/components/layout/BackgroundWrapper";
 import HealthServicesSection from "@/components/HealthServicesSection";
 import HospitalIntegration from "@/components/HospitalIntegration";
 import WelcomeBanner from "@/components/WelcomeBanner";
+import DisclaimerSection from "@/components/DisclaimerSection";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
