@@ -445,6 +445,15 @@ export default function StudentProfilePage() {
     await printDocument({ title: `Prescription — ${student?.full_name}`, bodyHtml, documentId: prescriptionId, documentType: 'PRESCRIPTION' });
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !student || !user) return;
@@ -460,6 +469,48 @@ export default function StudentProfilePage() {
 
     setUploadingPhoto(true);
     try {
+      // Step 1: AI Photo Validation
+      toast({ title: '🔍 Validating Photo...', description: 'AI is checking your photo for face visibility and authenticity.' });
+      
+      const imageBase64 = await convertFileToBase64(file);
+      
+      const { data: validationResult, error: validationError } = await supabase.functions.invoke('validate-photo', {
+        body: { imageBase64 },
+      });
+
+      if (validationError) {
+        console.error('Photo validation error:', validationError);
+        toast({ title: '⚠️ Validation Unavailable', description: 'Could not validate photo. Please ensure it is a clear face photo.' });
+        // Continue with upload if validation service fails
+      } else if (validationResult && !validationResult.valid) {
+        const checks = validationResult.checks || {};
+        let details = validationResult.reason || 'Photo did not pass validation.';
+        
+        if (!checks.face_visible) {
+          details = '❌ No clear face detected. Please upload a photo with your face clearly visible (front-facing, no sunglasses or masks).';
+        } else if (!checks.real_photo) {
+          details = '❌ This appears to be a downloaded or fake image. Please upload a real photo taken by your camera.';
+        } else if (!checks.quality_ok) {
+          details = '❌ Photo quality is too low. Please upload a clearer, well-lit photo.';
+        } else if (!checks.appropriate) {
+          details = '❌ This photo is not appropriate for an official profile. Please upload a suitable photo.';
+        }
+
+        toast({ 
+          title: '🚫 Photo Rejected', 
+          description: details,
+          variant: 'destructive',
+          duration: 8000,
+        });
+        setUploadingPhoto(false);
+        // Reset input
+        if (e.target) e.target.value = '';
+        return;
+      } else {
+        toast({ title: '✅ Photo Validated', description: 'AI verification passed! Uploading...' });
+      }
+
+      // Step 2: Upload to storage
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/profile.${fileExt}`;
 
