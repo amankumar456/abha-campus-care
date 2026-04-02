@@ -52,6 +52,7 @@ const Index = () => {
           <StudentHomeDashboard />
         ) : (
           <>
+            <DisclaimerSection />
             <WelcomeBanner />
             <HeroSection />
             <InspirationalSection />
