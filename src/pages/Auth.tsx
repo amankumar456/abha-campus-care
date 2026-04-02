@@ -271,16 +271,19 @@ export default function Auth() {
 
       if (data.user && userType) {
         // Fire role check + assignment, non-blocking
-        try {
-          const { data: existingRoles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id);
+        // SECURITY: Never auto-assign admin role through login flow
+        if (userType !== 'admin' as any) {
+          try {
+            const { data: existingRoles } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', data.user.id);
 
-          if (!existingRoles?.some(r => r.role === userType)) {
-            await supabase.from('user_roles').insert({ user_id: data.user.id, role: userType });
-          }
-        } catch {}
+            if (!existingRoles?.some(r => r.role === userType)) {
+              await supabase.from('user_roles').insert({ user_id: data.user.id, role: userType });
+            }
+          } catch {}
+        }
 
         // Don't block on metadata update
         supabase.auth.updateUser({ data: { user_type: userType } }).then(() => {});
