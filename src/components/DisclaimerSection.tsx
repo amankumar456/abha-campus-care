@@ -96,10 +96,7 @@ const DisclaimerSection = () => {
               Contact Me
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Have questions or concerns? Reach out using the form below or email{" "}
-              <a href="mailto:akkumarsingh456@gmail.com" className="text-primary underline font-medium">
-                akkumarsingh456@gmail.com
-              </a>
+              Have questions or concerns? Reach out using the form below.
             </p>
           </CardHeader>
           <CardContent>
