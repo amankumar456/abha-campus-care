@@ -101,10 +101,19 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("user_id", appointment.patient_id)
       .maybeSingle();
 
-    if (studentError || !student || !student.email) {
-      console.error("Student not found or missing email:", studentError);
-      return new Response(JSON.stringify({ error: 'Student email not found' }), {
-        status: 404,
+    if (studentError || !student) {
+      console.error("Student not found:", studentError);
+      return new Response(JSON.stringify({ success: true, skipped: true, message: "Student record not found — skipping email" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // If email is missing or masked, skip gracefully
+    if (!student.email || student.email === '******' || !student.email.includes('@')) {
+      console.warn("Student email missing or masked — skipping notification");
+      return new Response(JSON.stringify({ success: true, skipped: true, message: "Student email not available" }), {
+        status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
