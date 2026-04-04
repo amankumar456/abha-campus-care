@@ -22,6 +22,7 @@ import VisitingDoctorsTab from '@/components/admin/VisitingDoctorsTab';
 import MentorsTab from '@/components/admin/MentorsTab';
 import StudentMentorAssignment from '@/components/admin/StudentMentorAssignment';
 import SecurityDashboard from '@/components/admin/SecurityDashboard';
+import ContactSubmissionsTab from '@/components/admin/ContactSubmissionsTab';
 import AdminProfileCard from '@/components/profile/AdminProfileCard';
 import MedicalLeaveStudentsOverview from '@/components/medical-leave/MedicalLeaveStudentsOverview';
 
