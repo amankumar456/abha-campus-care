@@ -747,7 +747,9 @@ export default function Auth() {
               : "Student Portal"}
             </CardTitle>
             <CardDescription>
-              {userType === "doctor" 
+              {userType === "admin"
+                ? "Restricted access — Only authorized administrator"
+                : userType === "doctor" 
                 ? "Sign in to access medical dashboard and patient records"
                 : userType === "mentor"
                 ? "Sign in to view mentee health information and reports"
