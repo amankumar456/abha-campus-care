@@ -716,14 +716,17 @@ export default function Auth() {
           </Button>
           <CardHeader className="text-center pt-12">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              userType === "doctor" ? "bg-secondary/10" 
+              userType === "admin" ? "bg-red-100"
+              : userType === "doctor" ? "bg-secondary/10" 
               : userType === "mentor" ? "bg-green-100" 
               : userType === "pharmacy" ? "bg-purple-100"
               : userType === "lab_officer" ? "bg-blue-100"
               : userType === "medical_staff" ? "bg-orange-100"
               : "bg-primary/10"
             }`}>
-              {userType === "doctor" ? (
+              {userType === "admin" ? (
+                <Shield className="w-8 h-8 text-red-600" />
+              ) : userType === "doctor" ? (
                 <Stethoscope className="w-8 h-8 text-secondary" />
               ) : userType === "mentor" ? (
                 <Users className="w-8 h-8 text-green-600" />
