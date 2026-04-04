@@ -511,13 +511,13 @@ export default function Auth() {
 
               <Button
                 variant="outline"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-green-600 hover:bg-green-50 transition-all"
-                onClick={() => selectUserType("mentor")}
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-red-600 hover:bg-red-50 transition-all"
+                onClick={() => selectUserType("admin")}
               >
-                <Users className="w-8 h-8 text-green-600" />
+                <Shield className="w-8 h-8 text-red-600" />
                 <div className="text-center">
-                  <p className="font-semibold">Faculty Mentor</p>
-                  <p className="text-xs text-muted-foreground">Faculty Advisors & Student Mentors</p>
+                  <p className="font-semibold">Admin</p>
+                  <p className="text-xs text-muted-foreground">System Administrator (Restricted)</p>
                 </div>
               </Button>
 
