@@ -767,6 +767,53 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Disclaimer for restricted roles */}
+            {userType && signinOnlyRoles.includes(userType) && (
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">Signup is not available</strong> for this role. Only pre-authorized accounts can sign in.
+                  {userType === "admin" && " Admin access is restricted to a single authorized email."}
+                </p>
+              </div>
+            )}
+
+            {userType && signinOnlyRoles.includes(userType) ? (
+              /* Sign-in only — no tabs */
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder={userType === "admin" ? "admin@email.com" : userType === "doctor" ? "doctor@nitw.ac.in" : "staff@nitw.ac.in"}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <Button type="button" variant="link" className="px-0 h-auto text-xs text-muted-foreground hover:text-primary" onClick={() => setAuthView("forgot")}>
+                      Forgot password?
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
+                  </div>
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                </div>
+                <Button type="submit" className={`w-full ${userType === "admin" ? "bg-red-600 hover:bg-red-700" : userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : ""}`} disabled={isLoading}>
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
+            ) : (
             <Tabs defaultValue="signin" className="w-full" onValueChange={(v) => setAuthView(v as AuthView)}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin" className="flex items-center gap-2">
