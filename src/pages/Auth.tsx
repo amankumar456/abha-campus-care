@@ -21,7 +21,7 @@ import {
 } from "@/lib/security/validation";
 import { DEPARTMENTS, YEARS_OF_STUDY, PROGRAMMES } from "@/lib/validations/student-registration";
 
-type UserType = "student" | "doctor" | "mentor" | "lab_officer" | "pharmacy" | "medical_staff";
+type UserType = "student" | "doctor" | "mentor" | "lab_officer" | "pharmacy" | "medical_staff" | "admin";
 type AuthView = "select" | "signin" | "signup" | "forgot" | "staff_select";
 
 interface StudentFormData {
