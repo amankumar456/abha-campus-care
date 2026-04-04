@@ -243,17 +243,47 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const ADMIN_EMAIL = "akkumarsingh456@gmail.com";
+  const ALLOWED_DOCTOR_EMAILS = ["doctor@nitw.ac.in", "sr25edi0050@student.nitw.ac.in"];
+  const ALLOWED_STAFF_EMAILS: Record<string, string[]> = {
+    pharmacy: ["pharmacy@nitw.ac.in"],
+    lab_officer: ["labofficer@nitw.ac.in"],
+    medical_staff: ["medicalstaff@nitw.ac.in"],
+  };
+
+  // Roles that do NOT allow signup — signin only
+  const signinOnlyRoles: UserType[] = ["doctor", "admin", "pharmacy", "lab_officer", "medical_staff"];
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm(false)) return;
 
-    setIsLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
 
+    // Admin restriction
+    if (userType === "admin" && trimmedEmail !== ADMIN_EMAIL) {
+      toast({ title: "Access Denied", description: "Admin access is restricted. Only the authorized admin email can log in.", variant: "destructive" });
+      return;
+    }
+
+    // Doctor restriction - block real doctor names
+    if (userType === "doctor" && !ALLOWED_DOCTOR_EMAILS.includes(trimmedEmail)) {
+      toast({ title: "Access Denied", description: "Doctor login is restricted to authorized accounts only.", variant: "destructive" });
+      return;
+    }
+
+    // Staff restriction
+    if (userType && ALLOWED_STAFF_EMAILS[userType] && !ALLOWED_STAFF_EMAILS[userType].includes(trimmedEmail)) {
+      toast({ title: "Access Denied", description: "Staff login is restricted to authorized accounts only.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
     const safetyTimeout = setTimeout(() => setIsLoading(false), 8000);
     
     try {
       const { error, data } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         password,
       });
 
@@ -270,9 +300,8 @@ export default function Auth() {
       }
 
       if (data.user && userType) {
-        // Fire role check + assignment, non-blocking
         // SECURITY: Never auto-assign admin role through login flow
-        if (userType !== 'admin' as any) {
+        if (userType !== 'admin') {
           try {
             const { data: existingRoles } = await supabase
               .from('user_roles')
@@ -285,11 +314,9 @@ export default function Auth() {
           } catch {}
         }
 
-        // Don't block on metadata update
         supabase.auth.updateUser({ data: { user_type: userType } }).then(() => {});
       }
 
-      // Redirect immediately
       if (data.user) {
         await redirectBasedOnRole(data.user);
       }
