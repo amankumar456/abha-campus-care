@@ -238,6 +238,60 @@ export type Database = {
           },
         ]
       }
+      contact_submissions: {
+        Row: {
+          ai_validation_notes: string | null
+          ai_validation_status: string | null
+          branch: string | null
+          college_name: string | null
+          created_at: string
+          email: string
+          id: string
+          is_read: boolean | null
+          message: string
+          name: string
+          rating: number | null
+          sender_role: string
+          subject: string | null
+          submission_type: string
+          year: string | null
+        }
+        Insert: {
+          ai_validation_notes?: string | null
+          ai_validation_status?: string | null
+          branch?: string | null
+          college_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          name: string
+          rating?: number | null
+          sender_role?: string
+          subject?: string | null
+          submission_type?: string
+          year?: string | null
+        }
+        Update: {
+          ai_validation_notes?: string | null
+          ai_validation_status?: string | null
+          branch?: string | null
+          college_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          name?: string
+          rating?: number | null
+          sender_role?: string
+          subject?: string | null
+          submission_type?: string
+          year?: string | null
+        }
+        Relationships: []
+      }
       doctor_shifts: {
         Row: {
           created_at: string

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone, FlaskConical, Pill, ShieldCheck, Building } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone, FlaskConical, Pill, ShieldCheck, Building, Shield, AlertTriangle } from "lucide-react";
 import { z } from "zod";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { 
@@ -21,7 +21,7 @@ import {
 } from "@/lib/security/validation";
 import { DEPARTMENTS, YEARS_OF_STUDY, PROGRAMMES } from "@/lib/validations/student-registration";
 
-type UserType = "student" | "doctor" | "mentor" | "lab_officer" | "pharmacy" | "medical_staff";
+type UserType = "student" | "doctor" | "mentor" | "lab_officer" | "pharmacy" | "medical_staff" | "admin";
 type AuthView = "select" | "signin" | "signup" | "forgot" | "staff_select";
 
 interface StudentFormData {
@@ -243,17 +243,47 @@ export default function Auth() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const ADMIN_EMAIL = "akkumarsingh456@gmail.com";
+  const ALLOWED_DOCTOR_EMAILS = ["doctor@nitw.ac.in", "sr25edi0050@student.nitw.ac.in"];
+  const ALLOWED_STAFF_EMAILS: Record<string, string[]> = {
+    pharmacy: ["pharmacy@nitw.ac.in"],
+    lab_officer: ["labofficer@nitw.ac.in"],
+    medical_staff: ["medicalstaff@nitw.ac.in"],
+  };
+
+  // Roles that do NOT allow signup — signin only
+  const signinOnlyRoles: UserType[] = ["doctor", "admin", "pharmacy", "lab_officer", "medical_staff"];
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm(false)) return;
 
-    setIsLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
 
+    // Admin restriction
+    if (userType === "admin" && trimmedEmail !== ADMIN_EMAIL) {
+      toast({ title: "Access Denied", description: "Admin access is restricted. Only the authorized admin email can log in.", variant: "destructive" });
+      return;
+    }
+
+    // Doctor restriction - block real doctor names
+    if (userType === "doctor" && !ALLOWED_DOCTOR_EMAILS.includes(trimmedEmail)) {
+      toast({ title: "Access Denied", description: "Doctor login is restricted to authorized accounts only.", variant: "destructive" });
+      return;
+    }
+
+    // Staff restriction
+    if (userType && ALLOWED_STAFF_EMAILS[userType] && !ALLOWED_STAFF_EMAILS[userType].includes(trimmedEmail)) {
+      toast({ title: "Access Denied", description: "Staff login is restricted to authorized accounts only.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
     const safetyTimeout = setTimeout(() => setIsLoading(false), 8000);
     
     try {
       const { error, data } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail,
         password,
       });
 
@@ -270,9 +300,8 @@ export default function Auth() {
       }
 
       if (data.user && userType) {
-        // Fire role check + assignment, non-blocking
         // SECURITY: Never auto-assign admin role through login flow
-        if (userType !== 'admin' as any) {
+        if (userType !== 'admin') {
           try {
             const { data: existingRoles } = await supabase
               .from('user_roles')
@@ -285,11 +314,9 @@ export default function Auth() {
           } catch {}
         }
 
-        // Don't block on metadata update
         supabase.auth.updateUser({ data: { user_type: userType } }).then(() => {});
       }
 
-      // Redirect immediately
       if (data.user) {
         await redirectBasedOnRole(data.user);
       }
@@ -511,13 +538,13 @@ export default function Auth() {
 
               <Button
                 variant="outline"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-green-600 hover:bg-green-50 transition-all"
-                onClick={() => selectUserType("mentor")}
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-red-600 hover:bg-red-50 transition-all"
+                onClick={() => selectUserType("admin")}
               >
-                <Users className="w-8 h-8 text-green-600" />
+                <Shield className="w-8 h-8 text-red-600" />
                 <div className="text-center">
-                  <p className="font-semibold">Faculty Mentor</p>
-                  <p className="text-xs text-muted-foreground">Faculty Advisors & Student Mentors</p>
+                  <p className="font-semibold">Admin</p>
+                  <p className="text-xs text-muted-foreground">System Administrator (Restricted)</p>
                 </div>
               </Button>
 
@@ -689,14 +716,17 @@ export default function Auth() {
           </Button>
           <CardHeader className="text-center pt-12">
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-              userType === "doctor" ? "bg-secondary/10" 
+              userType === "admin" ? "bg-red-100"
+              : userType === "doctor" ? "bg-secondary/10" 
               : userType === "mentor" ? "bg-green-100" 
               : userType === "pharmacy" ? "bg-purple-100"
               : userType === "lab_officer" ? "bg-blue-100"
               : userType === "medical_staff" ? "bg-orange-100"
               : "bg-primary/10"
             }`}>
-              {userType === "doctor" ? (
+              {userType === "admin" ? (
+                <Shield className="w-8 h-8 text-red-600" />
+              ) : userType === "doctor" ? (
                 <Stethoscope className="w-8 h-8 text-secondary" />
               ) : userType === "mentor" ? (
                 <Users className="w-8 h-8 text-green-600" />
@@ -710,8 +740,9 @@ export default function Auth() {
                 <GraduationCap className="w-8 h-8 text-primary" />
               )}
             </div>
-            <CardTitle className="text-2xl">
-              {userType === "doctor" ? "Doctor Portal" 
+             <CardTitle className="text-2xl">
+              {userType === "admin" ? "Admin Portal"
+              : userType === "doctor" ? "Doctor Portal" 
               : userType === "mentor" ? "Mentor Portal" 
               : userType === "pharmacy" ? "Pharmacy Portal"
               : userType === "lab_officer" ? "Lab Officer Portal"
@@ -719,7 +750,9 @@ export default function Auth() {
               : "Student Portal"}
             </CardTitle>
             <CardDescription>
-              {userType === "doctor" 
+              {userType === "admin"
+                ? "Restricted access — Only authorized administrator"
+                : userType === "doctor" 
                 ? "Sign in to access medical dashboard and patient records"
                 : userType === "mentor"
                 ? "Sign in to view mentee health information and reports"
@@ -734,6 +767,53 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Disclaimer for restricted roles */}
+            {userType && signinOnlyRoles.includes(userType) && (
+              <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">Signup is not available</strong> for this role. Only pre-authorized accounts can sign in.
+                  {userType === "admin" && " Admin access is restricted to a single authorized email."}
+                </p>
+              </div>
+            )}
+
+            {userType && signinOnlyRoles.includes(userType) ? (
+              /* Sign-in only — no tabs */
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder={userType === "admin" ? "admin@email.com" : userType === "doctor" ? "doctor@nitw.ac.in" : "staff@nitw.ac.in"}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <Button type="button" variant="link" className="px-0 h-auto text-xs text-muted-foreground hover:text-primary" onClick={() => setAuthView("forgot")}>
+                      Forgot password?
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
+                  </div>
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                </div>
+                <Button type="submit" className={`w-full ${userType === "admin" ? "bg-red-600 hover:bg-red-700" : userType === "doctor" ? "bg-secondary hover:bg-secondary/90" : ""}`} disabled={isLoading}>
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
+            ) : (
             <Tabs defaultValue="signin" className="w-full" onValueChange={(v) => setAuthView(v as AuthView)}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin" className="flex items-center gap-2">
@@ -1038,6 +1118,7 @@ export default function Auth() {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </CardContent>
         </Card>
       </main>

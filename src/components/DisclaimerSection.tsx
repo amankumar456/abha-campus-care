@@ -3,25 +3,119 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Mail, Send, CheckCircle, XCircle, Megaphone, ShieldAlert } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, Mail, Send, CheckCircle, XCircle, Megaphone, ShieldAlert, Star, MessageSquare, GraduationCap, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+const BRANCHES = [
+  "Computer Science & Engineering", "Electronics & Communication", "Electrical Engineering",
+  "Mechanical Engineering", "Civil Engineering", "Chemical Engineering", "Biotechnology",
+  "Metallurgical & Materials Engineering", "Mathematics", "Physics", "Chemistry", "Other"
+];
 
 const DisclaimerSection = () => {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [contactForm, setContactForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [reviewForm, setReviewForm] = useState({
+    name: "", email: "", message: "", role: "" as string,
+    college_name: "", branch: "", year: "", subject: "", rating: 5,
+  });
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submitToDb = async (data: {
+    submission_type: string; sender_role: string; name: string; email: string;
+    subject?: string; message: string; college_name?: string; branch?: string;
+    year?: string; rating?: number;
+  }) => {
+    // AI validation
+    try {
+      const { data: validation } = await supabase.functions.invoke("validate-contact-submission", {
+        body: data,
+      });
+      if (validation && !validation.valid) {
+        toast.error("Submission rejected: " + (validation.notes || "Please fill in genuine information."));
+        return false;
+      }
+    } catch {
+      // If AI validation fails, still allow submission
+    }
+
+    const { error } = await supabase.from("contact_submissions" as any).insert({
+      submission_type: data.submission_type,
+      sender_role: data.sender_role,
+      name: data.name,
+      email: data.email,
+      subject: data.subject || null,
+      message: data.message,
+      college_name: data.college_name || null,
+      branch: data.branch || null,
+      year: data.year || null,
+      rating: data.rating || null,
+      ai_validation_status: "valid",
+    } as any);
+
+    if (error) {
+      toast.error("Failed to submit. Please try again.");
+      return false;
+    }
+
+    // Also send email
+    try {
+      await supabase.functions.invoke("send-contact-email", {
+        body: { name: data.name, email: data.email, subject: data.subject || "Contact Form", message: data.message },
+      });
+    } catch {}
+
+    return true;
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.subject || !form.message) {
+    if (!contactForm.name || !contactForm.email || !contactForm.subject || !contactForm.message) {
       toast.error("Please fill in all fields");
       return;
     }
     setSending(true);
-    // Simulate send — in production, wire to an edge function or email API
-    await new Promise((r) => setTimeout(r, 1200));
-    toast.success("Message sent successfully! We'll get back to you soon.");
-    setForm({ name: "", email: "", subject: "", message: "" });
+    const ok = await submitToDb({
+      submission_type: "contact", sender_role: "other",
+      name: contactForm.name, email: contactForm.email,
+      subject: contactForm.subject, message: contactForm.message,
+    });
+    if (ok) {
+      toast.success("Message sent successfully!");
+      setContactForm({ name: "", email: "", subject: "", message: "" });
+    }
+    setSending(false);
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewForm.name || !reviewForm.email || !reviewForm.message || !reviewForm.role) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    if (reviewForm.role === "student" && (!reviewForm.branch || !reviewForm.year || !reviewForm.college_name)) {
+      toast.error("Please fill in branch, year, and college name");
+      return;
+    }
+    if (reviewForm.role === "professor" && (!reviewForm.subject || !reviewForm.college_name)) {
+      toast.error("Please fill in subject and college name");
+      return;
+    }
+    setSending(true);
+    const ok = await submitToDb({
+      submission_type: "review",
+      sender_role: reviewForm.role as "student" | "professor",
+      name: reviewForm.name, email: reviewForm.email,
+      subject: reviewForm.subject, message: reviewForm.message,
+      college_name: reviewForm.college_name, branch: reviewForm.branch,
+      year: reviewForm.year, rating: reviewForm.rating,
+    });
+    if (ok) {
+      toast.success("Review submitted successfully! Thank you!");
+      setReviewForm({ name: "", email: "", message: "", role: "", college_name: "", branch: "", year: "", subject: "", rating: 5 });
+    }
     setSending(false);
   };
 
@@ -45,103 +139,152 @@ const DisclaimerSection = () => {
             <p className="text-muted-foreground leading-relaxed">
               This project is a <strong className="text-foreground">personal academic initiative</strong>. The data used in this project is publicly available data sourced from the official NIT Warangal website. All roll numbers and phone numbers displayed are <strong className="text-foreground">dummy data</strong> created for demonstration purposes only and do not represent real individuals.
             </p>
-
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-3">
               <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-foreground">
-                  ⚠️ This project is NOT officially accepted or endorsed by NIT Warangal
-                </p>
+                <p className="font-semibold text-foreground">⚠️ This project is NOT officially accepted or endorsed by NIT Warangal</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   I have already informed and described this project to the NIT Warangal administration. For any queries, clarifications, or concerns, please contact me below.
                 </p>
               </div>
             </div>
-
-            {/* Key Points */}
             <div className="grid sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                <span>This is <strong>my own personal project</strong></span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                <span>Data = <strong>public data</strong> from NIT Warangal website</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-primary shrink-0" />
-                <span>Roll numbers & phones = <strong>dummy / fake data</strong></span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Megaphone className="w-4 h-4 text-primary shrink-0" />
-                <span>Already <strong>informed</strong> to NIT Warangal administration</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <XCircle className="w-4 h-4 text-destructive shrink-0" />
-                <span><strong>NOT officially accepted</strong> by NIT Warangal</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4 text-primary shrink-0" />
-                <span>Contact: <strong>akkumarsingh456@gmail.com</strong></span>
-              </div>
+              {[
+                { icon: CheckCircle, color: "text-primary", text: <>This is <strong>my own personal project</strong></> },
+                { icon: CheckCircle, color: "text-primary", text: <>Data = <strong>public data</strong> from NIT Warangal website</> },
+                { icon: CheckCircle, color: "text-primary", text: <>Roll numbers & phones = <strong>dummy / fake data</strong></> },
+                { icon: Megaphone, color: "text-primary", text: <>Already <strong>informed</strong> to NIT Warangal administration</> },
+                { icon: XCircle, color: "text-destructive", text: <><strong>NOT officially accepted</strong> by NIT Warangal</> },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <item.icon className={`w-4 h-4 ${item.color} shrink-0`} />
+                  <span>{item.text}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Contact Form */}
+        {/* Contact & Review Tabs */}
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Mail className="w-5 h-5 text-primary" />
-              Contact Me
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Have questions or concerns? Reach out using the form below.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-4">
-              <Input
-                placeholder="Your Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-                maxLength={100}
-              />
-              <Input
-                type="email"
-                placeholder="Your Email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-                maxLength={255}
-              />
-              <div className="sm:col-span-2">
-                <Input
-                  placeholder="Subject"
-                  value={form.subject}
-                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                  required
-                  maxLength={200}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Textarea
-                  placeholder="Your Message"
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  required
-                  maxLength={1000}
-                  rows={4}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Button type="submit" disabled={sending} className="gap-2">
-                  <Send className="w-4 h-4" />
-                  {sending ? "Sending..." : "Send Message"}
-                </Button>
-              </div>
-            </form>
+          <CardContent className="pt-6">
+            <Tabs defaultValue="contact" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="contact" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Contact Owner
+                </TabsTrigger>
+                <TabsTrigger value="review" className="flex items-center gap-2">
+                  <Star className="w-4 h-4" />
+                  Reviews & Suggestions
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Contact Owner Tab */}
+              <TabsContent value="contact">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">Have questions or concerns? Reach out to the project owner.</p>
+                  <form onSubmit={handleContactSubmit} className="grid sm:grid-cols-2 gap-4">
+                    <Input placeholder="Your Name" value={contactForm.name} onChange={(e) => setContactForm(p => ({ ...p, name: e.target.value }))} required maxLength={100} />
+                    <Input type="email" placeholder="Your Email" value={contactForm.email} onChange={(e) => setContactForm(p => ({ ...p, email: e.target.value }))} required maxLength={255} />
+                    <div className="sm:col-span-2">
+                      <Input placeholder="Subject" value={contactForm.subject} onChange={(e) => setContactForm(p => ({ ...p, subject: e.target.value }))} required maxLength={200} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Textarea placeholder="Your Message" value={contactForm.message} onChange={(e) => setContactForm(p => ({ ...p, message: e.target.value }))} required maxLength={1000} rows={4} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Button type="submit" disabled={sending} className="gap-2">
+                        <Send className="w-4 h-4" />
+                        {sending ? "Sending..." : "Send Message"}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </TabsContent>
+
+              {/* Reviews Tab */}
+              <TabsContent value="review">
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">Share your feedback! Select your role to see the relevant form.</p>
+
+                  {/* Role selector */}
+                  <div className="flex gap-3">
+                    <Button
+                      type="button" variant={reviewForm.role === "student" ? "default" : "outline"}
+                      className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "student" }))}
+                    >
+                      <GraduationCap className="w-4 h-4" /> Student
+                    </Button>
+                    <Button
+                      type="button" variant={reviewForm.role === "professor" ? "default" : "outline"}
+                      className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "professor" }))}
+                    >
+                      <BookOpen className="w-4 h-4" /> Professor / Faculty
+                    </Button>
+                  </div>
+
+                  {reviewForm.role && (
+                    <form onSubmit={handleReviewSubmit} className="space-y-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <Input placeholder="Your Name *" value={reviewForm.name} onChange={(e) => setReviewForm(p => ({ ...p, name: e.target.value }))} required maxLength={100} />
+                        <Input type="email" placeholder="Your Email *" value={reviewForm.email} onChange={(e) => setReviewForm(p => ({ ...p, email: e.target.value }))} required maxLength={255} />
+                      </div>
+
+                      <Input placeholder="College / University Name *" value={reviewForm.college_name} onChange={(e) => setReviewForm(p => ({ ...p, college_name: e.target.value }))} required maxLength={200} />
+
+                      {reviewForm.role === "student" && (
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <Select value={reviewForm.branch} onValueChange={(v) => setReviewForm(p => ({ ...p, branch: v }))}>
+                            <SelectTrigger><SelectValue placeholder="Branch / Department *" /></SelectTrigger>
+                            <SelectContent>
+                              {BRANCHES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Select value={reviewForm.year} onValueChange={(v) => setReviewForm(p => ({ ...p, year: v }))}>
+                            <SelectTrigger><SelectValue placeholder="Year of Study *" /></SelectTrigger>
+                            <SelectContent>
+                              {["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "PG 1st Year", "PG 2nd Year", "PhD"].map(y => (
+                                <SelectItem key={y} value={y}>{y}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {reviewForm.role === "professor" && (
+                        <Input placeholder="Subject / Department *" value={reviewForm.subject} onChange={(e) => setReviewForm(p => ({ ...p, subject: e.target.value }))} required maxLength={200} />
+                      )}
+
+                      {/* Rating */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">How do you like this project?</label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <button key={s} type="button" onClick={() => setReviewForm(p => ({ ...p, rating: s }))}
+                              className="focus:outline-none">
+                              <Star className={`w-7 h-7 transition-colors ${s <= reviewForm.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Textarea
+                        placeholder={reviewForm.role === "student" ? "Your review / message *" : "Your suggestion / feedback *"}
+                        value={reviewForm.message}
+                        onChange={(e) => setReviewForm(p => ({ ...p, message: e.target.value }))}
+                        required maxLength={1000} rows={4}
+                      />
+
+                      <Button type="submit" disabled={sending} className="gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        {sending ? "Submitting..." : "Submit Review"}
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
