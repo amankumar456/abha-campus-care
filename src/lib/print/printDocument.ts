@@ -350,8 +350,10 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
         </style>
       </head>
       <body>
+        <div class="watermark-top-bar">⚠️ This is a student project document. No official validity. NOT for official use.</div>
         ${bodyHtml}
         ${!skipFooter ? getFooterHtml(documentId, documentType, qrDataUrl, currentDate) : ""}
+        <div class="watermark-bottom-bar">⚠️ This is a student project document. No official validity. Do not use for medical leave or any official purpose.</div>
       </body>
     </html>
   `);
