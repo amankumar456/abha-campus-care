@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone, FlaskConical, Pill, ShieldCheck, Building } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Stethoscope, GraduationCap, ArrowLeft, KeyRound, Users, BookOpen, Phone, FlaskConical, Pill, ShieldCheck, Building, Shield, AlertTriangle } from "lucide-react";
 import { z } from "zod";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { 
