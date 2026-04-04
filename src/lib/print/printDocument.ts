@@ -46,6 +46,57 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
             line-height: 1.6;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            position: relative;
+          }
+
+          /* ===== WATERMARK — flattened, non-removable ===== */
+          body::before {
+            content: 'NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            font-size: 42px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            color: rgba(102,102,102,0.18);
+            transform: rotate(-35deg);
+            transform-origin: center center;
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+            line-height: 350px;
+            word-spacing: 80px;
+            letter-spacing: 2px;
+            overflow: hidden;
+            background: repeating-linear-gradient(
+              -35deg,
+              transparent,
+              transparent 150px,
+              transparent 150px,
+              transparent 350px
+            );
+          }
+          /* Top disclaimer bar */
+          .watermark-top-bar {
+            text-align: center;
+            font-size: 8pt;
+            color: #999999;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            font-family: Arial, sans-serif;
+          }
+          /* Bottom disclaimer bar */
+          .watermark-bottom-bar {
+            text-align: center;
+            font-size: 8pt;
+            color: #999999;
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+            margin-top: 16px;
+            font-family: Arial, sans-serif;
           }
 
           /* ===== Institutional header ===== */
@@ -285,6 +336,15 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
           /* ===== Print media ===== */
           @media print {
             body { padding: 20px; }
+            body::before {
+              position: fixed;
+              top: 0;
+              left: 0;
+            }
+            .watermark-top-bar, .watermark-bottom-bar {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
             @page { margin: 15mm; size: A4; }
           }
         </style>
