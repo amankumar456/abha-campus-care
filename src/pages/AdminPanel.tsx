@@ -467,11 +467,20 @@ const AdminPanel = () => {
               <ShieldAlert className="h-4 w-4" />
               Security
             </TabsTrigger>
+            <TabsTrigger value="submissions" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Submissions
+            </TabsTrigger>
           </TabsList>
 
           {/* Security Dashboard Tab */}
           <TabsContent value="security">
             <SecurityDashboard />
+          </TabsContent>
+
+          {/* Contact Submissions Tab */}
+          <TabsContent value="submissions">
+            <ContactSubmissionsTab />
           </TabsContent>
 
           {/* Student-Mentor Assignment Tab */}
