@@ -737,8 +737,9 @@ export default function Auth() {
                 <GraduationCap className="w-8 h-8 text-primary" />
               )}
             </div>
-            <CardTitle className="text-2xl">
-              {userType === "doctor" ? "Doctor Portal" 
+             <CardTitle className="text-2xl">
+              {userType === "admin" ? "Admin Portal"
+              : userType === "doctor" ? "Doctor Portal" 
               : userType === "mentor" ? "Mentor Portal" 
               : userType === "pharmacy" ? "Pharmacy Portal"
               : userType === "lab_officer" ? "Lab Officer Portal"
