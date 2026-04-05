@@ -27,7 +27,21 @@ interface LabReportPdfOptions {
 export function generateLabReportPdf(opts: LabReportPdfOptions): Blob {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const reportNo = `LR/${format(new Date(opts.testDate), "yyyyMMdd")}/${opts.reportId.slice(0, 6).toUpperCase()}`;
+
+  // ===== WATERMARK (diagonal, repeated, non-removable) =====
+  doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+  doc.setTextColor(180, 0, 0);
+  doc.setFontSize(28);
+  doc.setFont("helvetica", "bold");
+  const wmText = "NOT AN OFFICIAL DOCUMENT";
+  for (let y = -100; y < pageHeight + 100; y += 80) {
+    for (let x = -100; x < pageWidth + 200; x += 220) {
+      doc.text(wmText, x, y, { angle: 35 });
+    }
+  }
+  doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
   // Header
   doc.setFillColor(30, 58, 138); // #1e3a8a
