@@ -243,7 +243,7 @@ const DisclaimerSection = () => {
 
                       <Input placeholder="College / University Name *" value={reviewForm.college_name} onChange={(e) => setReviewForm(p => ({ ...p, college_name: e.target.value }))} required maxLength={200} />
 
-                      {reviewForm.role === "student" && (
+                      {(reviewForm.role === "student" || reviewForm.role === "alumni") && (
                         <div className="grid sm:grid-cols-2 gap-4">
                           <Select value={reviewForm.branch} onValueChange={(v) => setReviewForm(p => ({ ...p, branch: v }))}>
                             <SelectTrigger><SelectValue placeholder="Branch / Department *" /></SelectTrigger>
@@ -252,11 +252,16 @@ const DisclaimerSection = () => {
                             </SelectContent>
                           </Select>
                           <Select value={reviewForm.year} onValueChange={(v) => setReviewForm(p => ({ ...p, year: v }))}>
-                            <SelectTrigger><SelectValue placeholder="Year of Study *" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder={reviewForm.role === "alumni" ? "Passing Year *" : "Year of Study *"} /></SelectTrigger>
                             <SelectContent>
-                              {["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "PG 1st Year", "PG 2nd Year", "PhD"].map(y => (
-                                <SelectItem key={y} value={y}>{y}</SelectItem>
-                              ))}
+                              {reviewForm.role === "alumni"
+                                ? ["2020", "2021", "2022", "2023", "2024", "2025", "2026"].map(y => (
+                                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                                  ))
+                                : ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "PG 1st Year", "PG 2nd Year", "PhD"].map(y => (
+                                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                                  ))
+                              }
                             </SelectContent>
                           </Select>
                         </div>
