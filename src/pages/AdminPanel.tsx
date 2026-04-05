@@ -117,6 +117,12 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const initialTab = searchParams.get('tab') || 'users';
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync tab with URL params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) setActiveTab(tabFromUrl);
+  }, [searchParams]);
   const [roleFilter, setRoleFilter] = useState('all');
   
   // Dialog states
