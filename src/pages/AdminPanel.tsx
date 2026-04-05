@@ -475,7 +475,7 @@ const AdminPanel = () => {
               Security
             </TabsTrigger>
             <TabsTrigger value="submissions" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
               Submissions
             </TabsTrigger>
           </TabsList>
