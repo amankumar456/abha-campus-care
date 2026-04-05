@@ -209,12 +209,18 @@ const DisclaimerSection = () => {
                   <p className="text-sm text-muted-foreground">Share your feedback! Select your role to see the relevant form.</p>
 
                   {/* Role selector */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     <Button
                       type="button" variant={reviewForm.role === "student" ? "default" : "outline"}
                       className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "student" }))}
                     >
                       <GraduationCap className="w-4 h-4" /> Student
+                    </Button>
+                    <Button
+                      type="button" variant={reviewForm.role === "alumni" ? "default" : "outline"}
+                      className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "alumni" }))}
+                    >
+                      <GraduationCap className="w-4 h-4" /> Alumni
                     </Button>
                     <Button
                       type="button" variant={reviewForm.role === "professor" ? "default" : "outline"}
