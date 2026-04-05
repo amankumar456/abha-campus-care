@@ -51,32 +51,46 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
 
           /* ===== WATERMARK — flattened, non-removable ===== */
           body::before {
-            content: 'NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE';
+            content: 'NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE    NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE    NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE    NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE    NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE    NOT AN OFFICIAL DOCUMENT – DO NOT USE FOR LEAVE, CERTIFICATION, OR ANY OFFICIAL PURPOSE';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 200%;
-            font-size: 42px;
+            top: -50%;
+            left: -50%;
+            width: 300%;
+            height: 300%;
+            font-size: 28px;
             font-family: Arial, Helvetica, sans-serif;
-            font-weight: bold;
-            color: rgba(102,102,102,0.18);
+            font-weight: 900;
+            color: rgba(180,0,0,0.12);
             transform: rotate(-35deg);
             transform-origin: center center;
             z-index: 9999;
             pointer-events: none;
             white-space: nowrap;
-            line-height: 350px;
-            word-spacing: 80px;
+            line-height: 120px;
+            word-spacing: 40px;
             letter-spacing: 2px;
             overflow: hidden;
-            background: repeating-linear-gradient(
-              -35deg,
-              transparent,
-              transparent 150px,
-              transparent 150px,
-              transparent 350px
-            );
+          }
+          body::after {
+            content: 'STUDENT PROJECT – NOT VALID FOR OFFICIAL USE    STUDENT PROJECT – NOT VALID FOR OFFICIAL USE    STUDENT PROJECT – NOT VALID FOR OFFICIAL USE    STUDENT PROJECT – NOT VALID FOR OFFICIAL USE    STUDENT PROJECT – NOT VALID FOR OFFICIAL USE    STUDENT PROJECT – NOT VALID FOR OFFICIAL USE';
+            position: fixed;
+            top: -50%;
+            left: -25%;
+            width: 300%;
+            height: 300%;
+            font-size: 22px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 900;
+            color: rgba(0,0,180,0.08);
+            transform: rotate(-55deg);
+            transform-origin: center center;
+            z-index: 9998;
+            pointer-events: none;
+            white-space: nowrap;
+            line-height: 150px;
+            word-spacing: 60px;
+            letter-spacing: 1px;
+            overflow: hidden;
           }
           /* Top disclaimer bar */
           .watermark-top-bar {
@@ -336,12 +350,10 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
           /* ===== Print media ===== */
           @media print {
             body { padding: 20px; }
-            body::before {
+            body::before, body::after {
               position: fixed;
-              top: 0;
-              left: 0;
             }
-            .watermark-top-bar, .watermark-bottom-bar {
+            .watermark-top-bar, .watermark-bottom-bar, .watermark-legal-bar {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
@@ -353,6 +365,9 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
         <div class="watermark-top-bar">⚠️ This is a student project document. No official validity. NOT for official use.</div>
         ${bodyHtml}
         ${!skipFooter ? getFooterHtml(documentId, documentType, qrDataUrl, currentDate) : ""}
+        <div class="watermark-legal-bar" style="text-align:center;font-size:9pt;color:#cc0000;border-top:2px solid #cc0000;padding:10px 8px;margin-top:20px;font-family:Arial,sans-serif;font-weight:bold;background:#fff5f5;">
+          ⚠️ DISCLAIMER: This is not the official website of NIT Warangal. No medical claims or documents issued here are valid for official, legal, or medical purposes. All data is dummy or publicly available from the NIT Warangal website.
+        </div>
         <div class="watermark-bottom-bar">⚠️ This is a student project document. No official validity. Do not use for medical leave or any official purpose.</div>
       </body>
     </html>

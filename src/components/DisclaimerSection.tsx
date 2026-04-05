@@ -99,6 +99,10 @@ const DisclaimerSection = () => {
       toast.error("Please fill in branch, year, and college name");
       return;
     }
+    if (reviewForm.role === "alumni" && (!reviewForm.branch || !reviewForm.year || !reviewForm.college_name)) {
+      toast.error("Please fill in branch, passing year, and college name");
+      return;
+    }
     if (reviewForm.role === "professor" && (!reviewForm.subject || !reviewForm.college_name)) {
       toast.error("Please fill in subject and college name");
       return;
@@ -209,12 +213,18 @@ const DisclaimerSection = () => {
                   <p className="text-sm text-muted-foreground">Share your feedback! Select your role to see the relevant form.</p>
 
                   {/* Role selector */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     <Button
                       type="button" variant={reviewForm.role === "student" ? "default" : "outline"}
                       className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "student" }))}
                     >
                       <GraduationCap className="w-4 h-4" /> Student
+                    </Button>
+                    <Button
+                      type="button" variant={reviewForm.role === "alumni" ? "default" : "outline"}
+                      className="flex-1 gap-2" onClick={() => setReviewForm(p => ({ ...p, role: "alumni" }))}
+                    >
+                      <GraduationCap className="w-4 h-4" /> Alumni
                     </Button>
                     <Button
                       type="button" variant={reviewForm.role === "professor" ? "default" : "outline"}
@@ -233,7 +243,7 @@ const DisclaimerSection = () => {
 
                       <Input placeholder="College / University Name *" value={reviewForm.college_name} onChange={(e) => setReviewForm(p => ({ ...p, college_name: e.target.value }))} required maxLength={200} />
 
-                      {reviewForm.role === "student" && (
+                      {(reviewForm.role === "student" || reviewForm.role === "alumni") && (
                         <div className="grid sm:grid-cols-2 gap-4">
                           <Select value={reviewForm.branch} onValueChange={(v) => setReviewForm(p => ({ ...p, branch: v }))}>
                             <SelectTrigger><SelectValue placeholder="Branch / Department *" /></SelectTrigger>
@@ -242,11 +252,16 @@ const DisclaimerSection = () => {
                             </SelectContent>
                           </Select>
                           <Select value={reviewForm.year} onValueChange={(v) => setReviewForm(p => ({ ...p, year: v }))}>
-                            <SelectTrigger><SelectValue placeholder="Year of Study *" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder={reviewForm.role === "alumni" ? "Passing Year *" : "Year of Study *"} /></SelectTrigger>
                             <SelectContent>
-                              {["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "PG 1st Year", "PG 2nd Year", "PhD"].map(y => (
-                                <SelectItem key={y} value={y}>{y}</SelectItem>
-                              ))}
+                              {reviewForm.role === "alumni"
+                                ? ["2020", "2021", "2022", "2023", "2024", "2025", "2026"].map(y => (
+                                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                                  ))
+                                : ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year", "PG 1st Year", "PG 2nd Year", "PhD"].map(y => (
+                                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                                  ))
+                              }
                             </SelectContent>
                           </Select>
                         </div>

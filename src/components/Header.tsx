@@ -285,6 +285,9 @@ const Header = () => {
                   <Link to="/admin/dashboard" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                     Dashboard
                   </Link>
+                  <Link to="/admin/dashboard?tab=submissions" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
+                    Submissions
+                  </Link>
                   <Link to="/medical-team" className="text-muted-foreground hover:text-primary transition-colors font-medium text-sm">
                     Medical Team
                   </Link>

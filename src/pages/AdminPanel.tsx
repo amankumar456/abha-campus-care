@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2, ShieldAlert, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
@@ -117,6 +117,12 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const initialTab = searchParams.get('tab') || 'users';
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync tab with URL params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl) setActiveTab(tabFromUrl);
+  }, [searchParams]);
   const [roleFilter, setRoleFilter] = useState('all');
   
   // Dialog states
@@ -443,7 +449,7 @@ const AdminPanel = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users & Roles
@@ -469,7 +475,7 @@ const AdminPanel = () => {
               Security
             </TabsTrigger>
             <TabsTrigger value="submissions" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
               Submissions
             </TabsTrigger>
           </TabsList>

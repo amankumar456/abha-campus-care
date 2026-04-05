@@ -27,7 +27,21 @@ interface LabReportPdfOptions {
 export function generateLabReportPdf(opts: LabReportPdfOptions): Blob {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const reportNo = `LR/${format(new Date(opts.testDate), "yyyyMMdd")}/${opts.reportId.slice(0, 6).toUpperCase()}`;
+
+  // ===== WATERMARK (diagonal, repeated, non-removable) =====
+  doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+  doc.setTextColor(180, 0, 0);
+  doc.setFontSize(28);
+  doc.setFont("helvetica", "bold");
+  const wmText = "NOT AN OFFICIAL DOCUMENT";
+  for (let y = -100; y < pageHeight + 100; y += 80) {
+    for (let x = -100; x < pageWidth + 200; x += 220) {
+      doc.text(wmText, x, y, { angle: 35 });
+    }
+  }
+  doc.setGState(new (doc as any).GState({ opacity: 1 }));
 
   // Header
   doc.setFillColor(30, 58, 138); // #1e3a8a
@@ -161,9 +175,15 @@ export function generateLabReportPdf(opts: LabReportPdfOptions): Blob {
   // Footer
   doc.setFontSize(6.5);
   doc.setTextColor(150, 150, 150);
-  const footerY = doc.internal.pageSize.getHeight() - 10;
+  const footerY = doc.internal.pageSize.getHeight() - 18;
   doc.text(`Generated on ${format(new Date(), "dd MMM yyyy, hh:mm a")} | Report No.: ${reportNo}`, pageWidth / 2, footerY, { align: "center" });
   doc.text("This is a computer-generated report from NIT Warangal Health Centre Laboratory", pageWidth / 2, footerY + 4, { align: "center" });
+
+  // Legal disclaimer at very bottom
+  doc.setFontSize(6);
+  doc.setTextColor(200, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text("DISCLAIMER: This is not the official website of NIT Warangal. No documents issued here are valid for official, legal, or medical purposes.", pageWidth / 2, footerY + 10, { align: "center", maxWidth: pageWidth - 28 });
 
   return doc.output("blob");
 }

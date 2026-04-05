@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import InspirationalSection from "@/components/InspirationalSection";
@@ -52,6 +53,15 @@ const Index = () => {
           <StudentHomeDashboard />
         ) : (
           <>
+            {/* Proposal PDF Bar */}
+            <div className="bg-primary/10 border-b border-primary/20">
+              <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-3">
+                <span className="text-sm text-foreground font-medium">📄 View the project proposal & guide</span>
+                <Link to="/proposal" className="text-sm font-semibold text-primary hover:underline">
+                  View Guide PDF →
+                </Link>
+              </div>
+            </div>
             <DisclaimerSection />
             <WelcomeBanner />
             <HeroSection />
