@@ -99,6 +99,10 @@ const DisclaimerSection = () => {
       toast.error("Please fill in branch, year, and college name");
       return;
     }
+    if (reviewForm.role === "alumni" && (!reviewForm.branch || !reviewForm.year || !reviewForm.college_name)) {
+      toast.error("Please fill in branch, passing year, and college name");
+      return;
+    }
     if (reviewForm.role === "professor" && (!reviewForm.subject || !reviewForm.college_name)) {
       toast.error("Please fill in subject and college name");
       return;
