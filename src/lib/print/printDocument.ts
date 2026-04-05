@@ -365,6 +365,9 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
         <div class="watermark-top-bar">⚠️ This is a student project document. No official validity. NOT for official use.</div>
         ${bodyHtml}
         ${!skipFooter ? getFooterHtml(documentId, documentType, qrDataUrl, currentDate) : ""}
+        <div class="watermark-legal-bar" style="text-align:center;font-size:9pt;color:#cc0000;border-top:2px solid #cc0000;padding:10px 8px;margin-top:20px;font-family:Arial,sans-serif;font-weight:bold;background:#fff5f5;">
+          ⚠️ DISCLAIMER: This is not the official website of NIT Warangal. No medical claims or documents issued here are valid for official, legal, or medical purposes. All data is dummy or publicly available from the NIT Warangal website.
+        </div>
         <div class="watermark-bottom-bar">⚠️ This is a student project document. No official validity. Do not use for medical leave or any official purpose.</div>
       </body>
     </html>
