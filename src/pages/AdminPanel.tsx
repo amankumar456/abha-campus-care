@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Shield, UserPlus, Trash2, Loader2, Users, Search, Stethoscope, UserCheck, GraduationCap, Link2, ShieldAlert, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import MedicalOfficersTab from '@/components/admin/MedicalOfficersTab';
