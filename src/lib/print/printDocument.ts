@@ -350,12 +350,10 @@ export const printDocument = async (opts: PrintDocumentOptions) => {
           /* ===== Print media ===== */
           @media print {
             body { padding: 20px; }
-            body::before {
+            body::before, body::after {
               position: fixed;
-              top: 0;
-              left: 0;
             }
-            .watermark-top-bar, .watermark-bottom-bar {
+            .watermark-top-bar, .watermark-bottom-bar, .watermark-legal-bar {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
