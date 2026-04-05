@@ -53,6 +53,7 @@ const LabOfficerDashboard = lazyRetry(() => import("./pages/LabOfficerDashboard"
 const MedicalStaffDashboard = lazyRetry(() => import("./pages/MedicalStaffDashboard"));
 const MedicalStaffHome = lazyRetry(() => import("./pages/MedicalStaffHome"));
 const EmergencyPage = lazyRetry(() => import("./pages/EmergencyPage"));
+const ProposalViewer = lazyRetry(() => import("./pages/ProposalViewer"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-background">
