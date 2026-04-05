@@ -175,9 +175,15 @@ export function generateLabReportPdf(opts: LabReportPdfOptions): Blob {
   // Footer
   doc.setFontSize(6.5);
   doc.setTextColor(150, 150, 150);
-  const footerY = doc.internal.pageSize.getHeight() - 10;
+  const footerY = doc.internal.pageSize.getHeight() - 18;
   doc.text(`Generated on ${format(new Date(), "dd MMM yyyy, hh:mm a")} | Report No.: ${reportNo}`, pageWidth / 2, footerY, { align: "center" });
   doc.text("This is a computer-generated report from NIT Warangal Health Centre Laboratory", pageWidth / 2, footerY + 4, { align: "center" });
+
+  // Legal disclaimer at very bottom
+  doc.setFontSize(6);
+  doc.setTextColor(200, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text("DISCLAIMER: This is not the official website of NIT Warangal. No documents issued here are valid for official, legal, or medical purposes.", pageWidth / 2, footerY + 10, { align: "center", maxWidth: pageWidth - 28 });
 
   return doc.output("blob");
 }
