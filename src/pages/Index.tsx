@@ -1,6 +1,6 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import InspirationalSection from "@/components/InspirationalSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import HealthCentreInfo from "@/components/HealthCentreInfo";
 import SecurityBanner from "@/components/SecurityBanner";
